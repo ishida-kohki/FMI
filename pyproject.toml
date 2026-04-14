@@ -38,4 +38,4 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/sample"]
+packages = ["src/sample", "src/fmi"]
