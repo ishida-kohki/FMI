@@ -1,0 +1,6 @@
+# Notebooks listed here are published as interactive WASM pages on GitHub Pages.
+# Any notebook not listed here is published as static HTML by default.
+
+wasm = [
+  "notebooks/demo_wasm.py",
+]

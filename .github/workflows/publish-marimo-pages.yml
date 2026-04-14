@@ -1,0 +1,266 @@
+name: Publish Marimo Pages
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Export notebooks and build pages index
+        run: |
+          uv run python - <<'PY'
+          import os
+          import shutil
+          import subprocess
+          import tomllib
+          from pathlib import Path
+
+          branch = Path("site") / os.environ["GITHUB_REF_NAME"]
+          branch.mkdir(parents=True, exist_ok=True)
+
+          publish_config = Path("notebooks/publish.toml")
+          wasm_notebooks = set()
+          if publish_config.exists():
+              config = tomllib.loads(publish_config.read_text(encoding="utf-8"))
+              wasm_notebooks = {Path(item).as_posix() for item in config.get("wasm", [])}
+
+          notebook_entries = []
+          for notebook in sorted(Path("notebooks").glob("*.py")):
+              notebook_rel = notebook.as_posix()
+              notebook_name = notebook.stem
+              static_output = branch / f"{notebook_name}.html"
+              wasm_output_dir = branch / notebook_name
+
+              if static_output.exists():
+                  static_output.unlink()
+              if wasm_output_dir.exists():
+                  shutil.rmtree(wasm_output_dir)
+
+              if notebook_rel in wasm_notebooks:
+                  subprocess.run(
+                      [
+                          "uv",
+                          "run",
+                          "marimo",
+                          "export",
+                          "html-wasm",
+                          notebook_rel,
+                          "-o",
+                          str(wasm_output_dir),
+                          "--mode",
+                          "run",
+                          "--force",
+                      ],
+                      check=True,
+                  )
+                  output_page = wasm_output_dir / "index.html"
+                  href = f"./{notebook_name}/index.html"
+                  mode = "Interactive (WASM)"
+              else:
+                  subprocess.run(
+                      [
+                          "uv",
+                          "run",
+                          "marimo",
+                          "export",
+                          "html",
+                          notebook_rel,
+                          "-o",
+                          str(static_output),
+                      ],
+                      check=True,
+                  )
+                  output_page = static_output
+                  href = f"./{notebook_name}.html"
+                  mode = "Static"
+
+              page_html = output_page.read_text(encoding="utf-8")
+              if 'name="robots"' not in page_html:
+                  page_html = page_html.replace(
+                      "<head>",
+                      '<head>\n    <meta name="robots" content="noindex,nofollow" />',
+                      1,
+                  )
+                  output_page.write_text(page_html, encoding="utf-8")
+
+              notebook_entries.append((notebook_name, href, mode))
+
+          links = "\n".join(
+              f'<li><a href="{href}">{name}</a> ({mode})</li>'
+              for name, href, mode in notebook_entries
+          )
+          if not links:
+              links = "<li>No notebooks exported yet.</li>"
+
+          branch_index = f"""<!doctype html>
+          <html lang=\"en\">
+            <head>
+              <meta charset=\"utf-8\" />
+              <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+              <meta name=\"robots\" content=\"noindex,nofollow\" />
+              <title>skelton notebooks ({branch.name})</title>
+              <style>
+                :root {{
+                  color-scheme: light;
+                  --bg: #f7f7f5;
+                  --panel: #ffffff;
+                  --text: #1d1f24;
+                  --muted: #5f6570;
+                  --accent: #0f766e;
+                  --border: #d7dbe2;
+                }}
+                * {{ box-sizing: border-box; }}
+                body {{
+                  margin: 0;
+                  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+                  background: linear-gradient(180deg, #f7f7f5 0%, #eef3f7 100%);
+                  color: var(--text);
+                }}
+                main {{ max-width: 840px; margin: 3rem auto; padding: 0 1rem; }}
+                .card {{
+                  background: var(--panel);
+                  border: 1px solid var(--border);
+                  border-radius: 14px;
+                  padding: 1.25rem;
+                  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+                }}
+                h1 {{ margin: 0 0 0.5rem; font-size: 1.8rem; }}
+                p {{ margin: 0 0 1rem; color: var(--muted); }}
+                ul {{ margin: 0; padding-left: 1.1rem; line-height: 1.8; }}
+                a {{ color: var(--accent); text-decoration: none; }}
+                a:hover {{ text-decoration: underline; }}
+              </style>
+            </head>
+            <body>
+              <main>
+                <section class=\"card\">
+                  <h1>skelton notebooks: {branch.name}</h1>
+                  <p>This page lists notebooks published from the <strong>{branch.name}</strong> branch.</p>
+                  <p><a href=\"../index.html\">Back to landing page</a></p>
+                  <ul>
+                    {links}
+                  </ul>
+                </section>
+              </main>
+            </body>
+          </html>
+          """
+          (branch / "index.html").write_text(branch_index, encoding="utf-8")
+
+          top_index = """<!doctype html>
+          <html lang=\"en\">
+            <head>
+              <meta charset=\"utf-8\" />
+              <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+              <meta name=\"robots\" content=\"noindex,nofollow\" />
+              <title>skelton notebook pages</title>
+              <style>
+                :root {
+                  color-scheme: light;
+                  --bg: #f5f7fa;
+                  --text: #131722;
+                  --muted: #5e6572;
+                  --card: #ffffff;
+                  --border: #d8dde6;
+                  --main: #0f766e;
+                  --dev: #b45309;
+                }
+                * { box-sizing: border-box; }
+                body {
+                  margin: 0;
+                  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+                  background: radial-gradient(1200px 500px at 20% -20%, #d9f0ee, transparent),
+                              radial-gradient(1200px 500px at 90% -20%, #fde9d1, transparent),
+                              var(--bg);
+                  color: var(--text);
+                }
+                main { max-width: 920px; margin: 3.5rem auto; padding: 0 1rem; }
+                h1 { margin: 0; font-size: 2rem; }
+                .subtitle { margin: 0.6rem 0 1.3rem; color: var(--muted); }
+                .grid {
+                  display: grid;
+                  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                  gap: 1rem;
+                }
+                .card {
+                  display: block;
+                  padding: 1rem 1.1rem;
+                  border: 1px solid var(--border);
+                  border-radius: 14px;
+                  background: var(--card);
+                  text-decoration: none;
+                  color: inherit;
+                  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+                }
+                .card:hover { transform: translateY(-1px); }
+                .badge {
+                  display: inline-block;
+                  padding: 0.2rem 0.55rem;
+                  border-radius: 999px;
+                  font-size: 0.78rem;
+                  font-weight: 600;
+                }
+                .main { color: var(--main); background: #dff4f1; }
+                .develop { color: var(--dev); background: #fff1de; }
+                .name { margin-top: 0.55rem; font-weight: 700; font-size: 1.1rem; }
+                .desc { margin-top: 0.35rem; color: var(--muted); font-size: 0.95rem; }
+              </style>
+            </head>
+            <body>
+              <main>
+                <h1>skelton notebook pages</h1>
+                <p class=\"subtitle\">Browse published notebooks by branch.</p>
+                <section class=\"grid\">
+                  <a class=\"card\" href=\"./main/index.html\">
+                    <span class=\"badge main\">stable</span>
+                    <div class=\"name\">main</div>
+                    <div class=\"desc\">Validated notebooks intended for stable sharing.</div>
+                  </a>
+                  <a class=\"card\" href=\"./develop/index.html\">
+                    <span class=\"badge develop\">in progress</span>
+                    <div class=\"name\">develop</div>
+                    <div class=\"desc\">Active work and previews before merging to main.</div>
+                  </a>
+                </section>
+              </main>
+            </body>
+          </html>
+          """
+          Path("site/index.html").write_text(top_index, encoding="utf-8")
+          Path("site/robots.txt").write_text("User-agent: *\nDisallow: /\n", encoding="utf-8")
+          Path("site/.nojekyll").write_text("", encoding="utf-8")
+          PY
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          keep_files: true

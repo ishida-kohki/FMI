@@ -1,0 +1,28 @@
+# Local environments
+.venv/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Research artifacts and scratch space
+work/
+
+# Notebook/runtime artifacts
+.ipynb_checkpoints/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
