@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>skelton notebook pages</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f7fa;
+        --text: #131722;
+        --muted: #5e6572;
+        --card: #ffffff;
+        --border: #d8dde6;
+        --main: #0f766e;
+        --dev: #b45309;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Source Sans 3", "Segoe UI", sans-serif;
+        background: radial-gradient(1200px 500px at 20% -20%, #d9f0ee, transparent),
+                    radial-gradient(1200px 500px at 90% -20%, #fde9d1, transparent),
+                    var(--bg);
+        color: var(--text);
+      }
+      main { max-width: 920px; margin: 3.5rem auto; padding: 0 1rem; }
+      h1 { margin: 0; font-size: 2rem; }
+      .subtitle { margin: 0.6rem 0 1.3rem; color: var(--muted); }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
+      }
+      .card {
+        display: block;
+        padding: 1rem 1.1rem;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--card);
+        text-decoration: none;
+        color: inherit;
+        box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+      }
+      .card:hover { transform: translateY(-1px); }
+      .badge {
+        display: inline-block;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+      }
+      .main { color: var(--main); background: #dff4f1; }
+      .develop { color: var(--dev); background: #fff1de; }
+      .name { margin-top: 0.55rem; font-weight: 700; font-size: 1.1rem; }
+      .desc { margin-top: 0.35rem; color: var(--muted); font-size: 0.95rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>skelton notebook pages</h1>
+      <p class="subtitle">Browse published notebooks by branch.</p>
+      <section class="grid">
+        <a class="card" href="./main/index.html">
+          <span class="badge main">stable</span>
+          <div class="name">main</div>
+          <div class="desc">Validated notebooks intended for stable sharing.</div>
+        </a>
+        <a class="card" href="./develop/index.html">
+          <span class="badge develop">in progress</span>
+          <div class="name">develop</div>
+          <div class="desc">Active work and previews before merging to main.</div>
+        </a>
+      </section>
+    </main>
+  </body>
+</html>
