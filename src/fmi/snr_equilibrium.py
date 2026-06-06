@@ -198,7 +198,7 @@ def solve_snr_equilibrium(
         return np.concatenate([v, v[-2::-1]])
 
     return {
-        "y_full":    _mirror_even(y_half),
+        "y_full":    np.concatenate([y_half, 2.0 * L_half - y_half[-2::-1]]),
         "B0z_full":  _mirror_odd(B0z),
         "E0y_full":  _mirror_odd(E0y),
         "ne_full":   _mirror_even(n_e_half),

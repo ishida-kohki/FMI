@@ -81,7 +81,7 @@ def _(plt, result):
     ax1.plot(d["E0y_full"], d["y_full"], "k--", lw=1.5, label=r"$E_{0y}$")
     ax1.set_xlabel(r"Fields $[m_e c\,\omega_{pe}/e]$")
     ax1.set_ylabel(r"$y\;[c/\omega_{pe}]$")
-    ax1.set_title("電磁場プロファイル")
+    ax1.set_title("Electromagnetic Fields")
     ax1.legend()
     ax1.grid(True, alpha=0.3)
 
@@ -90,7 +90,7 @@ def _(plt, result):
     ax2.plot(d["ninc_full"], d["y_full"], "r-",  lw=1.5, label=r"$n_{inc} / \bar{n}_e$")
     ax2.plot(d["nref_full"], d["y_full"], "g-",  lw=1.5, label=r"$n_{ref} / \bar{n}_e$")
     ax2.set_xlabel(r"Density $[\bar{n}_e]$")
-    ax2.set_title("密度プロファイル")
+    ax2.set_title("Density Profiles")
     ax2.legend()
     ax2.grid(True, alpha=0.3)
 
