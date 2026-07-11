@@ -160,6 +160,34 @@ def _bary_interp(x_nodes: NDArray, w: NDArray, f_nodes: NDArray,
     return out
 
 
+def reconstruct_eigenfunction(
+    mode: dict,
+    bg: BackgroundProfiles,
+    K: float,
+    field: str = "Bz",
+    n_display: int = 6,
+) -> tuple[NDArray, NDArray]:
+    """固有ベクトル û から δ(y)=e^{iKy}û(y) を n_display 周期展開して返す。
+
+    Args:
+        mode: solve_modes_bloch が返すモード辞書（キー "eigvec"）
+        bg: 背景プロファイル
+        K: Bloch 波数
+        field: フィールド名（デフォルト "Bz"）
+        n_display: 表示用に何周期分展開するか（デフォルト 6）
+
+    Returns:
+        (ys, delta): 拡張 y 座標と δ(y)=e^{iKy}û(y)
+    """
+    M = bg.M
+    lam = bg.lambda0
+    b = _field_index(bg.species)[field]
+    uhat = mode["eigvec"][b * M:(b + 1) * M]
+    ys = np.concatenate([bg.y + k * lam for k in range(n_display)])
+    delta = np.exp(1j * K * ys) * np.tile(uhat, n_display)
+    return ys, delta
+
+
 def build_background_1period(
     eq: dict,
     mime: float,
@@ -220,5 +248,6 @@ __all__ = [
     "build_operator_bloch",
     "solve_modes_bloch",
     "scan_K_spectrum",
+    "reconstruct_eigenfunction",
     "build_background_1period",
 ]

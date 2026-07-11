@@ -13,6 +13,7 @@ from fmi.snr_linear_bloch import (
     _chebyshev_nodes_weights,
     build_background_1period,
     build_operator_bloch,
+    reconstruct_eigenfunction,
     scan_K_spectrum,
     solve_modes_bloch,
 )
@@ -160,3 +161,18 @@ def test_equivalence_tiled_vs_bloch_warm_oblique():
                                     points_per_period=32)
     g_bloch = solve_modes_bloch(bg_b, kx=1.10 * k0, K=0.0, n_modes=1)[0]["gamma"]
     assert abs(g_tiled - g_bloch) / abs(g_tiled) < 1e-2
+
+
+def test_reconstruct_bloch_phase():
+    """再構成した δ は Bloch 性 δ(y+λ0)=e^{iKλ0}δ(y) を満たす。"""
+    eq = _warm_eq()
+    bg = build_background_1period(eq, mime=400.0, eta=0.2, points_per_period=32)
+    k0 = 2.0 * np.pi / bg.lambda0
+    K = 0.3 * k0
+    mode = solve_modes_bloch(bg, kx=0.0, K=K, n_modes=1)[0]
+    ys, delta = reconstruct_eigenfunction(mode, bg, K, field="Bz", n_display=3)
+    M = bg.M
+    assert ys.size == delta.size == 3 * M
+    # 1周期ずらすと位相因子 e^{iKλ0} 倍
+    phase = np.exp(1j * K * bg.lambda0)
+    assert np.allclose(delta[M:2 * M], phase * delta[0:M], atol=1e-10)
