@@ -6,6 +6,8 @@ import pytest
 from fmi.mach_parameters import MachConfig, build_solver_params
 from fmi.snr_equilibrium import solve_snr_equilibrium_electron_frame
 from fmi.snr_linear import BackgroundProfiles
+from fmi.snr_linear import build_background as build_background_tiled
+from fmi.snr_linear import scan_bloch_spectrum, solve_modes
 from fmi.snr_linear_bloch import (
     _bary_interp,
     _chebyshev_nodes_weights,
@@ -129,3 +131,32 @@ def test_background_1period_spectral_accuracy():
     # B0z の最高調波成分は主要成分よりずっと小さい（滑らか=帯域制限）
     sp = np.abs(np.fft.rfft(bg.B0z))
     assert sp[-1] < 1e-3 * sp.max()
+
+
+def test_equivalence_tiled_vs_bloch_warm_fmi():
+    """warm 平衡・kx=0 の FMI 最大成長率がタイル法と1周期Bloch法で一致。"""
+    eq = _warm_eq()
+    # タイル法（K は事後抽出）: FMI バンドの最大成長率
+    bg_t = build_background_tiled(eq, mime=400.0, eta=0.2,
+                                  points_per_period=32, n_periods=6)
+    g_tiled = scan_bloch_spectrum(bg_t, kx=0.0)["gamma"].max()
+    # 1周期Bloch法: K を明示走査した最大成長率
+    bg_b = build_background_1period(eq, mime=400.0, eta=0.2,
+                                    points_per_period=32)
+    g_bloch = scan_K_spectrum(
+        bg_b, kx=0.0, K_over_k0=np.linspace(0.0, 0.5, 7)
+    )["gamma"].max()
+    assert abs(g_tiled - g_bloch) / abs(g_tiled) < 1e-2
+
+
+def test_equivalence_tiled_vs_bloch_warm_oblique():
+    """warm 平衡・斜め kx/k0=1.10 の最大成長率が両手法で一致。"""
+    eq = _warm_eq()
+    k0 = 2.0 * np.pi / float(eq["lambda0"])
+    bg_t = build_background_tiled(eq, mime=400.0, eta=0.2,
+                                  points_per_period=32, n_periods=4)
+    g_tiled = solve_modes(bg_t, kx=1.10 * k0, n_modes=1)[0]["gamma"]
+    bg_b = build_background_1period(eq, mime=400.0, eta=0.2,
+                                    points_per_period=32)
+    g_bloch = solve_modes_bloch(bg_b, kx=1.10 * k0, K=0.0, n_modes=1)[0]["gamma"]
+    assert abs(g_tiled - g_bloch) / abs(g_tiled) < 1e-2
