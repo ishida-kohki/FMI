@@ -88,4 +88,50 @@ def build_operator_bloch(
     return Lop
 
 
-__all__ = ["build_operator_bloch"]
+def solve_modes_bloch(
+    bg: BackgroundProfiles,
+    kx: float,
+    K: float,
+    n_modes: int = 6,
+    growth_tol: float = 1e-6,
+    **op_kw: float,
+) -> list[dict]:
+    """L(kx,K) を解き、成長モード（Im ω>growth_tol）を成長率降順で返す。"""
+    Lop = build_operator_bloch(bg, kx, K, **op_kw)
+    eigval, eigvec = np.linalg.eig(Lop)
+    order = np.argsort(-eigval.imag)
+    modes: list[dict] = []
+    for j in order:
+        if eigval[j].imag <= growth_tol:
+            break
+        modes.append(
+            {
+                "omega": complex(eigval[j]),
+                "gamma": float(eigval[j].imag),
+                "eigvec": eigvec[:, j].copy(),
+            }
+        )
+        if len(modes) >= n_modes:
+            break
+    return modes
+
+
+def scan_K_spectrum(
+    bg: BackgroundProfiles,
+    kx: float,
+    K_over_k0,
+    growth_tol: float = 1e-7,
+    **op_kw: float,
+) -> dict:
+    """Bloch 波数 K を明示走査し、各 K の最大成長率 γ(K) を返す。"""
+    k0 = 2.0 * np.pi / bg.lambda0
+    r = np.asarray(K_over_k0, dtype=float)
+    gamma = np.zeros(r.size)
+    for i, ri in enumerate(r):
+        modes = solve_modes_bloch(bg, kx, ri * k0, n_modes=1,
+                                  growth_tol=growth_tol, **op_kw)
+        gamma[i] = modes[0]["gamma"] if modes else 0.0
+    return {"K_over_k0": r, "gamma": gamma}
+
+
+__all__ = ["build_operator_bloch", "solve_modes_bloch", "scan_K_spectrum"]
