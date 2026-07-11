@@ -3,11 +3,9 @@
 import numpy as np
 import pytest
 
-from fmi.mach_parameters import MachConfig, build_solver_params
 from fmi.snr_equilibrium import solve_snr_equilibrium_electron_frame
-from fmi.snr_linear import BackgroundProfiles, _field_index
+from fmi.snr_linear import BackgroundProfiles, _field_index, scan_bloch_spectrum, solve_modes
 from fmi.snr_linear import build_background as build_background_tiled
-from fmi.snr_linear import scan_bloch_spectrum, solve_modes
 from fmi.snr_linear_bloch import (
     _bary_interp,
     _chebyshev_nodes_weights,

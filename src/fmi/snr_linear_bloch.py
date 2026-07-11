@@ -22,7 +22,13 @@ def build_operator_bloch(
     gamma_ad: float = 5.0 / 3.0,
     coupling: float = 1.0,
 ) -> NDArray:
-    """ω x = L(kx,K) x の演算子を1周期上で組む（∂_y → D + iK）。"""
+    """ω x = L(kx,K) x の演算子を1周期上で組む（∂_y → D + iK）。
+
+    snr_linear.build_operator の写しに Bloch シフト DK=D+iK·I を、∂_y が作用する
+    4箇所（連続式 ∂_y(n0δv)、運動yの圧力 ∂_y(δp)、Faraday ∂_yδE_x、Ampère ∇×B）
+    にのみ適用する。他ブロックは build_operator と同一。K=0 で build_operator に一致。
+    物理式を変更する際は build_operator と本関数の両方を同期させること。
+    """
     species = bg.species
     M = bg.M
     S = len(species)
@@ -199,6 +205,13 @@ def build_background_1period(
     平衡の *_full は半周期 Chebyshev 解の鏡映（B0z は奇、密度は偶）。先頭 N+1 点が
     半周期値。これを Chebyshev barycentric で任意 y に評価し、鏡映パリティを適用して
     [0,λ0) の一様格子を作る（np.interp の C⁰ 折れ点を排除）。
+
+    `eta` は密度分割済みの `eq` には未使用（tiled 版 build_background との API 一貫性
+    のために受ける）。
+
+    注意: スペクトル補間は正値性を保存しない（ノード間で節点最小値を下回る over/under-
+    shoot が起こりうる）。warm 平衡（密度最小 ~0.1、帯域制限）では無害だが、密度が 0 に
+    迫る鋭い平衡では運動yの 1/n0 が発散しうる（cold σ=0 の既知限界。plan 参照）。
     """
     lambda0 = float(eq["lambda0"])
     L_half = 0.5 * lambda0
