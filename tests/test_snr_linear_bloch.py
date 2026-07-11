@@ -5,7 +5,7 @@ import pytest
 
 from fmi.mach_parameters import MachConfig, build_solver_params
 from fmi.snr_equilibrium import solve_snr_equilibrium_electron_frame
-from fmi.snr_linear import BackgroundProfiles
+from fmi.snr_linear import BackgroundProfiles, _field_index
 from fmi.snr_linear import build_background as build_background_tiled
 from fmi.snr_linear import scan_bloch_spectrum, solve_modes
 from fmi.snr_linear_bloch import (
@@ -176,3 +176,39 @@ def test_reconstruct_bloch_phase():
     # 1周期ずらすと位相因子 e^{iKλ0} 倍
     phase = np.exp(1j * K * bg.lambda0)
     assert np.allclose(delta[M:2 * M], phase * delta[0:M], atol=1e-10)
+
+
+def test_warm_bloch_gamma_converges():
+    """warm FMI（kx=0,K=0）成長率が PPP=32→64 で収束（平滑背景＋スペクトル補間）。"""
+    eq = _warm_eq()
+
+    def gamma_at(ppp: int) -> float:
+        bg = build_background_1period(eq, mime=400.0, eta=0.2,
+                                      points_per_period=ppp)
+        m = solve_modes_bloch(bg, kx=0.0, K=0.0, n_modes=1, growth_tol=1e-7)
+        return m[0]["gamma"] if m else 0.0
+
+    g32, g64 = gamma_at(32), gamma_at(64)
+    assert g32 > 1e-4 and g64 > 1e-4
+    assert abs(g32 - g64) / abs(g64) < 1e-2      # 実測 ~1e-13
+
+
+def test_warm_bloch_eigenfunction_smooth():
+    """warm FMI（kx=0,K=0）は δB_z 支配の磁気モードで、固有関数が滑らか（帯域制限）。"""
+    eq = _warm_eq()
+    bg = build_background_1period(eq, mime=400.0, eta=0.2, points_per_period=48)
+    m = solve_modes_bloch(bg, kx=0.0, K=0.0, n_modes=1, growth_tol=1e-7)[0]
+    M = bg.M
+    v = m["eigvec"]
+
+    def blk_norm(field: str) -> float:
+        i = _field_index(bg.species)[field]
+        return float(np.linalg.norm(v[i * M:(i + 1) * M]))
+
+    # δB_z が支配的＝磁気 filamentation モード（spurious な純 ref_vy でない）
+    assert blk_norm("Bz") == max(blk_norm(f) for f in _field_index(bg.species))
+    # 複素固有ベクトルは fft（rfft は実数専用）。Nyquist 成分が主要成分よりずっと小
+    b = _field_index(bg.species)["Bz"]
+    bz = v[b * M:(b + 1) * M]
+    sp = np.abs(np.fft.fft(bz))
+    assert sp[M // 2] < 1e-6 * sp.max()          # Gibbs リンギングなし（実測 2.4e-13）
