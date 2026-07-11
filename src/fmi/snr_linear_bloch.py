@@ -134,4 +134,91 @@ def scan_K_spectrum(
     return {"K_over_k0": r, "gamma": gamma}
 
 
-__all__ = ["build_operator_bloch", "solve_modes_bloch", "scan_K_spectrum"]
+def _chebyshev_nodes_weights(N: int) -> tuple[NDArray, NDArray]:
+    """Chebyshev-Gauss-Lobatto ノード x=cos(jπ/N)（降順 1→-1）と barycentric 重み。"""
+    x = np.cos(np.arange(N + 1) * np.pi / N)
+    w = np.ones(N + 1)
+    w[1::2] = -1.0
+    w[0] *= 0.5
+    w[N] *= 0.5
+    return x, w
+
+
+def _bary_interp(x_nodes: NDArray, w: NDArray, f_nodes: NDArray,
+                 x_query) -> NDArray:
+    """Berrut–Trefethen barycentric 補間（ノード一致時は値を直接返す）。"""
+    xq = np.atleast_1d(np.asarray(x_query, dtype=float))
+    out = np.empty(xq.shape, dtype=float)
+    for i, xx in enumerate(xq):
+        diff = xx - x_nodes
+        hit = np.isclose(diff, 0.0)
+        if np.any(hit):
+            out[i] = f_nodes[int(np.argmax(hit))]
+        else:
+            t = w / diff
+            out[i] = float((t @ f_nodes) / t.sum())
+    return out
+
+
+def build_background_1period(
+    eq: dict,
+    mime: float,
+    eta: float,
+    points_per_period: int,
+) -> BackgroundProfiles:
+    """平衡（Chebyshev 半周期解）を1周期一様格子へ barycentric スペクトル補間で載せる。
+
+    平衡の *_full は半周期 Chebyshev 解の鏡映（B0z は奇、密度は偶）。先頭 N+1 点が
+    半周期値。これを Chebyshev barycentric で任意 y に評価し、鏡映パリティを適用して
+    [0,λ0) の一様格子を作る（np.interp の C⁰ 折れ点を排除）。
+    """
+    lambda0 = float(eq["lambda0"])
+    L_half = 0.5 * lambda0
+    N = (np.asarray(eq["y_full"]).size - 1) // 2
+    x_cheb, w_cheb = _chebyshev_nodes_weights(N)
+
+    def half(name: str) -> NDArray:
+        return np.asarray(eq[name], dtype=float)[: N + 1]
+
+    ne_h, ni_h, nr_h = half("ne_full"), half("ninc_full"), half("nref_full")
+    B_h = half("B0z_full")
+
+    y = np.linspace(0.0, lambda0, points_per_period, endpoint=False)
+    s = np.where(y <= L_half, y, lambda0 - y)     # 半周期へ折り返し
+    xq = 1.0 - 2.0 * s / L_half                    # y_half=L_half(1-x)/2 の逆写像
+
+    def even(vals_h: NDArray) -> NDArray:
+        return _bary_interp(x_cheb, w_cheb, vals_h, xq)
+
+    def odd(vals_h: NDArray) -> NDArray:
+        sign = np.where(y <= L_half, 1.0, -1.0)
+        return sign * _bary_interp(x_cheb, w_cheb, vals_h, xq)
+
+    params = eq["params"]
+    return BackgroundProfiles(
+        y=y,
+        n={"e": even(ne_h), "inc": even(ni_h), "ref": even(nr_h)},
+        beta={
+            "e": float(eq["beta_e"]),
+            "inc": float(params["beta_inc"]),
+            "ref": float(params["beta_ref"]),
+        },
+        T={
+            "e": float(params["Te"]),
+            "inc": float(params["Tinc"]),
+            "ref": float(params["Tref"]),
+        },
+        mass={"e": 1.0, "inc": float(mime), "ref": float(mime)},
+        charge={"e": -1.0, "inc": 1.0, "ref": 1.0},
+        B0z=odd(B_h),
+        lambda0=lambda0,
+        n_periods=1,
+    )
+
+
+__all__ = [
+    "build_operator_bloch",
+    "solve_modes_bloch",
+    "scan_K_spectrum",
+    "build_background_1period",
+]

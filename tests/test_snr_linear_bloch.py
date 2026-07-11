@@ -3,8 +3,17 @@
 import numpy as np
 import pytest
 
+from fmi.mach_parameters import MachConfig, build_solver_params
+from fmi.snr_equilibrium import solve_snr_equilibrium_electron_frame
 from fmi.snr_linear import BackgroundProfiles
-from fmi.snr_linear_bloch import build_operator_bloch, scan_K_spectrum, solve_modes_bloch
+from fmi.snr_linear_bloch import (
+    _bary_interp,
+    _chebyshev_nodes_weights,
+    build_background_1period,
+    build_operator_bloch,
+    scan_K_spectrum,
+    solve_modes_bloch,
+)
 
 
 def _uniform_single_electron(M: int = 24, L: float = 2 * np.pi) -> BackgroundProfiles:
@@ -77,3 +86,46 @@ def test_scan_K_spectrum_shape():
     spec = scan_K_spectrum(bg, kx=0.0, K_over_k0=[0.1, 0.2, 0.3])
     assert spec["K_over_k0"].shape == spec["gamma"].shape == (3,)
     assert np.all(spec["gamma"] >= 0.0)
+
+
+def test_bary_interp_exact_on_polynomial():
+    """barycentric 補間は次数<=N の多項式を機械精度で再現。"""
+    N = 12
+    x, w = _chebyshev_nodes_weights(N)
+    f = 3.0 * x**3 - 2.0 * x + 1.0          # 3次（<=N）
+    xq = np.linspace(-1.0, 1.0, 37)
+    got = _bary_interp(x, w, f, xq)
+    exact = 3.0 * xq**3 - 2.0 * xq + 1.0
+    assert np.max(np.abs(got - exact)) < 1e-10
+
+
+def _warm_eq() -> dict:
+    return solve_snr_equilibrium_electron_frame(
+        eta=0.2, beta_inc=-0.05, beta_ref=0.19,
+        Te=0.5, Tinc=0.1, Tref=0.1,
+        a0_target=0.25, N_points=64, n_steps=25,
+    )
+
+
+def test_background_1period_basic():
+    """1周期背景は n_periods=1・正しい長さ・電荷/質量割当を持つ。"""
+    eq = _warm_eq()
+    bg = build_background_1period(eq, mime=400.0, eta=0.2, points_per_period=48)
+    assert bg.n_periods == 1
+    assert bg.M == 48
+    assert set(bg.species) == {"e", "inc", "ref"}
+    assert bg.charge == {"e": -1.0, "inc": 1.0, "ref": 1.0}
+    assert bg.lambda0 == pytest.approx(float(eq["lambda0"]))
+    # B0z は奇対称: y=0 で ~0
+    assert abs(bg.B0z[0]) < 1e-3
+
+
+def test_background_1period_spectral_accuracy():
+    """スペクトル補間は解像度を上げても平均密度=1 を保ち滑らか（高調波が小さい）。"""
+    eq = _warm_eq()
+    bg = build_background_1period(eq, mime=400.0, eta=0.2, points_per_period=64)
+    # 電子密度の空間平均は 1（正規化）
+    assert np.mean(bg.n["e"]) == pytest.approx(1.0, abs=1e-3)
+    # B0z の最高調波成分は主要成分よりずっと小さい（滑らか=帯域制限）
+    sp = np.abs(np.fft.rfft(bg.B0z))
+    assert sp[-1] < 1e-3 * sp.max()
