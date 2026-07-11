@@ -793,6 +793,10 @@ git commit -m "test(snr_linear_bloch): warm-regime smooth eigenfunction + demo f
 
 ## 完了後
 
-- 既存 `tests/test_snr_linear.py`（タイル法の回帰）が引き続き緑であることを確認: `uv run pytest tests/test_snr_linear.py -q`。
-- `docs/snr_linear_analysis.html` に Bloch 法の節を追加（別作業）。cold の跳び消失図 `../work/snr_bloch_demo.png` を掲載。
-- durable memory `snr-current-filament-linear-analysis` に「Fourier-Bloch 版で cold アーティファクト解消」を追記（別作業）。
+- 既存 `tests/test_snr_linear.py`（タイル法の回帰）が引き続き緑であることを確認: `uv run pytest tests/test_snr_linear.py -q`（5/5 pass, 2026-07-11）。
+- `docs/snr_linear_analysis.html` に Bloch 法の節を追加（別作業）。warm の平滑 δB_z 固有関数図 `../work/snr_bloch_demo.png` を掲載。
+- durable memory `snr-current-filament-linear-analysis` に「Fourier-Bloch 版：warm で物理FMIの平滑固有関数を再現・タイル法と<1%一致」を追記（別作業）。
+
+## 既知の限界（本分岐の対象外）
+
+- **cold σ=0 の inv_n0 縮退**: cold（T_ion→0）ではイオン密度が n_ref≈5.9e-54 まで evacuate し、運動yの圧力項 `inv_n0=1/n0` が発散する。その結果、最速成長モードは物理 FMI ではなく **spurious な純 ref_vy モード**（δn≈δE≈δB≈機械精度ゼロ、固有ペア残差~1e-15 の真の固有値）になる。タイル法 `snr_linear` も同一挙動＝Bloch 法固有のバグではない。Fourier-Bloch は補間 Gibbs は除去するが、この密度→0 の 1/n₀ 縮退は除去しない。将来対応（別 spec）: (a) inv_n0 の正則化（n0 フロア／密度重み弱形式）、(b) spurious フィルタ（|δn|/|δv| 閾値）、(c) cold 非対称平衡の収束性検証（native 残差・Harris 比較）。
