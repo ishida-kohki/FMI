@@ -3,9 +3,9 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [project]
-name = "skelton"
+name = "snr-filament-stability"
 version = "0.1.0"
-description = "Scientific research skeleton package"
+description = "SNR precursor current-filament equilibrium and linear stability analysis"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 dependencies = [

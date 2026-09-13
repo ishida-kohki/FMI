@@ -1,86 +1,37 @@
-# Skelton Project
+# SNR Filament Stability
 
-This repository is a starter template for a scientific research project.
+SNR前駆体衝撃波を模した3成分（電子・入射イオン・反射イオン）電流フィラメント平衡の構築と、線形安定性解析。
 
-## What you can do here
+Vanthieghem et al. (2018) のペアプラズマ平衡アプローチを非相対論的な3成分系に拡張し、drift-kink instability (DKI) と filamentation merging instability (FMI) の競合を Fourier-Bloch 法で調べる。
 
-- Build reusable code for models and analysis
-- Run interactive notebooks with marimo
-- Track tests and documentation as the project grows
-- Publish notebook results to GitHub Pages (`/main/` and `/develop/`)
+## できること
 
-## Published pages
+- **平衡構築**: 電子静止系での周期的電流フィラメント平衡を数値的に解く（`src/fmi/snr_equilibrium.py`）
+- **線形安定性解析**: Fourier-Bloch 法による固有値問題 ω x = L(kx, K) x を解き、DKI/FMI の成長率と固有関数を求める（`src/fmi/snr_linear_bloch.py`）
+- **PIC比較**: マッハ数ベースのパラメータ設計（`src/fmi/mach_parameters.py`）と Weibel 加熱後温度（`src/fmi/wi_saturated_temperature.py`）で、PIC シミュレーションと直接比較できる平衡を用意する
 
-- Landing page: <https://amanotk.github.io/skelton-project/>
-- Stable notebooks (`main`): <https://amanotk.github.io/skelton-project/main/>
-- Development notebooks (`develop`): <https://amanotk.github.io/skelton-project/develop/>
+## ディレクトリ構成
 
-## Directory structure
+- `src/fmi/`: 平衡ソルバー・線形演算子・パラメータ設計の本体コード
+- `notebooks/`: marimo インタラクティブノートブック
+- `tests/`: 自動テスト
+- `docs/`: 解析結果と導出のHTML/Markdown資料（GitHub Pagesで公開）
+- `work/`: 図・CSVなどの生成物（gitで追跡しない）
 
-- `src/`: reusable Python code
-- `notebooks/`: interactive marimo notebooks
-- `tests/`: automated tests
-- `docs/`: project documentation
-- `work/`: large files and scratch outputs (not committed)
-
-## Quick start
-
-1. Install dependencies:
+## クイックスタート
 
 ```bash
 uv sync
-```
-
-2. Run tests:
-
-```bash
 uv run pytest
 ```
 
-3. Open a notebook:
+## 公開ページ
 
-```bash
-uv run marimo run notebooks/demo_static.py
-```
+- Stable (`main`): <https://ishida-kohki.github.io/snr-filament-stability/main/>
+- Development (`develop`): <https://ishida-kohki.github.io/snr-filament-stability/develop/>
 
-WASM-focused example notebook:
+## ブランチ運用
 
-```bash
-uv run marimo run notebooks/demo_wasm.py
-```
-
-## Marimo notebook workflow
-
-- Run in browser: `uv run marimo run notebooks/<notebook-name>.py`
-- Edit notebook: `uv run marimo edit notebooks/<notebook-name>.py`
-- Script-mode check: `uv run notebooks/<notebook-name>.py`
-- Notebook lint check: `uvx marimo check notebooks/<notebook-name>.py`
-
-## GitHub Pages export mode
-
-- Default behavior: notebooks are published as static HTML.
-- To publish a notebook as interactive WASM, list it in `notebooks/publish.toml`.
-
-Example:
-
-```toml
-wasm = [
-  "notebooks/demo_wasm.py",
-]
-```
-
-`demo_static.py` imports the local `sample` module; `demo_wasm.py` avoids local imports so it works in browser WASM mode.
-
-## Recommended Git branching strategy
-
-- `main`: stable work (notebooks published to `/main/` on GitHub Pages)
-- `develop`: active development (notebooks published to `/develop/` on GitHub Pages)
-- `feature/*`: short-lived feature branches
-
-### Development on `develop`
-- Commit primarily to `develop` for ongoing work
-- Merge `develop` into `main` when stable and ready for release (usually with a normal merge commit)
-
-### Feature branches
-- Create `feature/*` branches for specific features or experiments
-- Merge `feature/*` branches back into `develop` when ready (usually with squash merge)
+- `main`: 安定版
+- `develop`: 開発中の作業（通常はここにコミット）
+- `feature/*`: 個別の実験・機能追加
