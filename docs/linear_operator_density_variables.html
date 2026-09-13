@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>線形演算子における密度の扱い</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #252836; --border: #2e3247;
+      --accent: #5c9cf5; --accent2: #7ec8a0; --accent3: #f5a623;
+      --text: #e2e4ed; --text-muted: #8890aa; --code-bg: #131622;
+      --kw: #c792ea; --fn: #82aaff; --str: #c3e88d; --num: #f78c6c; --cmt: #546e7a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.7; }
+    a { color: var(--accent); }
+    .page-wrap { display: flex; min-height: 100vh; }
+    nav { width: 280px; flex-shrink: 0; background: var(--surface);
+      border-right: 1px solid var(--border); padding: 2rem 1.2rem;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    nav h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .12em;
+      color: var(--text-muted); margin-bottom: .6rem; }
+    nav ul { list-style: none; }
+    nav li { margin: .2rem 0; }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: .88rem;
+      display: block; padding: .25rem .5rem; border-radius: 4px; transition: .15s; }
+    nav a:hover { color: var(--accent); background: rgba(92,156,245,.08); }
+    nav .section-head h2 { font-size:.72rem; color:var(--text-muted);
+      text-transform:uppercase; letter-spacing:.1em; margin:.8rem 0 .3rem; }
+    main { flex: 1; max-width: 900px; padding: 3rem 3.5rem; }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: .4rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: .95rem; }
+    h2 { font-size: 1.35rem; color: var(--accent); margin: 2.5rem 0 .8rem;
+      padding-bottom: .4rem; border-bottom: 1px solid var(--border); scroll-margin-top: 1rem; }
+    h3 { font-size: 1.05rem; color: var(--accent2); margin: 1.6rem 0 .5rem; }
+    h4 { font-size: .95rem; color: var(--accent3); margin: 1.2rem 0 .4rem; }
+    p  { margin-bottom: .9rem; }
+    ul, ol { margin: .3rem 0 1rem 1.4rem; }
+    li { margin: .25rem 0; }
+    .callout { border-left: 3px solid var(--accent); background: rgba(92,156,245,.07);
+      padding: .8rem 1.2rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+    .callout.green { border-color: var(--accent2); background: rgba(126,200,160,.07); }
+    .callout.orange { border-color: var(--accent3); background: rgba(245,166,35,.07); }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th { background: var(--surface2); color: var(--accent); padding: .55rem .9rem;
+      text-align: left; font-weight: 600; border: 1px solid var(--border); }
+    td { padding: .5rem .9rem; border: 1px solid var(--border); }
+    tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1.2rem 1.4rem; overflow-x: auto; font-size: .84rem; line-height: 1.6; margin: .8rem 0 1.2rem; }
+    code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+    p code, li code, td code { background: var(--surface2); padding: .15em .4em;
+      border-radius: 3px; font-size: .85em; }
+    .kw{color:var(--kw)} .fn{color:var(--fn)} .str{color:var(--str)}
+    .num{color:var(--num)} .cmt{color:var(--cmt);font-style:italic}
+    .eq-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem 1.6rem; text-align: center; overflow-x: auto; margin: 1rem 0; }
+    .badge { display: inline-block; font-size: .72rem; padding: .15em .55em; border-radius: 999px;
+      font-weight: 600; margin-left: .4rem; vertical-align: middle; }
+    .badge-blue { background: rgba(92,156,245,.2); color: var(--accent); }
+    .badge-green { background: rgba(126,200,160,.2); color: var(--accent2); }
+    .badge-orange { background: rgba(245,166,35,.2); color: var(--accent3); }
+    figure { margin: 1.2rem 0; text-align: center; }
+    figure img { max-width: 100%; border: 1px solid var(--border); border-radius: 8px; background:#fff; }
+    figcaption { color: var(--text-muted); font-size: .82rem; margin-top: .5rem; }
+    .diagram { font-family: monospace; font-size: .82rem; color: var(--text-muted);
+      background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem 1.4rem; white-space: pre; overflow-x: auto; margin: 1rem 0; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    /* ---- 折りたたみ（詳細・参照）---- */
+    details { border: 1px solid var(--border); border-radius: 8px; margin: 1rem 0;
+      background: var(--surface); }
+    details > summary { cursor: pointer; padding: .75rem 1.2rem; font-weight: 600;
+      color: var(--accent2); list-style: none; user-select: none; border-radius: 8px; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::before { content: "▸"; color: var(--text-muted);
+      display: inline-block; width: 1.1em; transition: transform .15s; }
+    details[open] > summary::before { content: "▾"; }
+    details > summary:hover { color: var(--accent); }
+    details[open] > summary { border-bottom: 1px solid var(--border); border-radius: 8px 8px 0 0; }
+    .details-body { padding: .4rem 1.4rem 1rem; }
+    .summary-tag { font-size: .72rem; color: var(--text-muted); font-weight: 400; margin-left: .5rem; }
+    /* ---- 目次（本文冒頭）---- */
+    .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.2rem 1.6rem; margin: 1rem 0 2rem; }
+    .toc h2 { border: none; margin: 0 0 .6rem; font-size: 1.05rem; padding: 0; color: var(--accent2); }
+    .toc ol { margin: 0 0 0 1.2rem; }
+    .toc a { text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    .toc .lead { color: var(--text-muted); font-size: .85rem; margin-left: -.6rem; }
+    .approach-card { border:1px solid var(--border); border-left-width:4px; border-radius:8px;
+      padding:.7rem 1.1rem; margin:.6rem 0; background:var(--surface); }
+    .approach-card.a1 { border-left-color: var(--accent); }
+    .approach-card.a2 { border-left-color: var(--accent2); }
+    .approach-card.a3 { border-left-color: var(--accent3); }
+    .approach-card h4 { margin:.1rem 0 .3rem; color: var(--text); font-size:1rem; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+<nav>
+  <h2>目次</h2>
+  <ul>
+    <li><a href="#summary">要約</a></li>
+    <li class="section-head"><h2>前提</h2></li>
+    <li><a href="#variants">絶対密度版と相対密度版</a></li>
+    <li><a href="#question">発端: 1/n0 を消せないか</a></li>
+    <li class="section-head"><h2>質量流束変数</h2></li>
+    <li><a href="#flux">定式化</a></li>
+    <li><a href="#similarity">厳密相似であることの証明</a></li>
+    <li><a href="#numeric">数値検証</a></li>
+    <li><a href="#conditioning">条件数は改善しない</a></li>
+    <li class="section-head"><h2>副産物として判明したこと</h2></li>
+    <li><a href="#discovery">相対密度版の欠陥</a></li>
+    <li><a href="#correction">以前の結論の訂正</a></li>
+    <li><a href="#convergence">絶対密度版の収束</a></li>
+    <li class="section-head"><h2>残る問題</h2></li>
+    <li><a href="#debye">流体近似の妥当範囲</a></li>
+    <li><a href="#pending">平衡解像度への依存性</a></li>
+    <li><a href="#next">次にやること</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<h1>線形演算子における密度の扱い</h1>
+<p class="subtitle">
+  質量流束変数への変換は固有値を変えない &mdash; そして相対密度版が短波長の偽モードを
+  生んでいたという訂正。2026-08-21 作成。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="summary">要約</h2>
+
+<div class="callout green">
+  <p><strong>1. 変数変換では偽モードは消せない。</strong>
+  質量流束 \(u_s=n_{s0}\delta v_s\) を使えば 1/n<sub>0</sub> は完全に消えるが、
+  これは離散演算子のレベルで厳密な相似変換であり、固有値は機械精度で一致する。
+  変数変換という方向は原理的に閉じている。</p>
+</div>
+
+<div class="callout orange">
+  <p><strong>2. 以前の「密度勾配が短波長モードを作る」という結論は誤りだった。</strong>
+  カットオフに張り付く現象は<strong>相対密度版だけの性質</strong>であり、
+  絶対密度版では起きていない。以前の測定はすべて相対密度版で行われていた。</p>
+</div>
+
+<div class="callout">
+  <p><strong>3. 絶対密度版は収束する。ただし収束先が流体近似の外にある。</strong>
+  ppp&ge;192 で 7 桁一致し、平衡の解像度 N<sub>points</sub> を 4 倍に変えても動かない。
+  数値的には真の固有値である。しかしそのモードは \(k_y\lambda_{De}=3.65\)、
+  すなわち電子デバイ長の 1/3.65 の波長にある。この波長では Landau 減衰が支配するため、
+  <strong>数値的に正しくても物理的な成長率ではない。</strong></p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="variants">絶対密度版と相対密度版</h2>
+
+<p>
+同じ線形固有値問題を、<strong>密度摂動の変数の取り方だけ変えて</strong>実装した 2 つの版がある。
+</p>
+
+<table>
+  <tr><th></th><th>絶対密度版</th><th>相対密度版</th></tr>
+  <tr><td>状態変数</td><td>\(\delta n_s\)</td><td>\(w_s=\delta n_s/n_{s0}\)</td></tr>
+  <tr><td>1/n<sub>0</sub> の扱い</td><td><code>diag(1/n0)</code> が残る</td><td>消える。代わりに \(\partial_y\ln n_{s0}\) が出る</td></tr>
+  <tr><td>実装</td><td><code>snr_linear_bloch.build_operator_bloch</code></td>
+      <td><code>snr_linear_relative.build_operator_bloch_relative</code></td></tr>
+  <tr><td>作った動機</td><td>元の定式化</td>
+      <td>n<sub>0</sub>&rarr;0 で 1/n<sub>0</sub> が発散するのを避ける<br>
+          （Harris a<sub>0</sub>=10 で n<sub>min</sub>~1e-43）</td></tr>
+</table>
+
+<p>
+連続な数学としては<strong>厳密な相似変換</strong>なので固有値は不変である。
+ところが離散化すると別物になる。相対版は \(\partial_y\ln n_{s0}\) を
+<code>D @ log(n0)</code>（log を取ってからスペクトル微分）として実装するが、
+これは絶対版の <code>diag(1/n0) @ D</code> とは<strong>異なる離散化</strong>である。
+</p>
+
+<div class="callout orange">
+  <p>
+    この差が、n<sub>min</sub>=1.86e-3 という穏やかな条件でも相対版を壊していた。
+    詳細は <a href="#discovery">§相対密度版の欠陥</a>。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="question">発端: 1/n0 を消せないか</h2>
+
+<p>
+線形演算子で密度が入る場所は 2 種類ある。
+</p>
+
+<table>
+  <tr><th>形</th><th>現れる式</th><th>性質</th></tr>
+  <tr><td>掛け算 \(n_{s0}\times\)</td><td>連続式、Ampère（電流）</td><td>有界。無害</td></tr>
+  <tr><td>割り算 \(1/n_{s0}\times\)</td><td>運動 y の圧力項、背景場力項</td><td>n<sub>0</sub>&rarr;0 で発散</td></tr>
+</table>
+
+<p>
+1/n<sub>0</sub> が現れるのは、運動量方程式を \(m_s n_{s0}\) で割って
+\(\partial_t\delta v_s=\dots\) の形にするからである。
+<strong>そもそも割らなければよいのではないか</strong>、というのが出発点。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="flux">質量流束変数による定式化</h2>
+
+<p>
+速度 \(\delta v_s\) の代わりに<strong>質量流束</strong>を状態変数に取る。
+</p>
+
+<div class="eq-block">
+  \[ u_{sx}\equiv n_{s0}\,\delta v_{sx},\qquad u_{sy}\equiv n_{s0}\,\delta v_{sy} \]
+</div>
+
+<p>
+\(n_{s0}\) は時間に依存しないので \(m_sn_{s0}(-i\Omega_s)\delta v_{sx}=m_s(-i\Omega_s)u_{sx}\)
+となり、運動量方程式は \(m_s\) で割るだけでよい。結果は
+</p>
+
+<pre><code>連続:    ω δn = kx u_x + kx v0 δn − i ∂_y u_y
+
+運動 x:  ω u_x = kx v0 u_x + i(q/m) <span class="str">n0</span> δE_x + i(q/m) B0z u_y + (kx γT/m) δn
+
+運動 y:  ω u_y = kx v0 u_y + i(q/m) <span class="str">n0</span> δE_y − i(q/m) B0z u_x
+                − i(q/m) <span class="str">n0</span> v0 δB_z + i(q/m)(E0y − β B0z) δn − i(γT/m) ∂_y δn
+
+Ampère:  ω δE_x = i ∂_y δB_z − i Σ q(u_x + v0 δn)
+         ω δE_y = kx δB_z − i Σ q u_y</code></pre>
+
+<div class="callout green">
+  <p>
+    <strong>1/n<sub>0</sub> が完全に消える。</strong>
+    しかも相対密度版と違って \(\partial_y\ln n_{s0}\) も出てこない。
+    n<sub>0</sub> は掛け算としてのみ現れ、係数はすべて有界である。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="similarity">厳密相似であることの証明</h2>
+
+<p>
+変換行列を、速度ブロックにだけ \(\mathrm{diag}(n_{s0})\) を置いた対角行列とする。
+</p>
+
+<div class="eq-block">
+  \[ S=\mathrm{diag}\big(\underbrace{I}_{\delta n},\ \underbrace{\mathrm{diag}(n_{s0})}_{\delta v_x},\
+     \underbrace{\mathrm{diag}(n_{s0})}_{\delta v_y},\ \dots,\ \underbrace{I,I,I}_{E_x,E_y,B_z}\big) \]
+</div>
+
+<p>
+このとき <strong>離散演算子のレベルで</strong> \(L'=SLS^{-1}\) が厳密に成り立つ。
+対角行列同士の積 \(\mathrm{diag}(n_0)\,\mathrm{diag}(1/n_0)=I\) が
+<strong>離散化誤差を伴わずに</strong>打ち消し合うためである。
+</p>
+
+<table>
+  <tr><th>ブロック</th><th>元の L</th><th>\(SLS^{-1}\)</th><th>流束形</th></tr>
+  <tr><td>連続 &larr; v<sub>y</sub></td><td>\(-iD\,\mathrm{diag}(n_0)\)</td>
+      <td>\(-iD\,\mathrm{diag}(n_0)\mathrm{diag}(1/n_0)=-iD\)</td><td>\(-iD\)</td></tr>
+  <tr><td>運動x &larr; n</td><td>\(\frac{k_x\gamma T}{m}\mathrm{diag}(1/n_0)\)</td>
+      <td>\(\mathrm{diag}(n_0)(\cdots)\mathrm{diag}(1/n_0)\cdot 1=\frac{k_x\gamma T}{m}I\)</td>
+      <td>\(\frac{k_x\gamma T}{m}I\)</td></tr>
+  <tr><td>運動y &larr; n</td><td>\(-i\frac{\gamma T}{m}\mathrm{diag}(1/n_0)D\)</td>
+      <td>\(-i\frac{\gamma T}{m}D\)</td><td>\(-i\frac{\gamma T}{m}D\)</td></tr>
+  <tr><td>運動x &larr; E<sub>x</sub></td><td>\(i\frac{q}{m}I\)</td>
+      <td>\(i\frac{q}{m}\mathrm{diag}(n_0)\)</td><td>\(i\frac{q}{m}\mathrm{diag}(n_0)\)</td></tr>
+  <tr><td>Ampère &larr; v<sub>x</sub></td><td>\(-iq\,\mathrm{diag}(n_0)\)</td>
+      <td>\(-iq\,I\)</td><td>\(-iq\,I\)</td></tr>
+</table>
+
+<div class="callout orange">
+  <p>
+    <strong>相似変換なので固有値は 1 つも変わらない。</strong>
+    偽モードが離散演算子の真の固有値である限り、そのまま残る。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="numeric">数値検証</h2>
+
+<p>
+新しい演算子を実装せずに検証できる。既存の L から \(SLS^{-1}\) を数値的に作り、
+固有値を比べればよい（<code>scratchpad/flux_similarity.py</code>）。
+kx/k0 = 1.10、準定常平衡（a<sub>0</sub>=0.14、T<sub>yy</sub>）。
+</p>
+
+<table>
+  <tr><th>ppp</th><th>#</th><th colspan="2">元 L</th><th colspan="2">流束形 \(SLS^{-1}\)</th></tr>
+  <tr><th></th><th></th><th>γ</th><th>n</th><th>γ</th><th>n</th></tr>
+  <tr><td rowspan="3">96</td><td>1</td><td>2.871474e-03</td><td>&minus;48</td><td>2.871474e-03</td><td>&minus;48</td></tr>
+  <tr><td>2</td><td>9.206444e-04</td><td>&minus;32</td><td>9.206444e-04</td><td>32</td></tr>
+  <tr><td>3</td><td>9.201021e-04</td><td>&minus;32</td><td>9.201021e-04</td><td>&minus;32</td></tr>
+  <tr><td rowspan="3">192</td><td>1</td><td>9.203116e-04</td><td>&minus;32</td><td>9.203116e-04</td><td>32</td></tr>
+  <tr><td>2</td><td>9.203116e-04</td><td>32</td><td>9.203116e-04</td><td>32</td></tr>
+  <tr><td>3</td><td>5.529411e-04</td><td>33</td><td>5.529411e-04</td><td>33</td></tr>
+</table>
+
+<p>
+上位 20 個の \(\mathrm{Im}\,\omega\) の最大差は ppp=96 で 7.8e-14、ppp=192 で 3.2e-13。
+\(\gamma\sim10^{-3}\) に対して <strong>10 桁以上下</strong>であり、完全一致と判定できる。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="conditioning">条件数は改善しない</h2>
+
+<p>
+相似変換でも数値的な条件は変わり得るので、そこに期待していた。
+<strong>結果は否定的だった。</strong>
+</p>
+
+<table>
+  <tr><th>指標</th><th>元 L</th><th>流束形</th><th>判定</th></tr>
+  <tr><td>cond(L)  ppp=96</td><td>8.48e+18</td><td>6.86e+18</td><td>ほぼ同じ</td></tr>
+  <tr><td>cond(L)  ppp=192</td><td>5.13e+19</td><td>4.91e+19</td><td>ほぼ同じ</td></tr>
+  <tr><td>行和の最大/最小</td><td>2.56e+03</td><td>2.29e+03</td><td>ほぼ同じ</td></tr>
+</table>
+
+<p>
+1/n<sub>min</sub> = 538 の増幅が消えても条件数がほとんど変わらない。
+これは<strong>悪条件の主因が 1/n<sub>0</sub> ではない</strong>ことを意味する。
+密度比 \(n_{\max}/n_{\min}=678\) という平衡そのものの動的レンジが、
+どの変数を選んでも行列に残るためである。
+</p>
+
+<div class="callout">
+  <p><strong>1/n<sub>0</sub> は問題の見かけであって、実体ではなかった。</strong></p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="discovery">副産物: 相対密度版の欠陥</h2>
+
+<p>
+上の検証で得た絶対密度版の数値が、以前報告していた値とまったく合わなかった。
+演算子の種類で切り分けた結果が下表である（<code>scratchpad/which_op.py</code>）。
+</p>
+
+<table>
+  <tr><th>ppp</th><th>演算子</th><th>dealias</th><th>γ #1</th><th>n</th><th>判定</th></tr>
+  <tr><td>96</td><td>絶対</td><td>False</td><td>2.871474e-03</td><td>&minus;48</td><td>未収束</td></tr>
+  <tr><td>96</td><td>絶対</td><td>True</td><td>5.824022e-04</td><td>&minus;31</td><td>未収束</td></tr>
+  <tr><td>192</td><td>絶対</td><td>False</td><td>9.203116e-04</td><td>&minus;32</td><td><span class="badge badge-green">収束</span></td></tr>
+  <tr><td>192</td><td>絶対</td><td>True</td><td>9.203116e-04</td><td>32</td><td><span class="badge badge-green">収束</span></td></tr>
+  <tr><td>288</td><td>絶対</td><td>False</td><td>9.203116e-04</td><td>32</td><td><span class="badge badge-green">収束</span></td></tr>
+  <tr><td>288</td><td>絶対</td><td>True</td><td>9.203116e-04</td><td>32</td><td><span class="badge badge-green">収束</span></td></tr>
+  <tr><td>96</td><td>相対</td><td>False</td><td>7.940266e-03</td><td>47</td><td><span class="badge badge-orange">Nyquist</span></td></tr>
+  <tr><td>192</td><td>相対</td><td>False</td><td>5.100307e-03</td><td>&minus;96</td><td><span class="badge badge-orange">Nyquist</span></td></tr>
+  <tr><td>288</td><td>相対</td><td>False</td><td>5.177625e-03</td><td>&minus;144</td><td><span class="badge badge-orange">Nyquist</span></td></tr>
+  <tr><td>96</td><td>相対</td><td>True</td><td>5.103499e-03</td><td>32</td><td><span class="badge badge-orange">2/3 カットオフ</span></td></tr>
+  <tr><td>192</td><td>相対</td><td>True</td><td>4.731351e-03</td><td>&minus;64</td><td><span class="badge badge-orange">2/3 カットオフ</span></td></tr>
+  <tr><td>288</td><td>相対</td><td>True</td><td>4.853010e-03</td><td>&minus;96</td><td><span class="badge badge-orange">2/3 カットオフ</span></td></tr>
+</table>
+
+<p>
+<strong>「カットオフに張り付く」現象は相対密度版だけの性質だった。</strong>
+以前報告していた 7.94e-3 / 5.10e-3 / 5.18e-3 / 4.73e-3 / 4.85e-3 は、
+すべてこの表の相対版の行と一致する。
+</p>
+
+<h3>相対版は物理モードを失ってはいない</h3>
+
+<p>
+成長モードを全部並べると、相対版は<strong>絶対版の全モードを保持したうえで、
+カットオフの偽モードを上乗せしている</strong>ことが分かる
+（ppp=192、<code>scratchpad/rel_contains_phys.py</code>）。
+</p>
+
+<table>
+  <tr><th>順位</th><th colspan="2">絶対密度版（成長モード 11 個）</th>
+      <th colspan="2">相対密度版（成長モード 19 個）</th></tr>
+  <tr><th></th><th>γ</th><th>n</th><th>γ</th><th>n</th></tr>
+  <tr><td>1</td><td>9.203116e-04</td><td>32</td>
+      <td>4.731351e-03</td><td>&minus;64 <span class="badge badge-orange">偽</span></td></tr>
+  <tr><td>2</td><td>9.203116e-04</td><td>32</td>
+      <td>4.731351e-03</td><td>64 <span class="badge badge-orange">偽</span></td></tr>
+  <tr><td>3</td><td>5.529411e-04</td><td>&minus;33</td>
+      <td>4.695412e-03</td><td>64 <span class="badge badge-orange">偽</span></td></tr>
+  <tr><td>4</td><td>5.529411e-04</td><td>33</td>
+      <td>4.695412e-03</td><td>&minus;64 <span class="badge badge-orange">偽</span></td></tr>
+  <tr><td>5</td><td>2.833973e-04</td><td>0</td>
+      <td>9.203116e-04</td><td>&minus;32 <span class="badge badge-green">物理</span></td></tr>
+  <tr><td>6</td><td>1.603396e-04</td><td>13</td>
+      <td>9.203116e-04</td><td>&minus;32 <span class="badge badge-green">物理</span></td></tr>
+  <tr><td>7</td><td>1.591506e-04</td><td>13</td>
+      <td>5.529411e-04</td><td>&minus;33 <span class="badge badge-green">物理</span></td></tr>
+  <tr><td>8</td><td>1.196239e-04</td><td>34</td>
+      <td>5.529411e-04</td><td>33 <span class="badge badge-green">物理</span></td></tr>
+</table>
+
+<div class="callout green">
+  <p>
+    相対版の 5&ndash;8 位は絶対版の 1&ndash;4 位と<strong>相対差 2e-9 で一致</strong>する。
+    つまり相似変換は物理モードについて正しく成立しており、
+    相対版は成長モードを 11 個から 19 個に増やす形で<strong>偽モードを 8 個追加している</strong>。
+  </p>
+  <p>
+    <strong>以前の測定は「間違った固有値」ではなかった。</strong>
+    汚染された演算子の正しい固有値のうち、最速のものが偽モードだったというのが実態である。
+    最速モードだけを見る解析手順が、この失敗を見逃す原因になった。
+  </p>
+</div>
+
+<h3>なぜ相対版だけ壊れるのか</h3>
+
+<p>相対版が持ち込む唯一の新しい項が <code>D @ log(n0)</code> である。</p>
+
+<table>
+  <tr><th></th><th>1/n<sub>0</sub> の実装</th><th>微分行列にかかるか</th><th>高調波を生むか</th></tr>
+  <tr><td>絶対版</td><td><code>diag(1/n0)</code></td><td>いいえ（対角行列）</td><td>生まない</td></tr>
+  <tr><td>相対版</td><td><code>D @ log(n0)</code></td><td><strong>はい</strong></td><td><strong>生む</strong></td></tr>
+</table>
+
+<p>
+n<sub>min</sub> = 1.86e-3 なので \(\ln n_0\) の変動幅は \(\ln(1.26/1.86\!\times\!10^{-3})=6.5\) あり、
+勾配は \(\max|\partial_y\ln n_0|=6.24\)、勾配スケール長は 0.16 c/&omega;<sub>pe</sub> しかない。
+これをスペクトル微分すると Gibbs 現象で高調波が励起される。
+</p>
+
+<div class="callout green">
+  <p>
+    以前の対照実験で「密度を一様にすると収束する」という結果が出たことも、これで説明がつく。
+    <strong>密度勾配を消すと <code>D @ log(n0)</code> の項自体が消える</strong>からである。
+    あの実験は「密度勾配が物理的に短波長モードを作る」ではなく、
+    「密度勾配が相対版の離散化を壊す」ことを示していた。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="correction">以前の結論の訂正</h2>
+
+<table>
+  <tr><th>以前の主張</th><th>現時点の評価</th></tr>
+  <tr><td>密度勾配が物理的に短波長モードを作る</td>
+      <td><span class="badge badge-orange">誤り</span> 相対密度版の離散化の問題</td></tr>
+  <tr><td>解像度を上げても収束しない</td>
+      <td><span class="badge badge-orange">誤り</span> 相対版の話。絶対版は ppp&ge;144 で収束</td></tr>
+  <tr><td>(d) 密度一様だけが収束 &rArr; 密度勾配が原因</td>
+      <td><span class="badge badge-blue">整合</span> ただし解釈が逆。<code>D @ log(n0)</code> が消えるため</td></tr>
+  <tr><td>準定常で信頼できるのは kx/k0=0.30 の 1 点だけ</td>
+      <td><span class="badge badge-orange">要再評価</span> 根拠が相対版だった</td></tr>
+  <tr><td>デエイリアシングは効かない</td>
+      <td><span class="badge badge-blue">整合</span> 相対版では確かに効かない。絶対版では不要</td></tr>
+  <tr><td>質量流束変数は固有値を変えない</td>
+      <td><span class="badge badge-green">確定</span> 演算子の種類によらない数学的性質</td></tr>
+  <tr><td>（新）相対版は物理モードを失う</td>
+      <td><span class="badge badge-blue">否定</span> 失わない。偽モードを 8 個上乗せするだけ</td></tr>
+</table>
+
+<h3>影響を受けるスクリプト</h3>
+
+<p>準定常平衡の結論を出したスクリプトは、いずれも相対密度版を使っている。</p>
+
+<pre><code>work/python/scan_snr_quasisteady_k0.py:116,140      relative=True
+work/python/dispersion_snr_quasisteady_ppp300.py    相対版を import</code></pre>
+
+<!-- ============================================================ -->
+<h2 id="convergence">絶対密度版の収束</h2>
+
+<p>
+線形格子 ppp を変えたときの最速成長モード。kx/k0 = 1.10、dealias 既定 ON
+（<code>scratchpad/abs_converge.py</code>）。
+</p>
+
+<table>
+  <tr><th>ppp</th><th>γ</th><th>n</th><th>k<sub>y</sub>/k<sub>0</sub></th>
+      <th>k<sub>y</sub>λ<sub>De</sub></th><th>λ [c/ω<sub>pe</sub>]</th></tr>
+  <tr><td>96</td><td>5.824022e-04</td><td>&minus;31</td><td>31</td><td>3.53</td><td>0.2141</td></tr>
+  <tr><td>144</td><td>9.202022e-04</td><td>&minus;32</td><td>32</td><td>3.65</td><td>0.2074</td></tr>
+  <tr><td>192</td><td>9.203116e-04</td><td>32</td><td>32</td><td>3.65</td><td>0.2074</td></tr>
+  <tr><td>240</td><td>9.203116e-04</td><td>32</td><td>32</td><td>3.65</td><td>0.2074</td></tr>
+  <tr><td>288</td><td>9.203116e-04</td><td>32</td><td>32</td><td>3.65</td><td>0.2074</td></tr>
+</table>
+
+<p>
+ppp&ge;144 で収束、ppp&ge;192 で <strong>7 桁一致</strong>。
+デエイリアシングの有無にも依存しない（固有関数が |n|&le;32 に収まっており、
+2/3 カットオフ 64 / 96 に触れないため）。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="debye">残る問題: 流体近似の妥当範囲</h2>
+
+<div class="callout orange">
+  <p><strong>収束したモードが物理的とは限らない。</strong></p>
+</div>
+
+<p>電子デバイ長は（\(c=1\)、\(m_ec^2\) 規格化で）</p>
+
+<div class="eq-block">
+  \[ \lambda_{De}=\frac{v_{te}}{\omega_{pe}}=\sqrt{T_e}=\sqrt{1.4507\times10^{-2}}
+     =0.1204\ \ c/\omega_{pe} \]
+</div>
+
+<p>収束したモードは n=32、すなわち</p>
+
+<div class="eq-block">
+  \[ k_y=32\,k_0=30.3\ \omega_{pe}/c,\qquad
+     \lambda=0.2074\ c/\omega_{pe},\qquad
+     \boxed{k_y\lambda_{De}=3.65} \]
+</div>
+
+<p>
+流体近似が妥当なのは \(k\lambda_{De}\lesssim1\) の範囲である。
+\(k\lambda_{De}=3.65\) では実際には Landau 減衰が支配し、
+流体モデルが予言する成長は起きない。
+</p>
+
+<div class="callout green">
+  <p>
+    <strong>問題の性質が変わった。</strong>
+    「解けない」から「解けるが、答えが流体モデルの適用範囲外」になった。
+    対処法も変わる。カットオフを恣意的に決めるのではなく、
+    <strong>\(k\lambda_{De}\lesssim1\)（本平衡では n &lesssim; 8.8）という物理的な基準</strong>で
+    モードを選別すればよい。以前提案していた「Nyquist の 1/4」のような
+    恣意的な閾値と違い、根拠がある。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="pending">平衡解像度への依存性</h2>
+
+<p>
+収束した \(\gamma=9.203116\times10^{-4}\) の調波 n=32 が、
+平衡ソルバーの解像度 <code>N_points=64</code> のちょうど半分と一致していた。
+背景表現の帯域幅が決めている産物である可能性を排除するため、
+線形格子 ppp=288 を固定して平衡側だけを変えた（<code>scratchpad/eq_resolution.py</code>）。
+</p>
+
+<table>
+  <tr><th>N<sub>points</sub></th><th>N<sub>points</sub>/2</th><th>背景の実効帯域*</th>
+      <th>γ #1</th><th>n</th><th>γ #2</th><th>n</th></tr>
+  <tr><td>32</td><td>16</td><td>143</td><td>9.203116e-04</td><td>32</td><td>9.203096e-04</td><td>32</td></tr>
+  <tr><td>48</td><td>24</td><td>55</td><td>9.203116e-04</td><td>32</td><td>9.203116e-04</td><td>32</td></tr>
+  <tr><td>64</td><td>32</td><td>50</td><td>9.203116e-04</td><td>32</td><td>9.203116e-04</td><td>32</td></tr>
+  <tr><td>96</td><td>48</td><td>50</td><td>9.203116e-04</td><td>32</td><td>9.203116e-04</td><td>32</td></tr>
+  <tr><td>128</td><td>64</td><td>50</td><td>9.203116e-04</td><td>32</td><td>9.203116e-04</td><td>32</td></tr>
+</table>
+
+<p class="summary-tag">
+  * 背景の実効帯域 = n<sub>inc</sub>(y) のスペクトルが最大値の 1e-10 を上回る最大調波。
+  N<sub>points</sub>=32 の 143 は平衡自体が未解像で偽の高調波が立っている状態。
+</p>
+
+<div class="callout green">
+  <p>
+    <strong>n=32 は平衡の解像度に依存しない。</strong>
+    N<sub>points</sub> を 4 倍にしても γ は 7 桁一致し、n も動かない。
+    背景表現の産物ではなく<strong>離散演算子の真の固有値</strong>である。
+    背景の実効帯域は 50 で、モードの n=32 はその内側に収まっている。
+  </p>
+  <p>
+    したがって数値的な疑いは解消した。残る論点は
+    <a href="#debye">\(k_y\lambda_{De}=3.65\) という物理的な妥当性</a>だけである。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="next">次にやること</h2>
+
+<ol>
+  <li><strong>絶対密度版で kx 分散関係を引き直す</strong>&mdash;
+      準定常平衡の結論は相対版に基づいていたため、全面的にやり直す必要がある。</li>
+  <li><strong>モード選別の基準を \(k_y\lambda_{De}\lesssim1\) にする</strong>&mdash;
+      恣意的なカットオフ比ではなく物理的な根拠に基づく基準に置き換える。</li>
+  <li><strong>相対密度版の位置づけを見直す</strong>&mdash;
+      n<sub>min</sub> が中程度（1e-3 級）なら絶対版が正しい。
+      相対版が必要なのは n<sub>min</sub> が極端に小さい場合に限られるが、
+      その領域では相対版自体も収束しないことが既に分かっている。
+      <strong>相対版の使いどころが実質的に無い可能性がある。</strong></li>
+</ol>
+
+<div class="callout orange">
+  <p>
+    <strong>変数変換という方向は完全に閉じた。</strong>
+    スペクトルを変えるには物理モデルを変えるしかない。
+    候補は「平衡に静止環境プラズマを加えて n<sub>0</sub> が 0 に落ちないようにする」
+    「異方性圧力や有限ラーマー半径効果で短波長を切る」である。
+    ただし \(k\lambda_{De}\) による選別で足りるなら、モデル変更は不要かもしれない。
+  </p>
+</div>
+
+<hr>
+
+<h2>参照</h2>
+<ul>
+  <li><code>docs/anisotropic_pressure_closure.html</code> &mdash; 異方性温度 T<sub>xx</sub> をどの式に入れるか</li>
+  <li><code>docs/density_regularization.md</code> &mdash; 密度空乏と正則化</li>
+  <li><code>docs/snr_linear_modes.md</code> &mdash; 線形化方程式と演算子ブロックの定義</li>
+  <li><code>src/fmi/snr_linear_bloch.py</code> &mdash; 絶対密度版</li>
+  <li><code>src/fmi/snr_linear_relative.py</code> &mdash; 相対密度版</li>
+</ul>
+
+</main>
+</div>
+</body>
+</html>

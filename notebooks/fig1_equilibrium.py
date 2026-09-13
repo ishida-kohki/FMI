@@ -16,14 +16,12 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md(
-        """
-        # FMI 均衡プロファイル — Fig. 1 (Vanthieghem et al. 2018)
+    mo.md("""
+    # FMI 均衡プロファイル — Fig. 1 (Vanthieghem et al. 2018)
 
-        Chebyshev スペクトル法 + Newton 継続法により、非対称均衡
-        （ビームプラズマ系）の電磁場および密度プロファイルを求めます。
-        """
-    )
+    Chebyshev スペクトル法 + Newton 継続法により、非対称均衡
+    （ビームプラズマ系）の電磁場および密度プロファイルを求めます。
+    """)
     return
 
 
@@ -60,7 +58,7 @@ def _(a0_slider, mo, np, root):
         Tp = 0.1;  betap =  0.995; gammap = 1.0 / np.sqrt(1 - betap**2)
         """
         Tb = 1.0;  betab = -0.995; gammab = 1.0 / np.sqrt(1 - betab**2)
-        Tp = 0.1;  betap =  0.8; gammap = 1.0 / np.sqrt(1 - betap**2)
+        Tp = 0.1;  betap =  0.995; gammap = 1.0 / np.sqrt(1 - betap**2)
         D_std, x_std = chebyshev_diff_matrix(N_points)
         D2_std = D_std @ D_std
 
@@ -153,8 +151,7 @@ def _(a0_slider, mo, np, root):
 
     with mo.status.spinner("均衡解を計算中..."):
         result = solve_asymmetric_equilibrium(a0_target=a0_slider.value)
-
-    return chebyshev_diff_matrix, result, solve_asymmetric_equilibrium
+    return (result,)
 
 
 @app.cell
@@ -182,24 +179,22 @@ def _(a0_slider, plt, result):
     fig.tight_layout()
     fig.savefig(f"work/fig1_a0{a0_slider.value:.2f}.png", dpi=300, bbox_inches='tight')
     fig
-    return (fig,)
+    return
 
 
 @app.cell
 def _(mo, result):
-    mo.md(
-        f"""
-        **均衡パラメータ**
+    mo.md(f"""
+    **均衡パラメータ**
 
-        | 変数 | 値 |
-        |------|-----|
-        | $T_b$ | {result['Tb']:.4f} |
-        | $T_p$ | {result['Tp']:.4f} |
-        | $\\beta_{{b0}}$ | {result['betab']:.4f} |
-        | $\\beta_{{p0}}$ | {result['betap']:.4f} |
-        | $\\lambda_0$ | {result['lambda0']:.4f} |
-        """
-    )
+    | 変数 | 値 |
+    |------|-----|
+    | $T_b$ | {result['Tb']:.4f} |
+    | $T_p$ | {result['Tp']:.4f} |
+    | $\\beta_{{b0}}$ | {result['betab']:.4f} |
+    | $\\beta_{{p0}}$ | {result['betap']:.4f} |
+    | $\\lambda_0$ | {result['lambda0']:.4f} |
+    """)
     return
 
 

@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNR平衡の線形固有値解析 — 手法と結果</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #252836; --border: #2e3247;
+      --accent: #5c9cf5; --accent2: #7ec8a0; --accent3: #f5a623;
+      --text: #e2e4ed; --text-muted: #8890aa; --code-bg: #131622;
+      --kw: #c792ea; --fn: #82aaff; --str: #c3e88d; --num: #f78c6c; --cmt: #546e7a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.7; }
+    a { color: var(--accent); }
+    .page-wrap { display: flex; min-height: 100vh; }
+    nav { width: 280px; flex-shrink: 0; background: var(--surface);
+      border-right: 1px solid var(--border); padding: 2rem 1.2rem;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    nav h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .12em;
+      color: var(--text-muted); margin-bottom: .6rem; }
+    nav ul { list-style: none; }
+    nav li { margin: .2rem 0; }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: .88rem;
+      display: block; padding: .25rem .5rem; border-radius: 4px; transition: .15s; }
+    nav a:hover { color: var(--accent); background: rgba(92,156,245,.08); }
+    nav .section-head h2 { font-size:.72rem; color:var(--text-muted);
+      text-transform:uppercase; letter-spacing:.1em; margin:.8rem 0 .3rem; }
+    main { flex: 1; max-width: 880px; padding: 3rem 3.5rem; }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: .4rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--text-muted); margin-bottom: 2.5rem; font-size: .95rem; }
+    h2 { font-size: 1.35rem; color: var(--accent); margin: 2.5rem 0 .8rem;
+      padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1.05rem; color: var(--accent2); margin: 1.6rem 0 .5rem; }
+    h4 { font-size: .95rem; color: var(--accent3); margin: 1.2rem 0 .4rem; }
+    p  { margin-bottom: .9rem; }
+    ul, ol { margin: .3rem 0 1rem 1.4rem; }
+    li { margin: .25rem 0; }
+    .callout { border-left: 3px solid var(--accent); background: rgba(92,156,245,.07);
+      padding: .8rem 1.2rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+    .callout.green { border-color: var(--accent2); background: rgba(126,200,160,.07); }
+    .callout.orange { border-color: var(--accent3); background: rgba(245,166,35,.07); }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th { background: var(--surface2); color: var(--accent); padding: .55rem .9rem;
+      text-align: left; font-weight: 600; border: 1px solid var(--border); }
+    td { padding: .5rem .9rem; border: 1px solid var(--border); }
+    tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1.2rem 1.4rem; overflow-x: auto; font-size: .84rem; line-height: 1.6; margin: .8rem 0 1.2rem; }
+    code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+    p code, li code, td code { background: var(--surface2); padding: .15em .4em;
+      border-radius: 3px; font-size: .85em; }
+    .kw{color:var(--kw)} .fn{color:var(--fn)} .str{color:var(--str)}
+    .num{color:var(--num)} .cmt{color:var(--cmt);font-style:italic}
+    .eq-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem 1.6rem; text-align: center; overflow-x: auto; margin: 1rem 0; }
+    .badge { display: inline-block; font-size: .72rem; padding: .15em .55em; border-radius: 999px;
+      font-weight: 600; margin-left: .4rem; vertical-align: middle; }
+    .badge-blue { background: rgba(92,156,245,.2); color: var(--accent); }
+    .badge-green { background: rgba(126,200,160,.2); color: var(--accent2); }
+    .badge-orange { background: rgba(245,166,35,.2); color: var(--accent3); }
+    figure { margin: 1.2rem 0; text-align: center; }
+    figure img { max-width: 100%; border: 1px solid var(--border); border-radius: 8px; background:#fff; }
+    figcaption { color: var(--text-muted); font-size: .82rem; margin-top: .5rem; }
+    .diagram { font-family: monospace; font-size: .82rem; color: var(--text-muted);
+      background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem 1.4rem; white-space: pre; overflow-x: auto; margin: 1rem 0; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+<nav>
+  <h2>目次</h2>
+  <ul>
+    <li><a href="#overview">概要</a></li>
+    <li class="section-head"><h2>定式化</h2></li>
+    <li><a href="#geometry">幾何と偏波分離</a></li>
+    <li><a href="#closure">P偏波が閉じる理由</a></li>
+    <li><a href="#background">背景平衡の供給</a></li>
+    <li><a href="#linearized">線形化方程式（12場）</a></li>
+    <li><a href="#eigenproblem">固有値問題への整形</a></li>
+    <li class="section-head"><h2>数値手順</h2></li>
+    <li><a href="#tiling">多周期タイル化と離散化</a></li>
+    <li><a href="#bloch">Bloch 波数の抽出</a></li>
+    <li><a href="#pipeline">実行パイプライン</a></li>
+    <li class="section-head"><h2>検証と結果</h2></li>
+    <li><a href="#calibration">演算子の較正</a></li>
+    <li><a href="#results">SNR の分散結果</a></li>
+    <li><a href="#eigenfunctions">モード構造（固有関数）</a></li>
+    <li><a href="#warm-natural">warm 設定での検証</a></li>
+    <li><a href="#fourier-bloch">Fourier-Bloch 版</a></li>
+    <li><a href="#floquet">Floquet 版の試みと剛性の壁</a></li>
+    <li><a href="#fourier-bg">Fourier 帯域制限背景</a></li>
+    <li><a href="#summary">まとめ</a></li>
+  </ul>
+</nav>
+
+<main>
+  <h1>SNR平衡の線形固有値解析</h1>
+  <p class="subtitle">非相対論 warm 多流体 + Maxwell をスペクトル直接固有値解析で解く — 手法・実装・検証・結果</p>
+
+  <h2 id="overview">概要</h2>
+  <p>
+    SNR（超新星残骸）衝撃の電流フィラメント初期平衡（電子・入射イオン・反射イオンの3成分）を
+    <strong>背景</strong>に固定し、その上の微小摂動が成長するかどうかを線形理論で判定した。
+    狙いは <strong>FMI（filamentation merging instability、フィラメント併合不安定）</strong>の成長モードを
+    確実に取り出すことである。
+  </p>
+  <p>
+    手段として、既存の <code>floquet.py</code>（Vanthieghem 2018 のペアプラズマ4成分・相対論版 shooting+monodromy）は
+    使わず、平衡を多周期へタイルした大領域での <strong>Fourier スペクトル直接固有値解析</strong>を新規実装した。
+    直接法は <span class="badge badge-blue">利点1</span> 固有値として \(\omega(k_x)\) をそのまま返し Brillouin 折返し処理が不要、
+    <span class="badge badge-blue">利点2</span> 固有ベクトル（モード構造）が一発で出て PIC スナップショットと直接比較できる、
+    <span class="badge badge-blue">利点3</span> 多周期領域なら固有ソルバが最速の併合波長を自動選択する。
+  </p>
+  <div class="callout orange">
+    <strong>物理的留保:</strong> 大領域固有値は Floquet と等価（Bloch 波数を離散 \(K=2\pi m/(N\lambda_0)\) でサンプルするだけ）であり
+    「より正しい」のではなく実務・可視化上の利点である。物理モードの選別は解像度収束だけでは不十分で
+    （解像度収束するのに固有ベクトルが場と非結合な縮退表現の例が cold σ=0 で実際に出た）、
+    固有ベクトルの場結合（\(\delta B_z\) 比）・密度下限に対する頑健性・並進ゼロモード検査を併用する（<a href="#calibration">較正</a>）。
+  </div>
+
+  <h2 id="geometry">幾何と偏波分離</h2>
+  <p>
+    平衡は \(y\) のみに依存する。電流はドリフト方向 \(x\)、磁場 \(B_{0z}\) は面外 (z)。摂動は
+  </p>
+  <div class="eq-block">\[ \delta g(x,y,t) = \delta\hat g(y)\,\exp(i k_x x - i\omega t) \]</div>
+  <p>
+    と置く。\(k_x\) はパラメータ、\(y\) はスペクトルで解像し、\(z\) 方向は一様とする。\(x\)–\(y\) 面では2つの偏波が分離し、
+    不安定（FMI/DKI）に効くのは <strong>P 偏波</strong> \(\{\delta E_x,\delta E_y,\delta B_z\}\) と流体
+    \(\{\delta n_s,\delta v_{sx},\delta v_{sy}\}\) のみ。O 偏波 \(\{\delta E_z,\delta B_x,\delta B_y,\delta v_{sz}\}\) は
+    分離するので除外する。これで自由度は <strong>3成分 × 3（n, v_x, v_y）+ 3（E_x, E_y, B_z）= 12 場</strong>になる。
+  </p>
+  <div class="callout">
+    <strong>用語の定義（P偏波・O偏波）:</strong> 本稿では摂動を電場の向きで2つに分類し、それぞれ次を指す。
+    <ul style="margin:6px 0 0 0;">
+      <li><strong>P偏波</strong> — 電場摂動が伝播面（\(x\)–\(y\) 面）の<strong>面内</strong>にある分枝：
+        \(\{\delta E_x,\delta E_y,\delta B_z\}\) と流体の面内自由度 \(\{\delta n_s,\delta v_{sx},\delta v_{sy}\}\)。
+        磁場摂動は面外 \(\delta B_z\parallel\mathbf B_0\) のみ。名称は光学の p 偏光（電場が伝播面に平行）に倣う。
+        波数 \(\mathbf k\perp\mathbf B_0\)・\(\delta\mathbf E\perp\mathbf B_0\) なので、磁化プラズマの分類では
+        extraordinary（X）モードに連なる分枝に当たる。FMI/DKI を担うのはこちら。</li>
+      <li><strong>O偏波</strong> — 電場摂動が背景磁場に<strong>平行</strong>（\(\delta E_z\parallel B_{0z}\hat z\)）な分枝：
+        \(\{\delta E_z,\delta B_x,\delta B_y,\delta v_{sz}\}\)。磁場摂動は面内。名称は磁化プラズマの
+        ordinary（O）モード（\(\delta\mathbf E\parallel\mathbf B_0\)）に由来する。
+        密度摂動を持たず（連続式に \(\delta v_{sz}\) が入らない）、フィラメント構造に結合しない。</li>
+    </ul>
+    <p style="margin:6px 0 0 0;">
+      両者が厳密に分離する（演算子が対角ブロックに割れる）ことの証明は次節。
+    </p>
+  </div>
+
+  <h2 id="closure">P偏波が閉じる理由（O偏波の分離）</h2>
+  <p>
+    12場が閉じるのは、残りの自由度 \(\{\delta v_{sz},\delta E_z,\delta B_x,\delta B_y\}\)（O偏波）が
+    <strong>自分自身だけ</strong>で完結した別ブロックを作り、演算子 \(\mathsf{L}\) が P偏波と対角ブロックに割れるからである。
+    線形化した <strong>O偏波系</strong>を明示すると（記号・正規化は下記12場と同一、\(\Omega_s\equiv\omega-k_x v_{s0x}\)）：
+  </p>
+  <div class="eq-block">\[
+  \begin{aligned}
+  \text{運動 }z:\quad & m_s n_{s0}(-i\Omega_s)\delta v_{sz} = q_s n_{s0}\big(\delta E_z + v_{s0x}\delta B_y\big) \\[4pt]
+  \text{Faraday }x:\quad & -i\omega\,\delta B_x = -\,\partial_y\delta E_z \\[4pt]
+  \text{Faraday }y:\quad & -i\omega\,\delta B_y = i k_x\,\delta E_z \\[4pt]
+  \text{Ampère }z:\quad & -i\omega\,\delta E_z = i k_x\delta B_y - \partial_y\delta B_x - \textstyle\sum_s q_s n_{s0}\delta v_{sz}
+  \end{aligned}
+  \]</div>
+  <p>
+    <strong>要点は右辺に P偏波の場 \((\delta n_s,\delta v_{sx},\delta v_{sy},\delta E_x,\delta E_y,\delta B_z)\) が一切現れないこと。</strong>
+    これが成り立つ理由は3つ：
+  </p>
+  <ul>
+    <li><strong>\(\partial_z=0\)（z 一様）</strong>：連続式の発散は \(\nabla\!\cdot\!(n_{s0}\delta\mathbf v)=i k_x(\cdot)_x+\partial_y(\cdot)_y\) で
+      \(\delta v_{sz}\) を含まない。よって \(\delta v_{sz}\) は密度 \(\delta n_s\) を動かさず、逆に \(\delta n_s\) も z 系を動かさない。</li>
+    <li><strong>\(\mathbf B_0\parallel\hat z,\ \mathbf v_0\parallel\hat x\) でローレンツ力が対角化</strong>：z 方向の力は
+      \(F_z=q_s(\delta E_z+v_{s0x}\delta B_y)\) だけ（\((\delta\mathbf v\times B_{0z}\hat z)_z=0\)）。逆に面内の力 \(F_x,F_y\) には
+      \(\delta E_z,\delta B_x,\delta B_y\) が入らない（\(F_x=q_s(\delta E_x+B_{0z}\delta v_{sy})\)、
+      \(F_y=q_s(\delta E_y-B_{0z}\delta v_{sx}-v_{s0x}\delta B_z)\)、いずれも P偏波の場のみ）。</li>
+    <li><strong>z 電流は \(\delta v_{sz}\) のみ</strong>：\(J_z=\sum_s q_s n_{s0}\delta v_{sz}\)（\(v_{s0z}=0\)）なので O偏波の場しかソースにしない。</li>
+  </ul>
+  <p>
+    したがって P偏波モードでは \(\delta v_{sz}=\delta E_z=\delta B_x=\delta B_y=0\) と置いてよく、下の
+    <a href="#linearized">12場方程式</a>が<strong>厳密に閉じる</strong>。O偏波は \(E_z\parallel B_{0z}\) の ordinary 分枝で、
+    フィラメント構造（面外 \(\delta B_z\) と面内密度バンチング）に結合しないため本不安定性（FMI/DKI）には効かない。
+    面外ガイド磁場 \(\sqrt\sigma\,\hat z\) を後で入れても \(B_{0z}\) に足すだけなので、この P/O 分離は保たれる。
+  </p>
+
+  <h2 id="background">背景平衡の供給</h2>
+  <p>
+    背景は<strong>電流中性系平衡</strong>（<code>solve_snr_equilibrium</code>）を主に使う。電子ドリフトは独立
+    パラメータではなく、電流中性条件 \(v_{e0x}=(1-\eta)v_{{\rm inc}0x}+\eta v_{{\rm ref}0x}\) でドリフトから決まる
+    （既定パラメータで \(v_{e0x}\approx-7.5\times10^{-4}\) と微小）。この系は方程式が3成分対称で、線形分散 seed が
+    縮退しないため数値的にも頑健。
+  </p>
+  <div class="callout orange">
+    <strong>2026-07 訂正 — 背景 \(E_{0y}\) は線形摂動式にも現れる:</strong> 旧版は「\(E_{0y}\) は0次の釣り合いにのみ入り
+    線形摂動式には直接現れない」としていたが、これは誤り。密度揺らぎ \(\delta n_s\) の分の粒子も背景場から力を受けるため、
+    一次の力 \(q_s\delta n_s(E_{0y}-v_{s0x} B_{0z})\)（力釣り合いより \(T_s\delta n_s\,d\ln n_{s0}/dy\) に等しい）が
+    運動 \(y\) に入る。旧版の式と実装はこの項を欠いており、並進ゼロモード検査（<a href="#calibration">較正</a>）で
+    欠落を検出・修正した（2026-07-14）。修正の影響は<a href="#results">結果</a>参照。
+  </div>
+  <div class="callout green">
+    <strong>フレーム選択は線形解析にほぼ無影響:</strong> フレーム変換で変わるのは \(E_{0y}\to E_{0y}-v_{e0x} B_{0z}\) のみで、
+    密度・\(B_{0z}\)・相対電流は不変。背景場力項の係数 \((E_{0y}-v_{s0x} B_{0z})\) はこの変換で不変
+    （\((E_{0y}-v_{e0x} B_{0z})-(v_{s0x}-v_{e0x})B_{0z}=E_{0y}-v_{s0x} B_{0z}\)）。ドリフトは \(v_{s0x}\to v_{s0x}-v_{e0x}\) と
+    一様にずれるだけなので、Doppler 因子 \(\Omega_s=\omega-k_x v_{s0x}\) は \(\omega\) の一定シフト \(k_x v_{e0x}\) に相当する
+    （\(v_{e0x}\sim10^{-4}\) で無視可）。したがって背景は電流中性系で供給すれば十分で、電子静止系（\(v_{e0x}=0\)）は
+    PIC のフレーム合わせ用の付録 boost（<code>solve_snr_equilibrium_electron_frame</code>、ここでは実質 no-op）。
+  </div>
+  <p>
+    本プロジェクト既定の非磁化・音速マッハ基準点：
+  </p>
+  <div class="eq-block">\[ \sigma=0,\quad M_S=154.92,\quad \beta_{\rm sh}=V_{\rm sh}/c=0.25,\quad
+     \beta_{te}=v_{th,e}/c=0.1,\quad \eta=0.2,\quad m_i/m_e=400,\quad a_0=0.25 \]</div>
+  <p>各成分 \(s\in\{e,\text{inc},\text{ref}\}\) の背景量は</p>
+  <ul>
+    <li>密度 \(n_{s0}(y)\)（\(y\) で変動。平衡ソルバの <code>ne/ninc/nref</code>）</li>
+    <li>ドリフト \(v_{s0x}\)（\(s\in\{e,\text{inc},\text{ref}\}\) でそれぞれ \(v_{e0x},v_{{\rm inc}0x},v_{{\rm ref}0x}\)。\(c=1\) 正規化で速度=規格化ドリフト） <span class="badge badge-green">y方向に一定</span></li>
+    <li>温度 \(T_s\)（一定）、圧力 \(p_{s0}=n_{s0}T_s\)、摂動圧力 \(\delta p_s=\gamma_{\rm ad}T_s\,\delta n_s\)</li>
+    <li>質量 \(m_e=1,\ m_{\rm inc}=m_{\rm ref}=m_i/m_e\)、電荷 \(q_e=-1,\ q_{\rm inc}=q_{\rm ref}=+1\)</li>
+  </ul>
+  <h4>ドリフトが \(y\) 一定であることの確認</h4>
+  <p>
+    Boltzmann 閉包 \(n_{s0}\propto\exp[\mp(\Phi-v_{s0x} A)/T_s]\) より \(T_s\,d(\ln n_{s0})/dy = E_{0y}-v_{s0x} B_{0z}\)。
+    一方 \(y\) 方向の力釣り合いは \(q_s(E_{0y}-v_{s0x}B_{0z})=(1/n_{s0})\,dp_{s0}/dy=T_s\,d(\ln n_{s0})/dy\)。
+    両者が一致するのは \(v_{s0x}\) が \(y\) に一定のとき。よって速度シア項は現れない。
+    背景 \(E_{0y}\) は0次の釣り合いに入ることに加え、上記の背景場力項 \(q_s\delta n_s(E_{0y}-v_{s0x} B_{0z})\)
+    として線形摂動式にも寄与する。実装では \(E_{0y}\) を電子の力釣り合い
+    \(E_{0y}=v_{e0x} B_{0z}-T_e\,n_{e0}'/n_{e0}\) から格子上で再構成する（Boltzmann 平衡で厳密）。
+  </p>
+
+  <h2 id="linearized">線形化方程式（12場）</h2>
+  <p>\(\partial_t\to-i\omega\) で \(\omega\) 一次。Doppler 因子 \(\Omega_s\equiv\omega-k_x v_{s0x}\)、\(c=1\)、\(\omega_{pe}=1\) 正規化。</p>
+  <div class="eq-block">\[
+  \begin{aligned}
+  \text{連続:}\quad & -i\omega\,\delta n_s + i k_x(n_{s0}\delta v_{sx}+v_{s0x}\delta n_s) + \partial_y(n_{s0}\delta v_{sy}) = 0 \\[4pt]
+  \text{運動 }x:\quad & m_s n_{s0}(-i\Omega_s)\delta v_{sx} = q_s n_{s0}\delta E_x + q_s n_{s0}B_{0z}\delta v_{sy} - i k_x\gamma_{\rm ad}T_s\delta n_s \\[4pt]
+  \text{運動 }y:\quad & m_s n_{s0}(-i\Omega_s)\delta v_{sy} = q_s n_{s0}\delta E_y - q_s n_{s0}(B_{0z}\delta v_{sx}+v_{s0x}\delta B_z) \\
+  & \qquad\qquad\qquad\qquad\quad + q_s\delta n_s(E_{0y}-v_{s0x} B_{0z}) - \partial_y(\gamma_{\rm ad}T_s\delta n_s) \\[4pt]
+  \text{Faraday:}\quad & -i\omega\,\delta B_z = -(i k_x\delta E_y - \partial_y\delta E_x) \\[4pt]
+  \text{Ampère }x:\quad & -i\omega\,\delta E_x = \partial_y\delta B_z - \textstyle\sum_s q_s(n_{s0}\delta v_{sx}+v_{s0x}\delta n_s) \\[4pt]
+  \text{Ampère }y:\quad & -i\omega\,\delta E_y = -i k_x\delta B_z - \textstyle\sum_s q_s n_{s0}\delta v_{sy}
+  \end{aligned}
+  \]</div>
+  <p>
+    電流結合係数は \(\omega_{pe}=1\) 正規化で 1（Gaussian の \(4\pi\) を吸収）。\(\nabla\!\cdot\!E=\rho\)（Poisson）は
+    連続 + Ampère から保たれるので、固有ベクトルの検算に使える。
+  </p>
+
+  <h2 id="eigenproblem">固有値問題への整形</h2>
+  <p>
+    各式を \(\partial_t\) 項の係数（連続: \(-i\)、運動: \(-i m_s n_{s0}\)、Faraday/Ampère: \(-i\)）で割ると、
+    標準固有値問題
+  </p>
+  <div class="eq-block">\[ \omega\,\mathbf{x} = \mathsf{L}\,\mathbf{x} \]</div>
+  <p>
+    になる（\(\mathbf{x}\) は12場を縦に並べたベクトル、\(\mathsf{L}\) は複素行列）。1/(\(-i\))=\(i\) を使った各ブロック係数は
+    <code>docs/snr_linear_modes.md §4</code> と <code>build_operator</code> に1対1で対応する。例えば運動\(y\)の行は
+    \(\delta v_{sy}\): \(k_x v_{s0x}\)、\(\delta E_y\): \(i q_s/m_s\)、\(\delta v_{sx}\): \(-i q_s B_{0z}/m_s\)、
+    \(\delta B_z\): \(-i q_s v_{s0x}/m_s\)、
+    \(\delta n_s\): \(-i(\gamma_{\rm ad}T_s/m_s)(1/n_{s0})\partial_y + i(q_s/m_s)(E_{0y}-v_{s0x} B_{0z})/n_{s0}\)。
+  </p>
+
+  <h4>整形後の方程式群（\(\omega\,\delta g = \cdots\)）</h4>
+  <p>
+    <a href="#linearized">12場方程式</a>の各式を上記の \(\partial_t\) 係数で割り、\(\Omega_s=\omega-k_x v_{s0x}\) を展開して
+    移流項 \(k_x v_{s0x}\) を左辺の対角へ移すと、各場について \(\omega\,\delta g = (\cdots)\) の形になる
+    （\(s\in\{e,\text{inc},\text{ref}\}\)、\(1/(-i)=i\) を使用）：
+  </p>
+  <div class="eq-block">\[
+  \begin{aligned}
+  \text{連続:}\quad \omega\,\delta n_s ={}& k_x v_{s0x}\,\delta n_s + k_x n_{s0}\,\delta v_{sx}
+     - i\,\partial_y\!\left(n_{s0}\,\delta v_{sy}\right) \\[4pt]
+  \text{運動 }x:\quad \omega\,\delta v_{sx} ={}& k_x v_{s0x}\,\delta v_{sx}
+     + \frac{k_x\gamma_{\rm ad}T_s}{m_s n_{s0}}\,\delta n_s
+     + i\frac{q_s}{m_s}\,\delta E_x + i\frac{q_s}{m_s}B_{0z}\,\delta v_{sy} \\[4pt]
+  \text{運動 }y:\quad \omega\,\delta v_{sy} ={}& k_x v_{s0x}\,\delta v_{sy}
+     - i\frac{q_s}{m_s}B_{0z}\,\delta v_{sx}
+     + i\frac{q_s}{m_s}\,\delta E_y - i\frac{q_s v_{s0x}}{m_s}\,\delta B_z \\
+     &{} + \left[\,i\frac{q_s}{m_s}\frac{E_{0y}-v_{s0x} B_{0z}}{n_{s0}}
+        - i\frac{\gamma_{\rm ad}T_s}{m_s}\frac{1}{n_{s0}}\partial_y\right]\delta n_s \\[4pt]
+  \text{Faraday:}\quad \omega\,\delta B_z ={}& i\,\partial_y\,\delta E_x + k_x\,\delta E_y \\[4pt]
+  \text{Ampère }x:\quad \omega\,\delta E_x ={}& i\,\partial_y\,\delta B_z
+     - i\sum_s q_s\!\left(v_{s0x}\,\delta n_s + n_{s0}\,\delta v_{sx}\right) \\[4pt]
+  \text{Ampère }y:\quad \omega\,\delta E_y ={}& k_x\,\delta B_z
+     - i\sum_s q_s n_{s0}\,\delta v_{sy}
+  \end{aligned}
+  \]</div>
+  <p>
+    この右辺がそのまま \(\mathsf L\) の各行になる。\(1/n_{s0}\)（運動 \(x,y\) の圧力項と運動 \(y\) の背景場力項）は
+    低温で密度下限に置換する（下の留保）。以下の<a href="#eigenproblem">ブロック形</a>はこれを行列でまとめたものである。
+  </p>
+
+  <h4>全行列要素（ブロック形）</h4>
+  <p>
+    固有ベクトルのブロック順は実装どおり
+    \(\mathbf x=(\delta n_e,\delta v_{ex},\delta v_{ey},\ \delta n_{\rm inc},\delta v_{{\rm inc},x},\delta v_{{\rm inc},y},\
+    \delta n_{\rm ref},\delta v_{{\rm ref},x},\delta v_{{\rm ref},y},\ \delta E_x,\delta E_y,\delta B_z)^{\!\top}\)
+    で、各場は \(y\) 格子 \(M\) 点ぶんの縦ベクトル。\(\mathsf L\) は \(M\times M\) ブロック12×12の複素行列で、
+    成分どうしは場（\(\delta E_x,\delta E_y,\delta B_z\)）を介してのみ結合するから、成分×成分の非対角ブロックはすべて 0：
+  </p>
+  <div class="eq-block">\[
+  \mathsf L=\begin{pmatrix}
+  \mathsf A_e & 0 & 0 & \mathsf C_e \\
+  0 & \mathsf A_{\rm inc} & 0 & \mathsf C_{\rm inc} \\
+  0 & 0 & \mathsf A_{\rm ref} & \mathsf C_{\rm ref} \\
+  \mathsf J_e & \mathsf J_{\rm inc} & \mathsf J_{\rm ref} & \mathsf F
+  \end{pmatrix}
+  \]</div>
+  <p>記号（すべて \(M\times M\)）：\(I\)＝単位行列、\(D\)＝Fourier 微分行列、
+    \(N_s=\mathrm{diag}(n_{s0})\)（実密度のまま）、
+    \(\tilde N_s^{-1}=\mathrm{diag}(1/\tilde n_{s0})\)、\(\tilde n_{s0}=\max(n_{s0},\ \text{floor}\cdot\max_y n_{s0})\)
+    （下の密度下限）、\(B=\mathrm{diag}(B_{0z})\)、
+    \(G_s=\mathrm{diag}\!\big[(E_{0y}-v_{s0x} B_{0z})/\tilde n_{s0}\big]\)（背景場力項）。
+    成分ブロック（行・列とも \(\delta n_s,\delta v_{sx},\delta v_{sy}\) の順）：</p>
+  <div class="eq-block">\[
+  \mathsf A_s=\begin{pmatrix}
+  k_x v_{s0x} I & k_x N_s & -i\,D N_s \\[4pt]
+  \dfrac{k_x\gamma_{\rm ad}T_s}{m_s}\tilde N_s^{-1} & k_x v_{s0x} I & i\dfrac{q_s}{m_s}B \\[8pt]
+  -i\dfrac{\gamma_{\rm ad}T_s}{m_s}\tilde N_s^{-1}D + i\dfrac{q_s}{m_s}G_s & -i\dfrac{q_s}{m_s}B & k_x v_{s0x} I
+  \end{pmatrix}
+  \]</div>
+  <p>成分→場の結合（行 \(\delta n_s,\delta v_{sx},\delta v_{sy}\)、列 \(\delta E_x,\delta E_y,\delta B_z\)）：</p>
+  <div class="eq-block">\[
+  \mathsf C_s=\begin{pmatrix}
+  0 & 0 & 0 \\[4pt]
+  i\dfrac{q_s}{m_s}I & 0 & 0 \\[8pt]
+  0 & i\dfrac{q_s}{m_s}I & -i\dfrac{q_s v_{s0x}}{m_s}I
+  \end{pmatrix}
+  \]</div>
+  <p>場→成分の結合（電流。行 \(\delta E_x,\delta E_y,\delta B_z\)、列 \(\delta n_s,\delta v_{sx},\delta v_{sy}\)。
+    電流結合係数は \(\omega_{pe}=1\) 正規化で 1）：</p>
+  <div class="eq-block">\[
+  \mathsf J_s=\begin{pmatrix}
+  -i\,q_s v_{s0x} I & -i\,q_s N_s & 0 \\[4pt]
+  0 & 0 & -i\,q_s N_s \\[4pt]
+  0 & 0 & 0
+  \end{pmatrix}
+  \]</div>
+  <p>場×場ブロック（行・列とも \(\delta E_x,\delta E_y,\delta B_z\)。Faraday と \(\nabla\times B\)）：</p>
+  <div class="eq-block">\[
+  \mathsf F=\begin{pmatrix}
+  0 & 0 & i\,D \\[4pt]
+  0 & 0 & k_x I \\[4pt]
+  i\,D & k_x I & 0
+  \end{pmatrix}
+  \]</div>
+  <p>
+    パラメータ値：\(q_e=-1,\ q_{\rm inc}=q_{\rm ref}=+1\)、\(m_e=1,\ m_{\rm inc}=m_{\rm ref}=m_i/m_e\)、
+    \(\gamma_{\rm ad}=5/3\)（等温検査では 1）。\(\tilde N_s^{-1}\)（圧力項・背景場力項の除算）だけが密度下限の影響を受け、
+    \(N_s\)（連続・Ampère の乗算）は実密度のまま。この4ブロックが <code>build_operator</code>
+    （<code>src/fmi/snr_linear.py</code>）の <code>add(...)</code> 呼び出しと1対1で対応する。
+  </p>
+  <div class="callout orange">
+    <strong>密度下限（低温で必須）:</strong> 運動 \(y\) の \(1/n_{s0}\)（圧力項・背景場力項）は、密度が空乏化する
+    低温平衡（\(n_{\rm ref}\to\sim10^{-54}\)）で発散する。<code>density_floor</code> により
+    \(1/\max(n_{s0},\ \text{floor}\cdot\max n_{s0})\) へ置換して解く（既定 0 = 正則化なし、低温の正式ランは
+    floor \(=3\times10^{-2}\)）。斜め枝の \(\gamma\) は floor 2桁変化に対し ~5% の変動（系統誤差として扱う）。
+    \(k_x=0\) の FMI は floor 依存が強く、この流体閉包では頑健に決まらない（空乏域では Boltzmann 流体近似自体が適用限界）。
+  </div>
+
+  <h2 id="tiling">多周期タイル化と離散化</h2>
+  <p>
+    平衡ソルバは1周期 \([0,\lambda_0)\) を非一様な Chebyshev 鏡映格子で返す。これを
+    <code>build_background</code> が次の手順で線形演算子用の背景に変換する：
+  </p>
+  <ol>
+    <li>1周期プロファイルを <strong>周期端を補完して</strong> \([0,\lambda_0)\) の一様 \(P\) 点へ線形補間（<code>numpy.interp</code>）。</li>
+    <li>これを \(N\) 周期ぶん <code>np.tile</code> でタイルし、\([0,N\lambda_0)\) 上の一様 \(M=NP\) 点を作る。</li>
+    <li>ドリフトは \(v_{e0x}=\) <code>eq["beta_e"]</code>(\(\approx 0\)), \(v_{{\rm inc/ref}0x}=\) <code>params</code> から定数で格納。</li>
+  </ol>
+  <p>
+    離散化は \([0,N\lambda_0)\) 上の <strong>Fourier スペクトル</strong>。\(\partial_y\) は Fourier 微分行列 \(D_y\)
+    （Trefethen <em>Spectral Methods in MATLAB</em> の周期微分行列を区間長へスケール）、背景 \(n_{s0}(y),B_{0z}(y)\) は
+    実空間で対角（<code>np.diag</code>）乗算演算子になる。総自由度は \((3S+3)\,M\)。密行列 <code>numpy.linalg.eig</code>
+    で全スペクトルを解き、\(\mathrm{Im}(\omega)>0\) を成長モードとして抽出、解像度収束で物理固有値を選別する。
+  </p>
+  <div class="diagram">  平衡ソルバ(1周期, Chebyshev)        build_background           build_operator
+  ┌──────────────┐   resample    ┌────────────────┐  tile×N   ┌──────────────┐
+  │ y_full, ne,  │ ──────────▶  │ [0,λ0) 一様 P 点 │ ───────▶ │ [0,Nλ0) M=NP │
+  │ ninc, nref,  │   (周期補間)  │ n_s0, β_s, B0z   │          │ Fourier 微分  │
+  │ B0z, λ0      │              └────────────────┘          │ Dy + diag     │
+  └──────────────┘                                          └──────┬───────┘
+                                                                   │ ωx = Lx
+                                              numpy.linalg.eig ◀────┘
+                                              → Im(ω)>0 を成長モードとして抽出</div>
+
+  <h2 id="bloch">Bloch 波数の抽出</h2>
+  <p>
+    平衡は \(\lambda_0\) 周期なので演算子は \(\lambda_0\) 並進と可換であり、各固有モードは確定した
+    <strong>Bloch 波数 \(K\)</strong> を持つ。FFT のピーク（格子キャリア）ではなく、この包絡 \(K\) こそ
+    併合（\(K=k_0/2\) = period-doubling）の指標になる。<code>bloch_wavenumber</code> は \(\delta B_z\) を
+    1周期分シフトした並進演算子の固有位相 \(\exp(iK\lambda_0)\) から
+  </p>
+  <div class="eq-block">\[ \frac{K}{k_0} = \frac{1}{2\pi}\arg\!\left(\frac{\langle \delta B_z,\ \mathrm{roll}(\delta B_z,-M/N)\rangle}{\langle \delta B_z,\ \delta B_z\rangle}\right) \]</div>
+  <p>
+    で測る。<code>scan_bloch_spectrum</code> は全固有値を Bloch セクタ \(|K|/k_0=m/N\ (m=0..N/2)\) に振り分け、
+    各セクタの最大成長率を集計して分散 \(\gamma(K)\) を返す。これが FMI 分散の Brillouin ゾーン表現である。
+  </p>
+
+  <h2 id="pipeline">実行パイプライン</h2>
+  <p>正式ランは <code>work/run_snr_linear.py</code>。Panel A と B は別解像度の背景で解く：</p>
+  <pre><span class="cmt"># Panel A  FMI: kx=0 の Bloch ゾーン分散 γ(K)</span>
+<span class="cmt">#          K=0 が同相フィラメント補強、K=k0/2 が period-doubling（隣接併合）</span>
+<span class="cmt"># Panel B  kx 掃引 γ_max(kx): kx=0 が FMI、有限 kx が斜め/ドリフトキンク(DKI)候補</span>
+
+eq  = <span class="fn">solve_snr_equilibrium_electron_frame</span>(**sp, a0_target=<span class="num">0.25</span>, N_points=<span class="num">64</span>, n_steps=<span class="num">25</span>)
+bgA = <span class="fn">build_background</span>(eq, mime=<span class="num">400</span>, eta=<span class="num">0.2</span>, points_per_period=<span class="num">32</span>, n_periods=<span class="num">10</span>)
+fmi = <span class="fn">scan_bloch_spectrum</span>(bgA, kx=<span class="num">0.0</span>, density_floor=<span class="num">3e-2</span>)     <span class="cmt"># Panel A</span>
+bgB = <span class="fn">build_background</span>(eq, mime=<span class="num">400</span>, eta=<span class="num">0.2</span>, points_per_period=<span class="num">36</span>, n_periods=<span class="num">4</span>)
+<span class="kw">for</span> r <span class="kw">in</span> kx_over_k0:                                             <span class="cmt"># Panel B</span>
+    gamma[i] = <span class="fn">solve_modes</span>(bgB, kx=r*k0, n_modes=<span class="num">1</span>, density_floor=<span class="num">3e-2</span>)[<span class="num">0</span>][<span class="str">"gamma"</span>]</pre>
+  <table>
+    <tr><th>解像度</th><th>FMI（Bloch ゾーン）</th><th>kx 掃引（DKI 方向）</th></tr>
+    <tr><td>points_per_period</td><td>32</td><td>36（cold の収束に必要）</td></tr>
+    <tr><td>n_periods</td><td>10（Bloch K を k0/10 刻みに分解）</td><td>4（ピーク追跡のみ）</td></tr>
+    <tr><td>掃引</td><td>\(K/k_0\in[0,0.5]\)</td><td>\(k_x/k_0\in[0,2.5]\)、26点</td></tr>
+    <tr><td>density_floor</td><td colspan="2">3×10⁻²（低温の密度空乏に必須。<a href="#eigenproblem">整形</a>の留保参照）</td></tr>
+  </table>
+
+  <h2 id="calibration">演算子の較正</h2>
+  <p>
+    線形演算子は <strong>平衡と独立な解析解</strong>で較正し、回帰テスト
+    （<code>tests/test_snr_linear.py</code>）に固定してある。ただし光波・cold filamentation の2較正は
+    <strong>一様背景のみ</strong>を検査し、非一様背景の勾配結合項（\(\partial_y n_{s0}\)、\(1/n_{s0}\)、背景場力項）には
+    届かない。実際、背景場力項の欠落（2026-07 訂正）はこの2較正では検出できなかった。勾配項は
+    <strong>並進ゼロモード検査</strong>（平衡の \(y\) 微小並進 \(\delta n_s=-n_{s0}'\), \(\delta E_y=-E_{0y}'\),
+    \(\delta B_z=-B_{0z}'\) は \(k_x=0,\ \omega=0\) の厳密解 → 演算子が消すべき）で較正する。
+  </p>
+  <table>
+    <tr><th>テスト</th><th>背景</th><th>照合する解析解</th></tr>
+    <tr>
+      <td><code>test_lightwave_calibration</code></td>
+      <td>一様・単一電子</td>
+      <td>光波/Langmuir 分散 \(\omega^2=\omega_{pe}^2+c^2k_x^2=1+k_x^2\)</td>
+    </tr>
+    <tr>
+      <td><code>test_cold_filamentation_dispersion</code></td>
+      <td>一様・逆流2 cold ビーム</td>
+      <td>\(\gamma^2(k_y)=\tfrac12\!\left[\sqrt{(k_y^2+1)^2+4v_{0x}^2k_y^2}-(k_y^2+1)\right]\)、\(k_y\to\infty\) で \(\gamma\to v_{0x}\omega_{pe}\)</td>
+    </tr>
+    <tr>
+      <td><code>test_translation_zero_mode_annihilated</code></td>
+      <td>SNR 平衡（warm, \(\gamma_{\rm ad}=1\)）</td>
+      <td>平衡の \(y\) 微小並進（\(\omega=0\) の厳密解）を演算子が消す：運動 \(y\) 残差 &lt;10⁻⁵
+          （<strong>勾配結合項の較正</strong>。背景場力項が欠けると 10⁻⁴ 台の残差が残る）</td>
+    </tr>
+    <tr>
+      <td><code>test_snr_fmi_band_unstable</code></td>
+      <td>SNR 平衡（floor=3×10⁻²）</td>
+      <td>kx=0 で Bloch ゾーン全域 \(\gamma>10^{-3}\)、併合枝 \(K/k_0=0.5\) も不安定</td>
+    </tr>
+    <tr>
+      <td><code>test_snr_oblique_growth_rate_converges</code></td>
+      <td>SNR 平衡（floor=3×10⁻²）</td>
+      <td>斜め枝 \(P=36\) と \(P=48\) で相対差 &lt;5%（spurious でない）</td>
+    </tr>
+    <tr>
+      <td><code>test_snr_oblique_mode_faster_than_fmi</code></td>
+      <td>SNR 平衡（floor=3×10⁻²）</td>
+      <td>\(\gamma_{\max}(k_x\!\approx\!0.3k_0) > 1.3\,\gamma_{\max}(k_x=0)\)（実測 ~3.6×）</td>
+    </tr>
+    <tr>
+      <td><code>test_cold_floor_stable_magnetic_mode</code></td>
+      <td>SNR 平衡（cold）</td>
+      <td>斜め枝の \(\gamma\) が floor 2桁変化で &lt;5% 変動、\(\delta B_z\) に有意に結合</td>
+    </tr>
+  </table>
+
+  <h2 id="results">SNR の分散結果 <span class="badge badge-orange">2026-07-14 改訂</span></h2>
+  <div class="callout orange">
+    本節の数値は背景場力項の追加（<a href="#background">2026-07 訂正</a>）・密度下限 floor \(=3\times10^{-2}\)・
+    解像度引き上げ（FMI: PPP32×10周期、\(k_x\) 掃引: PPP36×4周期）後のもの。旧版の数値
+    （FMI 6.85×10⁻³、斜め 1.06×10⁻²、比 1.55×、「バンドほぼ平坦」）は欠落項を含まない演算子によるもので廃止。
+  </div>
+  <figure>
+    <img src="../work/floquet_diagnostics/snr_linear_spectrum.png" alt="SNR linear spectrum: FMI band and kx sweep">
+    <figcaption>
+      (A) kx=0 の Bloch ゾーン分散 \(\gamma(K)\)。 (B) 最大成長率の \(k_x\) 掃引。
+      平衡 \(\lambda_0=7.94\)、\(k_0=2\pi/\lambda_0=0.792\)（電流中性系）。
+    </figcaption>
+  </figure>
+  <h4>(A) FMI バンド <span class="badge badge-blue">kx = 0</span></h4>
+  <ul>
+    <li>最速は <strong>\(K=0\)</strong>：\(\gamma=3.27\times10^{-3}\)（同相フィラメント補強）。</li>
+    <li>併合枝 \(K=k_0/2\)：\(\gamma=6.8\times10^{-4}\)。<strong>バンドは平坦でなく</strong> \(K=0\) が併合枝の約5倍速い。</li>
+    <li>留保: \(k_x=0\) の \(\gamma\) は floor 依存が強く（floor 2桁で最大 ~2倍）、定量値は参考。
+      「\(K=0\) が最速・併合枝も不安定」という順序は floor によらない。</li>
+  </ul>
+  <h4>(B) \(k_x\) 掃引 <span class="badge badge-orange">FMI → 斜め/DKI</span></h4>
+  <ul>
+    <li>斜め枝のピークは <strong>\(k_x/k_0=0.30\)</strong>：\(\gamma=9.2\times10^{-3}\)
+      （floor 2桁変化で ±5% の系統誤差、解像度 PPP36→48 で 0.9%）。kx=0 の FMI の約 <strong>3.6倍</strong>。</li>
+    <li>これがフィラメント軸方向に波数を持つ斜めモード＝ドリフトキンク(DKI)候補で、
+      PIC の線形成長率（\(\gamma/\omega_{pe}\approx6.6\)–\(9.0\times10^{-3}\)、σ=0.0025 実質非磁化ラン）と同帯で一致する。</li>
+    <li>\(k_x/k_0\gtrsim1.7\) には掃引端（2.5）へ向けて上昇する高 \(k_x\) 枝が別に存在する（ビーム方向の
+      二流体不安定の系統）。この枝の扱いは下の留保を参照。</li>
+  </ul>
+  <div class="callout orange">
+    <strong>高 \(k_x\) の静電枝（本解析の対象外）:</strong> 延長掃引（\(k_x/k_0\) 2.5→8）で確認したところ、
+    この枝は電子密度 \(\delta n_e\) 支配・ほぼ静電的（\(|\delta B_z|/\max\sim10^{-2}\)–\(10^{-3}\)）のまま
+    \(\gamma\sim6\times10^{-2}\) まで上昇を続ける。電子と反射イオンビーム間の二流体（Buneman 型）不安定であり、
+    フィラメンテーション/DKI（電磁的・横方向）とは別系統。実系では電子 Landau 減衰が効く領域なので、
+    Landau 減衰を持たない本流体モデルの成長率は定量的に信頼できない。運動論的扱いが必要（本解析の範囲外）。
+  </div>
+
+  <h4>PIC 波長との対応（a0 再校正） <span class="badge badge-blue">2026-07-15</span></h4>
+  <p>
+    基準は \(a_0=0.25\)（\(\lambda_0=7.94\ c/\omega_{pe}\)）だが、PIC（σ=0.0025 実質非磁化ラン）の
+    一次 Weibel 波長は \(\sim10\)–\(12\ c/\omega_{pe}\)（\(B_z\) の \(y\) プロファイル FFT、合体前）である。
+    平衡周期をこれに合わせると \(a_0=0.45\to\lambda_0=11.06\ c/\omega_{pe}\)。両者で線形スペクトルを比較すると：
+  </p>
+  <figure>
+    <img src="../work/equilibrium/a0_recalibration.png" alt="a0 recalibration: kx spectra for a0=0.25 and 0.45">
+    <figcaption>
+      \(a_0=0.25\)(\(\lambda_0=7.94\)) と \(a_0=0.45\)(\(\lambda_0=11.06\)) の \(\gamma(k_x)\)。横軸は
+      <strong>物理波数 \(k_x\)</strong>。緑帯は PIC の速い相成長率 \(6.6\)–\(9.0\times10^{-3}\)。
+    </figcaption>
+  </figure>
+  <ul>
+    <li><strong>DKI 支配は波長合わせに頑健</strong>：ピークは \(a_0=0.25\) で \(\gamma=9.6\times10^{-3}\)、
+      \(a_0=0.45\) で \(8.7\times10^{-3}\)（PIC 帯内）。FMI(\(k_x=0\)) は \(3.3\to1.1\times10^{-3}\) と弱化。</li>
+    <li><strong>DKI ピークの物理波数は \(\lambda_0\) によらずほぼ不変</strong>：\(k_x\approx0.18\)–\(0.20\ c/\omega_{pe}\)
+      （軸方向波長 \(\lambda_x\approx30\ c/\omega_{pe}\)）。DKI の軸波長はフィラメント間隔でなく物理で決まる。</li>
+    <li><strong>併合の自己整合</strong>：\(2\lambda_0=22\ c/\omega_{pe}\) が PIC の合体後波長（\(\omega_{pi}t\approx100\) で \(\sim19.5\)）に近い。
+      \(\lambda_0=\) 一次 Weibel、線形 FMI 併合モード（\(K=k_0/2\)=周期倍化）\(\to 2\lambda_0\)=PIC の粗大化、という鎖が成り立つ。</li>
+  </ul>
+  <p>
+    正式値は基準 \(a_0=0.25\) のまま（既存の較正・図・テスト資産を保つ）。\(a_0=0.45\) は
+    <strong>PIC 整合点</strong>として併記する。生成: <code>work/plot_a0_recalibration.py</code>。
+  </p>
+
+  <h4>PIC 磁場成分との対応 <span class="badge badge-blue">2026-07-15</span></h4>
+  <p>
+    座標は PIC(sim) と本解析で恒等対応（sim-\(x\)=ビーム=\(x\)、sim-\(y\)=フィラメント変調=\(y\)、
+    sim-\(z\)=面外(Nz=1)=\(z\)）。σ=0 の P偏波不安定磁場は <strong>\(\delta B_z\)（面外）のみ</strong>で、
+    PIC の <strong>\(B_z\)(sim)</strong> に対応する。実際 PIC では \(B_z\) が先に立ち、拡張線形相
+    （\(\omega_{pi}t\approx32\)–200）を支配し、速い相の \(\gamma_{Bz}/\omega_{pe}=5.0\times10^{-3}\) は線形
+    FMI–DKI 帯に入る。一方 <strong>ビーム平行 \(B_x\)（面内）は σ=0 線形に対応物がない</strong>
+    （面内磁場は O偏波で σ=0 では安定）。面内 \(B\) は面外電流 \(J_z\) を要し、ビーム \(v_x\) とガイド磁場
+    \(B_0\parallel\hat y\) の \(v_x\times B_0\propto\hat z\) が \(J_z\) を立てて生む＝<strong>磁化チャンネル</strong>で、
+    速い相のバースト＋晩期 EMHD ダイナモ（\(\Omega_i^{-1}\approx400\)）で飽和を支配する。
+    「PIC 最速が面外 \(B_z\) でなくビーム平行 \(B_x\)」という事実はこれで説明され、σ=0 線形が
+    捉えるのは \(B_z\) チャンネル、\(B_x\) は磁化拡張が捉える物理、と切り分けられる。図: <code>work/pic_linear_component_map.png</code>。
+  </p>
+
+  <h2 id="eigenfunctions">モード構造（固有関数）</h2>
+  <p>
+    直接固有値解析は成長率 \(\gamma\) だけでなく<strong>固有ベクトル（モード構造）</strong>を一発で返す。
+    主役3モードの固有関数を \(y/\lambda_0\) に対して描き、各列の固有ベクトルは \(\delta B_z\) のピークで
+    振幅・位相を規格化した（ピークが実正）。上段 \(\delta B_z\)（Re 実線・Im 破線、背景 \(B_{0z}\) を薄い網掛け）、
+    中段 成分別 \(\delta n_s\)、下段 \(\delta E_x,\delta E_y\)。
+  </p>
+  <figure>
+    <img src="../work/floquet_diagnostics/snr_eigenfunctions.png" alt="SNR cold eigenfunctions: FMI, merging, oblique">
+    <figcaption>
+      cold 基準点（\(M_S\)=154.9）の固有関数（補正後演算子、floor=3×10⁻²）。
+      (a) FMI 最速 \(k_x=0,\ K\!\approx\!0\)（\(\gamma\)=2.54×10⁻³、同相補強、全周期同一形）、
+      (b) 併合枝 \(k_x=0,\ K=k_0/2\)（\(\gamma\)=1.13×10⁻³、包絡が1周期おきに反転＝period-doubling）、
+      (c) 斜め/DKI \(k_x/k_0\)=0.30（\(\gamma\)=9.12×10⁻³、最速）。PPP=48, 6周期。
+    </figcaption>
+  </figure>
+  <ul>
+    <li><strong>(a) FMI \(K\!\approx\!0\)</strong>：\(\delta B_z\) は全周期同一形（包絡一様）＝ 同相フィラメント補強。
+      モードはシート端に鋭く局在し、\(\delta E_y\) 卓越・\(\delta E_x\!\approx\!0\)。\(\omega_r=-1.3\times10^{-2}\) の遅い伝搬。</li>
+    <li><strong>(b) 併合枝 \(K=k_0/2\)</strong>：\(\delta B_z\) の包絡が1周期おきに反転＝隣接フィラメント逆相。
+      これは<strong>ペア併合（period-doubling）の線形シード</strong>であり、多本合体はこれを起点とする非線形逆カスケード
+      \(\lambda_0\!\to\!2\lambda_0\!\to\!\cdots\) で進む（\(K=k_0/n\) は n 本群併合に対応）。FMI 最速（K=0）の約 1/2 の成長率。</li>
+    <li><strong>(c) 斜め/DKI \(k_x/k_0\)=0.30</strong>：\(\mathrm{Re},\mathrm{Im}\) が同程度＝伝搬（\(\omega_r=4.4\times10^{-3}\)）。
+      系全体（静電枝を除く）で最速で、DKI 候補。</li>
+  </ul>
+  <div class="callout orange">
+    <strong>cold 平衡の解像度とモード構造:</strong> cold 基準点はシートが鋭く（sinh–Poisson 冷極限）、モードがシート端に
+    局在するため、線形段の Fourier 点数（points_per_period）が律速になる。\(\gamma\) の収束には PPP≳36 が必要
+    （斜め枝 PPP36→48 で 0.9%）。kx=0 の \(\gamma\) は floor 依存も残る（<a href="#results">結果</a>の留保参照）。
+  </div>
+
+  <h2 id="warm-natural">warm「natural」設定での検証</h2>
+  <p>
+    上の cold シート由来の解像度交絡を切り分けるため、温度を上げた <strong>warm「natural」設定</strong>で同じ解析を行った。
+    平衡が滑らかになりシート鋭化が消えるので、固有関数の見かけの不連続が本当に解像度起因かを確認できる。
+    直接パラメータ指定（電子静止系ソルバ、MachConfig を経由しない）：
+  </p>
+  <div class="eq-block">\[ \eta=0.2,\quad v_{{\rm inc}0x}=-0.05,\quad v_{{\rm ref}0x}=0.19,\quad
+     T_e=0.5,\quad T_{\rm inc}=T_{\rm ref}=0.1,\quad a_0=0.25 \]</div>
+  <figure>
+    <img src="../work/k0_natural/snr_natural_equilibrium.png" alt="warm natural equilibrium profile">
+    <figcaption>
+      warm 平衡プロファイル。\(\lambda_0\)=20.9、\(B_{0z}^{\rm pk}\)=0.071（滑らかな正弦波）、\(n_e\!\approx\!1\) ほぼ一様、
+      \(n_{\rm inc}/n_{\rm ref}\) は緩やかに変調、\(E_{0y}\!\sim\!5\times10^{-4}\)、\(v_{e0x}\)=0。cold のようなシート鋭化がない。
+    </figcaption>
+  </figure>
+  <figure>
+    <img src="../work/k0_natural/snr_natural_dispersion.png" alt="warm natural dispersion">
+    <figcaption>
+      (A) FMI バンド（\(k_x=0\)）は背景場力項の追加でほぼ安定化（\(K=0\) で \(\gamma\approx1\times10^{-5}\)、
+      補正前は 5.8×10⁻⁴）。(B) \(k_x\) 掃引は滑らかな単峰で \(k_x/k_0\)=1.10 にピーク
+      \(\gamma\)=7.91×10⁻³（伝搬、\(\omega_r\)=0.028。補正の影響 −0.8%）。
+    </figcaption>
+  </figure>
+  <figure>
+    <img src="../work/k0_natural/snr_natural_eigenfunctions.png" alt="warm natural eigenfunctions">
+    <figcaption>
+      warm 固有関数。(a) FMI \(k_x=0\)（補正後 \(\gamma\approx1\times10^{-5}\) とほぼ安定、構造の参考として表示）：
+      \(\delta B_z\) は<strong>きれいな \(K=0\) 正弦波で不連続ゼロ</strong>、
+      \(\delta n_{\rm inc}/\delta n_{\rm ref}\) 逆相・\(\delta n_e\) 微小。(b) 斜め/DKI \(k_x/k_0\)=1.10：高波数由来の細かい
+      \(y\) 構造をもつ伝搬モード（アーティファクトではなく物理構造）。
+    </figcaption>
+  </figure>
+  <div class="callout green">
+    <strong>解像度収束（決定的）:</strong> warm では斜め枝の \(\gamma\) が PPP=24/36 で 5桁一致
+    （7.9141×10⁻³。Fourier-Bloch 版 PPP=32/64 では 7.8630×10⁻³ で機械精度一致、手法間差 0.65%）。
+    cold の解像度・floor 依存と対照的で、平衡が滑らかなため中程度の解像度で収束する。
+    斜めモードの細構造は高 \(k_x\) 由来の物理であって、解像度不足ではないと確認できる。
+  </div>
+  <div class="callout green">
+    <strong>natural（warm）は密度下限 floor に非依存（検証 2026-07-23）:</strong>
+    warm「natural」平衡の線形解析は <code>density_floor</code> を<strong>一切使わない</strong>。
+    ドライバ <code>work/plot_snr_natural.py</code> は <code>solve_modes</code>/<code>scan_bloch_spectrum</code> に
+    floor を渡さず（既定 0）、運動 \(x,y\) の \(1/n_{s0}\) は素の密度のまま解いている。物理的にも floor は不要で、
+    warm 平衡の密度は谷でも十分大きく（\(n_{\min}/n_{\max}\): 電子 0.996、入射イオン 0.80、
+    <strong>最も枯れる反射イオンでも 0.40＝ピークの 12%</strong>）、\(1/n_{s0}\) は \(O(1\!-\!10)\) で有界。
+    仮に floor \(=3\times10^{-2}\) を渡しても閾値 \(0.03\,n_{\max}\) を全点が上回るため
+    \(\max(n_{s0},\,0.03\,n_{\max})=n_{s0}\) となり<strong>何も書き換えない（inert）</strong>。
+    したがって上表の warm 値（斜め \(7.91\times10^{-3}\)、FMI ほぼ安定）は floor の系統誤差を<strong>含まない</strong>。
+    密度下限とその感度・妥当性（<a href="#eigenproblem">整形</a>の留保）は<strong>cold σ=0 平衡に固有の話</strong>である。
+  </div>
+  <h4>cold と warm の質的な違い（補正後）</h4>
+  <table>
+    <tr><th>指標</th><th>cold（\(M_S\)=155）</th><th>warm natural</th></tr>
+    <tr><td>\(\lambda_0\)</td><td>7.94</td><td>20.9</td></tr>
+    <tr><td>\(B_{0z}\) ピーク</td><td>0.16（鋭シート）</td><td>0.071（滑らか）</td></tr>
+    <tr><td>FMI \(\gamma\)（\(k_x=0\)）</td><td>\(\sim2.5\)–\(3.3\times10^{-3}\)（floor 依存）</td><td>\(\sim1\times10^{-5}\)（ほぼ安定化）</td></tr>
+    <tr><td>斜めピーク</td><td>\(k_x/k_0\)=0.30, \(\gamma\)=\(9.2\times10^{-3}\pm5\%\)</td><td>\(k_x/k_0\)=1.10, \(\gamma\)=\(7.91\times10^{-3}\)</td></tr>
+    <tr><td>斜め / FMI 比</td><td>約3.6×</td><td>—（FMI がほぼ安定）</td></tr>
+    <tr><td>\(\gamma\) の頑健性</td><td>floor ±5%・PPP≳36 必要</td><td>5桁収束（PPP≈24 で十分）</td></tr>
+  </table>
+  <div class="callout">
+    補正後は両レジームとも<strong>斜め/DKI 枝が明確な最速不安定</strong>で、\(k_x=0\) の FMI は
+    cold で副次的、warm ではほぼ安定化する。背景場力項は「密度揺らぎを平衡に引き戻す」復元力として働き、
+    とくに \(k_x=0\) の純フィラメンテーション枝を強く抑制する。
+    ドライバ: <code>work/plot_snr_natural.py</code>（平衡→分散→固有関数を一括出力）。
+  </div>
+
+  <h2 id="fourier-bloch">Fourier-Bloch 版（タイル化の代替）<span class="badge badge-blue">2026-07</span></h2>
+  <p>
+    上の<a href="#tiling">タイル化</a>は、Chebyshev で解いた平衡を一様 Fourier 格子へ <code>np.interp</code>（区分線形＝C⁰）で載せ替え、
+    \(N\) 周期に並べて大領域固有値問題を解く。この「2つの離散化の橋渡し」が cold で固有関数に見かけの Gibbs 跳びを生む。
+    研究指導の指摘（最初から周期スペクトルで通せば周期境界条件が自然に入る）を受け、線形段を<strong>1周期 Fourier に統一</strong>し
+    Bloch 位相をシフトで取り込む方式へ書き換えた。実装: <code>src/fmi/snr_linear_bloch.py</code>（既存 <code>snr_linear.py</code> は回帰基準として温存）。
+  </p>
+  <h3>中核: Bloch シフト</h3>
+  <p>
+    1周期 \([0,\lambda_0)\) 上で摂動を \(\delta\hat g(y)=e^{iKy}\hat u(y)\)（\(\hat u\) は \(\lambda_0\) 周期）と分解する。周期背景では全項に共通の
+    \(e^{iKy}\) が括り出せて消え、演算子は
+  </p>
+  <div class="eq-block">\[ \partial_y \;\longrightarrow\; D + iK\,I \]</div>
+  <p>
+    の置換だけで得られる（\(D\) は1周期 Fourier 微分行列）。置換は \(\partial_y\) が作用する<strong>4箇所のみ</strong>
+    （連続式 \(\partial_y(n_0\delta v)\)、運動 \(y\) の圧力 \(\partial_y(\delta p)\)、Faraday \(\partial_y\delta E_x\)、Ampère \(\nabla\times B\)）。
+    \(K\) は明示パラメータとして走査するので<a href="#bloch">事後抽出</a>は不要になり、行列サイズはタイル ×\(N\) より \(N\) 倍小さい。
+    \(K=0\) で既存 <code>build_operator</code> に厳密一致（\(\max|A-B|=0\) を確認）。背景は <code>np.interp</code> を廃し、半周期 Chebyshev 解を
+    <strong>barycentric スペクトル補間</strong>（\(C^\infty\)）で1周期一様格子へ載せる。折れ点が消え、固有関数は band-limited（原理的に Gibbs なし）。
+  </p>
+  <figure>
+    <img src="../work/floquet_diagnostics/snr_bloch_demo.png" alt="Fourier-Bloch demo: warm oblique eigenfunction and K scan">
+    <figcaption>
+      warm 平衡での Fourier-Bloch デモ（斜め枝 \(k_x/k_0\)=1.10, \(K=0\)）。(左) \(\delta B_z(y)\) は6周期にわたり
+      <strong>滑らか</strong>（band-limited、Gibbs 跳びゼロ）。(右) 明示 \(K\) 走査の \(\gamma(K)\)。
+      kx=0 の FMI は補正後ほぼ安定化したため斜め枝で例示する。ドライバ: <code>work/plot_snr_bloch_demo.py</code>。
+    </figcaption>
+  </figure>
+  <div class="callout green">
+    <strong>warm 等価性（本質検証）:</strong> warm 平衡でタイル法と Fourier-Bloch 法が一致：斜め枝
+    （\(k_x/k_0\)=1.10）でタイル 7.9141×10⁻³ vs Bloch 7.8630×10⁻³（差 0.65%）、同一 \(K\) 指定では
+    <strong>5桁一致</strong>。\(k_x=0\) の FMI は補正後どちらの手法でも周辺的（タイル \(\sim\)10⁻⁵、Bloch は
+    成長モードなし）で、この周辺性も両手法で整合する。固有関数は帯域制限（Nyquist/最大 \(\sim\)10⁻¹⁴）。
+  </div>
+  <h3>cold σ=0 の扱い（2026-07 決着）</h3>
+  <div class="callout green">
+    <strong>経緯と決着:</strong> cold（\(T_{\rm ion}\to0\)）ではイオン密度が \(n_{\rm ref}\!\approx\!6\times10^{-54}\) まで空乏化し、
+    運動 \(y\) の \(1/n_0\) が発散する。当初この領域の最速モードは「spurious（純 \(\delta v_{{\rm ref},y}\)、
+    \(\delta B_z\approx\)機械精度ゼロ）」と解釈されたが、密度下限（<code>density_floor</code>）による検証で
+    <strong>固有値そのものは実在</strong>で、spurious だったのは固有ベクトルの表現（縮退部分空間で場と非結合な代表を
+    拾っていた）だけと判明した。さらに背景場力項の欠落（<a href="#background">2026-07 訂正</a>）を修正した現行の
+    演算子では、floor 併用で cold の斜め枝が floor ±5% の系統誤差内で決まる（<a href="#results">結果</a>）。
+    \(k_x=0\) の FMI のみ floor 依存が残り、空乏域では Boltzmann 流体近似自体が適用限界であることを示す。
+    <a href="#eigenfunctions">cold 固有関数</a>で見えた「不連続」は、near-zero の \(\delta B_z\) をピーク正規化した
+    数値ノイズだった（floor 併用の現行版では解消）。
+  </div>
+  <p>
+    残る将来対応（別スコープ）: cold 非対称平衡の収束性検証（Harris 解との重ね描き）、空乏域の運動論的扱い。
+    検証: <code>uv run pytest tests/test_snr_linear.py tests/test_snr_linear_bloch.py -q</code>（20件、
+    並進ゼロモード検査と floor 頑健性検査を含む）。
+  </p>
+
+  <h2 id="floquet">Floquet（モノドロミー）版の試みと剛性の壁 <span class="badge badge-blue">2026-07-16</span></h2>
+  <p>
+    Chebyshev 平衡（<code>snr_equilibrium</code>）を一様格子へ再サンプルせず、そのまま Vanthieghem+2018
+    流の <strong>Floquet（モノドロミー）法</strong>に入れる並行トラックを試作した（タイル法 snr_linear の独立検証が狙い）。
+    平衡は barycentric 補間で任意 \(y\) を機械精度評価でき、<a href="#tiling">再サンプルの Gibbs</a> を回避できる。
+    実装: <code>src/fmi/snr_floquet.py</code>。結論を先に言うと、<strong>SNR フィラメントでは素朴なモノドロミーが
+    剛性（悪条件）で破綻</strong>する。以下に、Floquet 用に導いた方程式とその理由を残す。
+  </p>
+
+  <h4>1階縮約系（\(\partial_y \mathbf x = N(y,\omega,k_x)\,\mathbf x\), 8場）</h4>
+  <p>
+    Floquet は12場の \(\omega\mathbf x=\mathsf L\mathbf x\) ではなく、\(y\) について1階の
+    <strong>\(\partial_y \mathbf x = N(y,\omega,k_x)\,\mathbf x\)</strong> 形を要る。
+    <a href="#linearized">12場</a>のうち \(\partial_y\) を含まない<strong>運動 \(x\)（\(\delta v_{sx}\)）と
+    Ampère \(y\)（\(\delta E_y\)）は代数的に消去</strong>し、状態は8場
+  </p>
+  <div class="eq-block">\[ \mathbf x=(\delta E_x,\ \delta B_z,\ \delta n_e,\delta n_{\rm inc},\delta n_{\rm ref},\ \delta v_{ey},\delta v_{{\rm inc}y},\delta v_{{\rm ref}y})^{\!\top} \]</div>
+  <p>になる（\(\Omega_s\equiv\omega-k_x v_{s0x}\)）。まず代数消去：</p>
+  <div class="eq-block">\[
+  \begin{aligned}
+  \delta v_{sx} &= i\frac{q_s}{m_s\Omega_s}\delta E_x + i\frac{q_s B_{0z}}{m_s\Omega_s}\delta v_{sy}
+     + \frac{k_x\gamma_{\rm ad}T_s}{m_s n_{s0}\Omega_s}\delta n_s \\[4pt]
+  \delta E_y &= \frac{k_x}{\omega}\delta B_z - \frac{i}{\omega}\sum_s q_s n_{s0}\,\delta v_{sy}
+  \end{aligned}
+  \]</div>
+  <p>これを代入して1階系を得る（右辺がそのまま \(N\) の各行）：</p>
+  <div class="eq-block">\[
+  \begin{aligned}
+  \partial_y \delta E_x =&\ i\Big(\frac{k_x^2}{\omega}-\omega\Big)\delta B_z
+     + \frac{k_x}{\omega}\sum_s q_s n_{s0}\,\delta v_{sy} \\[6pt]
+  \partial_y \delta B_z =&\ i\Big(\sum_s\frac{q_s^2 n_{s0}}{m_s\Omega_s}-\omega\Big)\delta E_x
+     + \sum_s\Big(\frac{q_s k_x\gamma_{\rm ad}T_s}{m_s\Omega_s}+q_s v_{s0x}\Big)\delta n_s
+     + \sum_s i\frac{q_s^2 n_{s0}B_{0z}}{m_s\Omega_s}\,\delta v_{sy} \\[6pt]
+  \partial_y \delta n_s =&\ \frac{1}{\gamma_{\rm ad}T_s}\Big\{
+     -i\frac{q_s^2 n_{s0}B_{0z}}{m_s\Omega_s}\,\delta E_x
+     + q_s n_{s0}\Big(\frac{k_x}{\omega}-v_{s0x}\Big)\delta B_z \\
+    &\ +\Big[q_s(E_{0y}-v_{s0x}B_{0z})-\frac{q_s B_{0z}k_x\gamma_{\rm ad}T_s}{m_s\Omega_s}\Big]\delta n_s
+     -i\frac{q_s n_{s0}}{\omega}\sum_{s'}q_{s'}n_{s'0}\,\delta v_{s'y} \\
+    &\ +\Big(i\,m_s n_{s0}\Omega_s - i\frac{q_s^2 n_{s0}B_{0z}^2}{m_s\Omega_s}\Big)\delta v_{sy}\Big\} \\[6pt]
+  \partial_y \delta v_{sy} =&\ \frac{k_x q_s}{m_s\Omega_s}\,\delta E_x
+     + \Big[\frac{i\omega}{n_{s0}}-\frac{i k_x v_{s0x}}{n_{s0}}-\frac{i k_x^2\gamma_{\rm ad}T_s}{m_s n_{s0}\Omega_s}\Big]\delta n_s
+     + \Big[\frac{k_x q_s B_{0z}}{m_s\Omega_s}-\frac{d\ln n_{s0}}{dy}\Big]\delta v_{sy}
+  \end{aligned}
+  \]</div>
+  <p>
+    背景勾配は<a href="#background">力釣り合い</a> \(d\ln n_{s0}/dy=q_s(E_{0y}-v_{s0x}B_{0z})/T_s\) で代数的に与え、
+    数値微分を要しない。平衡は Chebyshev 半周期解の barycentric 補間（<code>build_bg_func</code>）で任意 \(y\) を厳密評価
+    （平衡プロファイルを機械精度で再現、上記勾配も中心差分と \(10^{-8}\) 一致を確認）。
+    モノドロミー \(M(\lambda_0)\) は \(\partial_y M=N M,\ M(0)=I\) を1周期積分（<code>solve_ivp</code>, Radau）して作り、
+    特性乗数 \(\sigma=\mathrm{eig}\,M(\lambda_0)\)、Bloch 波数は \(K=\arg\sigma/\lambda_0\) で読む。
+  </p>
+
+  <h4>剛性の壁（素朴モノドロミーが破綻する理由）</h4>
+  <div class="callout orange">
+    <strong>結論:</strong> SNR フィラメントでは前進モノドロミーが悪条件化し、物理成長率を取り出せない。温度設定のせいではなく本質的。
+  </div>
+  <p>
+    局所 \(N\) の固有値（\(k_y\) 分枝）の最大実部 \(\max|\mathrm{Re}\,k_y|\) はシート尺度で
+    \(\sim1\)–\(3\,(c/\omega_{pe})^{-1}\) あり、1周期で減衰モードが
+    \(\ln|\sigma|_{\max}=\max|\mathrm{Re}\,k_y|\cdot\lambda_0\approx35\)–\(66\) e-fold 蓄積する
+    → \(|\sigma|\sim10^{15}\)–\(10^{28}\)。基本行列 \(M(\lambda_0)\) の条件数がこれで決まり、
+    物理モード \(|\sigma|=1\) は固有値ノイズ床（\(\sim|\sigma|_{\max}\cdot\epsilon\)）より下に埋もれて分解できない。
+  </p>
+  <figure>
+    <img src="../work/floquet_diagnostics/floquet_stiffness.png" alt="Floquet monodromy stiffness for the SNR filament">
+    <figcaption>
+      (A) warm の Floquet 乗数 \(|\sigma_j|\)（8個）は \(10^2\)–\(10^{18}\) に散らばり、\(|\sigma|=1\) はノイズ床の下。
+      (B) 温度を \(T_e=2.0\to0.2\)（\(T_i=T_e/5\)）と振っても \(\ln|\sigma|_{\max}\) は実用域（\(\sim18\)）を大きく超え続ける
+      （各点に \(\lambda_0\) を注記）。生成: <code>work/plot_floquet_stiffness.py</code>。
+    </figcaption>
+  </figure>
+  <p>
+    <strong>温度に依らない理由:</strong> 温めると局所スケール \(\max|\mathrm{Re}\,k_y|\) は下がる（構造がなだらか）が、
+    周期 \(\lambda_0\) が伸びて相殺し、積 \(\ln|\sigma|_{\max}\) は下がらない（むしろ高温側で悪化）。
+    本質は<strong>「SNR フィラメント周期 \(\lambda_0\sim12\)–\(65\,c/\omega_{pe}\) が微視スケールに対して大きく、
+    1周期に多数の e-fold が入る」</strong>こと。Vanthieghem のペアプラズマは \(\lambda_0\approx1.26\,c/\Omega_p\) と
+    コンパクト（フィラメント幅 \(\sim1\) スキン深さ）なので e-fold 数が少なくモノドロミーが通る。<strong>この差が両者を分ける。</strong>
+  </p>
+  <div class="callout green">
+    <strong>含意:</strong> 素朴な前進モノドロミー Floquet は SNR には不適で、使うなら剛性に強い積分
+    （連続直交化 / Riccati / compound-matrix）か大域スペクトル解が要る。
+    プロジェクトが当初から<a href="#tiling">タイル法 Fourier</a>（大域スペクトル・良条件）を採ったのは、
+    まさにこの悪条件を避けるためだった、という整合が取れる。snr_linear は PIC とも整合し目的を果たしている。
+  </div>
+
+  <h2 id="fourier-bg">Fourier 帯域制限背景（平衡を Fourier 級数で与える）<span class="badge badge-blue">2026-07-16</span></h2>
+  <p>
+    研究指導（7/16）の方針「<strong>平衡を Fourier 級数で与え、等間隔選点で多めに取って高波数を捨てる</strong>」を
+    <a href="#fourier-bloch">Fourier-Bloch 版</a>の背景ビルダとして実装した（<code>build_background_fourier</code>,
+    <code>src/fmi/snr_linear_bloch.py</code>）。線形演算子はもともと等間隔 Fourier 微分行列で組まれており（剛性は
+    <a href="#floquet">モノドロミー固有</a>の問題でこの大域スペクトル法には無い）、残る改良点は<strong>背景の作り方</strong>だった。
+    従来の barycentric 補間（<a href="#fourier-bloch">上節</a>）は鋭い密度を直接補間するため、フィラメント間の谷で
+    <strong>密度が負に overshoot</strong>し（\(n_{\rm inc,min}\approx-3.9\times10^{-4}\)）、運動 \(y\) の \(1/n_0\) が符号反転して
+    spurious モードを助長していた。
+  </p>
+  <h3>滑らかなのはポテンシャル：A, Φ を打ち切り、密度は指数で再構成</h3>
+  <p>
+    鋭い密度を直接 Fourier 打ち切りすると Gibbs で負値が出る。そこで<strong>滑らかなポテンシャル \(A(y),\Phi(y)\) を
+    Fourier 級数で表し</strong>、密度はそこから指数関数で作る。手順は:
+  </p>
+  <ol>
+    <li>半周期 Chebyshev 解の \(A,\Phi\) を細格子（<code>oversample</code>=12 倍）へ barycentric 評価（<strong>多めに取る</strong>）。</li>
+    <li>実 FFT し、低次 \(m=0..n_{\rm keep}\) のみ残す（<strong>高波数を捨てる</strong>）。既定 \(n_{\rm keep}=M/2-1\)（格子 Nyquist 未満でエイリアスを出さない最大値）。</li>
+    <li>演算子格子 \([0,\lambda_0)\) の \(M\) 点で、残した係数から解析的に評価:</li>
+  </ol>
+  <div class="eq-block">\[
+  \begin{aligned}
+  A(y) &= \hat a_0 + 2\!\sum_{m=1}^{n_{\rm keep}}\!\mathrm{Re}\big[\hat a_m e^{i k_m y}\big], \qquad k_m=\frac{2\pi m}{\lambda_0} \\[4pt]
+  B_{0z}(y) &= -\frac{dA}{dy} = -2\!\sum_{m=1}^{n_{\rm keep}}\!\mathrm{Re}\big[i k_m\hat a_m e^{i k_m y}\big], \qquad
+  E_{0y}(y) = -\frac{d\Phi}{dy}
+  \end{aligned}
+  \]</div>
+  <p>
+    微分は残した係数に \(ik_m\) を掛けるだけ＝<strong>帯域制限内でスペクトル精度に厳密</strong>（格子 \(D\) 行列を介さない）。
+    密度は化学ポテンシャル正規化つきの Boltzmann 形で格子上に再構成する:
+  </p>
+  <div class="eq-block">\[
+  n_{s0}(y) = w_s\,\frac{\exp\!\big[-q_s(\Phi-v_{s0x}A)/T_s\big]}{\langle\exp[\cdots]\rangle},\qquad
+  (w_e,w_{\rm inc},w_{\rm ref})=(1,\,1-\eta,\,\eta)
+  \]</div>
+  <p>指数関数なので \(n_{s0}>0\) が<strong>構造的に保証</strong>される（負値 overshoot が原理的に消える）。</p>
+
+  <figure>
+    <img src="../work/floquet_diagnostics/fourier_bg_verify.png" alt="Fourier band-limited background verification: positivity, convergence, kx dispersion">
+    <figcaption>
+      Fourier 帯域制限背景の検証（生成: <code>work/verify_fourier_bg.py</code>）。
+      <strong>(A) 密度の正値性</strong>（symlog 軸）: Fourier（赤）はフィラメント間の谷でも \(n_{\rm inc}>0\)、
+      barycentric（青破線）は灰色ゼロ線の下＝負に落ちる。
+      <strong>(B) 解像度収束</strong>（cold, DKI \(k_x/k_0\)=0.30, floor=3×10⁻²）: Fourier 背景の \(\gamma\)（紫）は
+      PPP を上げると \(\approx8.6\times10^{-3}\) に収束。tiled の \(9.21\times10^{-3}\) は PPP=36 の単発（緑星）で、
+      低解像度の過大評価と分かる。
+      <strong>(C) \(k_x\) 分散</strong>（FMI→DKI）: DKI ピークは \(k_x/k_0\)=0.30。\(k_x=0\) の FMI は floor 敏感で
+      両背景がずれるが、DKI ピーク近傍は一致。
+    </figcaption>
+  </figure>
+
+  <div class="callout green">
+    <strong>検証結果:</strong>
+    <ul>
+      <li><strong>warm 等価性:</strong> 斜め枝（\(k_x/k_0\)=1.10）の成長率が barycentric 版と <strong>0.000% 一致</strong>（正値も一致）。</li>
+      <li><strong>cold 正値＋収束:</strong> 密度が厳密に正、DKI（\(k_x/k_0\)=0.30, floor=3×10⁻²）が PPP=48→80 で
+        \(\gamma\approx8.6\times10^{-3}\) に収束。DKI ピーク位置 \(k_x/k_0\)=0.30 は tiled と一致し、値は<strong>収束させると
+        \(8.6\times10^{-3}\)</strong>（tiled の \(9.21\times10^{-3}\) は PPP=36 の低解像度値）。</li>
+      <li>回帰テスト <code>tests/test_snr_linear_bloch.py</code> に4件追加、<strong>計16件緑</strong>。</li>
+    </ul>
+  </div>
+  <div class="callout orange">
+    <strong>floor は残る（流体閉包の限界）:</strong> cold の谷は物理的に \(n_0\to0\)（準真空）なので、正値再構成後も
+    \(1/n_0\) は発散する。したがって <code>density_floor</code>=3×10⁻² は数値対策でなく<strong>Boltzmann 流体近似の適用限界</strong>として残す。
+    固有ベクトルの高波数成分でフィルタする案は、中間波数の spurious が残り単独では不十分と確認した（2026-07-16）。
+    根治には空乏域の運動論的扱いが要る（別スコープ）。
+  </div>
+
+  <h2 id="summary">まとめ <span class="badge badge-orange">2026-07-14 改訂</span></h2>
+  <div class="diagram">  SNR 3成分平衡（電流中性系, σ=0, M_S=154.92）
+        │
+        ├─ P偏波 12場を線形化（∂t→-iω, c=1, ω_pe=1）
+        │       ├─ ドリフト β_s は y 一定（Boltzmann閉包と力釣り合いが一致）
+        │       └─ 運動y に背景場力項 q δn (E0y - β B0z) を含む（2026-07 追加）
+        │
+        ├─ 多周期タイル [0,Nλ0) + Fourier スペクトル → ωx = Lx（密固有値）
+        │       ├─ 較正: 光波分散・cold filamentation・並進ゼロモード検査
+        │       └─ 低温は density_floor=3e-2（密度空乏の正則化）
+        │
+        └─ 結果（cold, floor=3e-2）
+            ├─ (A) kx=0: 最速 K=0 (3.3e-3, floor依存強), 併合 K=0.5 (6.8e-4)
+            ├─ (B) kx掃引: 斜め枝ピーク kx/k0=0.30 (9.2e-3 ±5%) = FMIの~3.6倍 → DKI候補
+            │        PIC 実測 6.6–9.0e-3 と同帯で一致（σ=0.0025 実質非磁化ラン）
+            └─ 高kx (≳1.7k0): 静電的二流体枝（対象外, 運動論的扱いが必要）</div>
+  <ul>
+    <li>背景場力項の追加で旧数値（FMI 6.85×10⁻³・斜め 1.06×10⁻²・比1.55×）は廃止。
+      <strong>「斜め/DKI 枝が最速」という結論は補正後むしろ強まった</strong>（cold 3.6×、warm では FMI がほぼ安定化）。</li>
+    <li>斜め枝の \(\gamma=9.2\times10^{-3}\pm5\%\) は PIC の線形成長率（6.6–9.0×10⁻³）と同帯で、
+      非磁化線形解析と微小有限磁場 PIC の対応（comparable）を定量的に支持する。</li>
+    <li>較正は一様背景の解析解2種に加え、<strong>並進ゼロモード検査</strong>で勾配結合項まで担保した。</li>
+    <li>\(k_x=0\) の FMI の定量値は floor 依存が残る。空乏域は Boltzmann 流体近似の適用限界で、
+      詰めるには運動論的扱いが必要。</li>
+  </ul>
+  <div class="callout green">
+    <strong>次段（本スコープ外）:</strong> ① PIC とのモード波長・成分構造の対応づけ（成長率は同帯を確認済み）、
+    ② 空乏域・高 kx 静電枝の kinetic 精密化、③ cold 非対称平衡の Harris 解対照。
+  </div>
+
+  <div class="callout">
+    関連ドキュメント:
+    <a href="snr_equilibrium_solver.html">3成分平衡ソルバー</a> ／
+    <a href="electron_rest_frame.html">電子静止系への補正フロー</a> ／
+    <a href="mach_parameter_scheme.html">マッハ数基準パラメータ設計</a> ／
+    <a href="efield_variation.html">平衡 E0y の空間変動</a>。
+    導出ノート: <code>docs/snr_linear_modes.md</code>。実装: <code>src/fmi/snr_linear.py</code>（タイル法）、
+    <code>src/fmi/snr_linear_bloch.py</code>（Fourier-Bloch 版）、
+    ドライバ: <code>work/run_snr_linear.py</code>、<code>work/plot_snr_bloch_demo.py</code>。
+  </div>
+
+  <hr>
+  <p style="color:var(--text-muted);font-size:.82rem;text-align:center;margin-top:2rem;">
+    SNR平衡の線形固有値解析 — 非相対論 warm 多流体 + Maxwell のスペクトル直接解法と FMI/斜め枝の結果
+  </p>
+</main>
+</div>
+</body>
+</html>

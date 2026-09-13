@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fig1_equilibrium.py 解説</title>
+
+  <!-- MathJax -->
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        tags: 'ams'
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+
+  <!-- highlight.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+
+  <style>
+    :root {
+      --bg: #f8f9fb;
+      --surface: #ffffff;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #f1f5f9;
+      --warn: #fef3c7;
+      --warn-border: #f59e0b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 16px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+      color: white;
+      padding: 3rem 2rem 2.5rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; font-weight: 700; margin-bottom: .5rem; }
+    header p  { opacity: .85; font-size: 1.05rem; }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    /* ---- TOC ---- */
+    .toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem 2rem;
+      margin-bottom: 2.5rem;
+    }
+    .toc h2 { font-size: 1rem; color: var(--muted); text-transform: uppercase;
+               letter-spacing: .08em; margin-bottom: .75rem; }
+    .toc ol { padding-left: 1.4rem; }
+    .toc li { margin: .3rem 0; }
+    .toc a  { color: var(--accent); text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    /* ---- Sections ---- */
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    section h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--accent);
+      border-left: 4px solid var(--accent);
+      padding-left: .75rem;
+      margin-bottom: 1.25rem;
+    }
+    section h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 .75rem;
+      color: var(--text);
+    }
+    p { margin-bottom: .85rem; }
+
+    /* ---- Info / Warning boxes ---- */
+    .box {
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      font-size: .95rem;
+    }
+    .box.info   { background: var(--accent-light); border-left: 4px solid var(--accent); }
+    .box.warn   { background: var(--warn);         border-left: 4px solid var(--warn-border); }
+    .box strong { font-weight: 700; }
+
+    /* ---- Parameter table ---- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.25rem;
+      font-size: .93rem;
+    }
+    th {
+      background: var(--accent);
+      color: white;
+      padding: .55rem .9rem;
+      text-align: left;
+    }
+    td { padding: .5rem .9rem; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: var(--code-bg); }
+
+    /* ---- Step badge ---- */
+    .steps { counter-reset: step; }
+    .step {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      align-items: flex-start;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 2rem; height: 2rem;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      font-size: .9rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-body h4 { font-size: 1rem; font-weight: 600; margin-bottom: .3rem; }
+
+    /* ---- Code ---- */
+    pre {
+      background: var(--code-bg) !important;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      margin: .75rem 0 1rem;
+      font-size: .88rem;
+      line-height: 1.55;
+    }
+    code { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; }
+    p code, li code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: .1em .35em;
+      font-size: .88em;
+    }
+
+    /* ---- Flow diagram (pure CSS) ---- */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 1rem 0;
+    }
+    .flow-item {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+    .flow-box {
+      background: var(--accent-light);
+      border: 1.5px solid var(--accent);
+      border-radius: 8px;
+      padding: .45rem 1rem;
+      font-size: .9rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .flow-arrow {
+      color: var(--accent);
+      font-size: 1.3rem;
+      line-height: 1;
+      padding: .1rem 0;
+    }
+    .flow-vertical { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+    .flow-vertical .flow-arrow { transform: rotate(90deg); padding: .15rem .5rem; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: .85rem;
+      padding: 2rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>fig1_equilibrium.py 解説</h1>
+  <p>FMI 均衡プロファイル計算コード（Vanthieghem et al. 2018, Fig.1 再現）</p>
+</header>
+
+<div class="container">
+
+  <!-- TOC -->
+  <nav class="toc">
+    <h2>目次</h2>
+    <ol>
+      <li><a href="#overview">概要・物理背景</a></li>
+      <li><a href="#model">物理モデル：非対称ビームプラズマ系</a></li>
+      <li><a href="#equations">支配方程式</a></li>
+      <li><a href="#numerics">数値手法：Chebyshev スペクトル法 + Newton 継続法</a></li>
+      <li><a href="#code">コード構造の詳細</a></li>
+      <li><a href="#output">出力・可視化</a></li>
+      <li><a href="#run">実行方法</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. Overview -->
+  <section id="overview">
+    <h2>1. 概要・物理背景</h2>
+    <p>
+      このノートブックは <strong>FMI（Filamentation Magnetic Instability）</strong> の
+      非線形均衡プロファイルを数値計算し、Vanthieghem et al. (2018) の Figure 1 を再現します。
+    </p>
+    <p>
+      FMI は、相対論的な電流シートにおいて電磁場が自己一致的に形成される現象であり、
+      宇宙プラズマ（衝撃波・ジェット）の磁場増幅機構として注目されています。
+    </p>
+    <div class="box info">
+      <strong>参考文献：</strong>
+      Vanthieghem, A. et al. (2018). <em>Stability and nonlinear saturation of the
+      Weibel/filamentation instability in a relativistic beam-plasma system.</em>
+    </div>
+  </section>
+
+  <!-- 2. Physical model -->
+  <section id="model">
+    <h2>2. 物理モデル：非対称ビームプラズマ系</h2>
+    <p>
+      系は <strong>相対論的ビーム（beam）</strong> と
+      <strong>背景プラズマ（plasma）</strong> の 2 成分から構成されます。
+      両成分は逆方向に流れます（ $z$ 軸方向）。
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>成分</th><th>温度</th><th>速度 $\beta = v/c$</th><th>ローレンツ因子 $\gamma$</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ビーム (b)</td>
+          <td>$T_b = 1.0$</td>
+          <td>$\beta_b = -0.995$（$-z$ 方向）</td>
+          <td>$\gamma_b = 1/\sqrt{1-\beta_b^2} \approx 10.0$</td>
+        </tr>
+        <tr>
+          <td>プラズマ (p)</td>
+          <td>$T_p = 0.1$</td>
+          <td>$\beta_p = +0.995$（$+z$ 方向）</td>
+          <td>$\gamma_p \approx 10.0$</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="box warn">
+      <strong>非対称性の意味：</strong>
+      $T_b \neq T_p$ であるため「非対称」均衡と呼ばれます。
+      温度が異なると電場 $E_{0y}$ も有限になります（対称系では $E_{0y} = 0$）。
+    </div>
+
+    <p>
+      均衡は $y$ 方向に周期的（ドメイン幅 $\lambda_0$）で、
+      $z$ 方向一様の 1D 問題として定式化されます。
+    </p>
+  </section>
+
+  <!-- 3. Equations -->
+  <section id="equations">
+    <h2>3. 支配方程式</h2>
+    <h3>3.1 Maxwell 方程式（静的均衡）</h3>
+    <p>均衡状態では時間微分がゼロとなり、Ampère 則と Gauss 則は</p>
+
+    $$\frac{d^2 A}{dy^2} = \sum_\alpha J_{z,\alpha} = 2\bigl(\gamma_b\beta_b \sinh\xi_b + \gamma_p\beta_p \sinh\xi_p\bigr)$$
+
+    $$\frac{d^2 \Phi}{dy^2} = \sum_\alpha \rho_\alpha = 2\bigl(\gamma_b \sinh\xi_b + \gamma_p \sinh\xi_p\bigr)$$
+
+    <p>ここで $A$ はベクトルポテンシャル（$B_{0z} = -dA/dy$）、$\Phi$ はスカラーポテンシャル（$E_{0y} = -d\Phi/dy$）です。</p>
+
+    <h3>3.2 Boltzmann 分布の指数引数</h3>
+    <p>各成分の分布が Maxwell–Jüttner 分布に従うとき、指数引数は</p>
+
+    $$\xi_\alpha = \frac{\gamma_\alpha}{T_\alpha}\bigl(\Phi - \beta_\alpha A\bigr)$$
+
+    <p>
+      この引数の符号の対称性から、$+y$（進行方向）と $-y$（逆行方向）の
+      粒子密度比が $e^{+\xi_\alpha}$、$e^{-\xi_\alpha}$ となります。
+    </p>
+
+    <h3>3.3 境界条件</h3>
+    <p>ドメイン半分 $y \in [0, L/2]$ を解いて後で反転対称化します。</p>
+    <table>
+      <thead><tr><th>境界</th><th>条件</th><th>意味</th></tr></thead>
+      <tbody>
+        <tr><td>$y = 0$（中心）</td><td>$A(0) = a_0$</td><td>振幅を固定（継続法の制御変数）</td></tr>
+        <tr><td>$y = 0$</td><td>$d\Phi/dy = 0$</td><td>対称性から $E_{0y}(0) = 0$</td></tr>
+        <tr><td>$y = L/2$（端）</td><td>$dA/dy = 0$</td><td>$B_{0z}(L/2) = 0$</td></tr>
+        <tr><td>$y = L/2$</td><td>$d\Phi/dy = 0$</td><td>$E_{0y}(L/2) = 0$</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 4. Numerics -->
+  <section id="numerics">
+    <h2>4. 数値手法</h2>
+
+    <h3>4.1 Chebyshev スペクトル法</h3>
+    <p>
+      物理空間 $y \in [0, L/2]$ を Chebyshev 点（$N = 64$）でサンプリングし、
+      微分行列 $D$ を用いて微分を <strong>行列演算</strong> に置き換えます：
+    </p>
+
+    $$\frac{d^2 u}{dy^2} \longrightarrow D^2 \cdot \mathbf{u}$$
+
+    <p>
+      Chebyshev 点は端点付近に密集するため、境界層を高精度に捉えられます。
+      標準域 $[-1, 1]$ から物理域 $[0, L/2]$ へのスケーリングは
+    </p>
+
+    $$\frac{dy}{dx} = -\frac{L/2}{2} \quad \Rightarrow \quad D_\text{phys} = D_\text{std} \Big/ \frac{dy}{dx}$$
+
+    <div class="box info">
+      <strong>なぜ Chebyshev か？</strong>
+      均等格子（有限差分）と比較して、同じ格子点数で指数的に高精度な微分近似が得られます。
+      FMI 均衡のような滑らかな関数に特に有効です。
+    </div>
+
+    <h3>4.2 Newton 継続法（Continuation method）</h3>
+    <p>
+      ベクトルポテンシャルの振幅 $a_0$ を小さな値から目標値まで
+      <strong>段階的に増加</strong>させながら非線形方程式を解きます。
+    </p>
+
+    <div class="flow flow-vertical">
+      <div class="flow-item">
+        <div class="flow-box">初期値：線形化 ODE の解析解で初期推定</div>
+      </div>
+      <div class="flow-item"><span class="flow-arrow">↓</span></div>
+      <div class="flow-item">
+        <div class="flow-box">$a_0 = 0.01 \to a_{0,\text{target}}$ を 25 ステップで継続</div>
+      </div>
+      <div class="flow-item"><span class="flow-arrow">↓</span></div>
+      <div class="flow-item">
+        <div class="flow-box">各ステップで <code>scipy.optimize.root</code>（LM 法）で求解</div>
+      </div>
+      <div class="flow-item"><span class="flow-arrow">↓</span></div>
+      <div class="flow-item">
+        <div class="flow-box">前ステップの解を次ステップの初期値に再利用</div>
+      </div>
+    </div>
+
+    <h3>4.3 未知数ベクトル</h3>
+    <p>
+      解ベクトル $\mathbf{u}$ は $2(N+1) + 1 = 131$ 次元：
+    </p>
+    <pre><code class="language-text">u = [ A[0], A[1], ..., A[N],          ← N+1 個（ベクトルポテンシャル）
+      Φ[0], Φ[1], ..., Φ[N],          ← N+1 個（スカラーポテンシャル）
+      L_half ]                          ← 1 個（ドメイン半幅、未知数）</code></pre>
+    <p>
+      ドメイン幅 $L_\text{half}$ も未知数として同時に決定します。
+      これが計算コストを下げながら自己一致解を得るための工夫です。
+    </p>
+  </section>
+
+  <!-- 5. Code -->
+  <section id="code">
+    <h2>5. コード構造の詳細</h2>
+
+    <h3>5.1 <code>chebyshev_diff_matrix(N)</code></h3>
+    <p>
+      標準 Chebyshev 微分行列 $D \in \mathbb{R}^{(N+1)\times(N+1)}$ と
+      Chebyshev 点 $x_j = \cos(j\pi/N)$ を返します。
+    </p>
+    <pre><code class="language-python">def chebyshev_diff_matrix(N):
+    x = np.cos(np.arange(N + 1) * np.pi / N)   # Chebyshev ノード
+    D = np.zeros((N + 1, N + 1))
+    p = np.ones(N + 1); p[0] = 2; p[N] = 2     # 端点の重み係数
+    for i in range(N + 1):
+        for j in range(N + 1):
+            if i != j:
+                D[i, j] = (-1)**(i+j) * p[i] / (p[j] * (x[i] - x[j]))
+    # 対角成分（sum formula で厳密計算）
+    D[0, 0]   = (1 + 2 * N**2) / 6
+    D[N, N]   = -(1 + 2 * N**2) / 6
+    for j in range(1, N):
+        D[j, j] = -x[j] / (2 * (1 - x[j]**2))
+    return D, x</code></pre>
+
+    <h3>5.2 <code>residual(u, current_a0)</code></h3>
+    <p>
+      非線形連立方程式の残差ベクトルを返します。
+      <code>root()</code> がこれをゼロにするように解を探索します。
+    </p>
+    <pre><code class="language-python">def residual(u, current_a0):
+    A, Phi   = u[:N+1], u[N+1:2*N+2]
+    L_half   = np.abs(u[-1]) + 1e-6          # 正値を保証
+    dy_dx    = -(L_half / 2.0)               # スケーリング係数
+    D_phys   = D_std  / dy_dx               # 物理座標の 1 階微分行列
+    D2_phys  = D2_std / dy_dx**2            # 物理座標の 2 階微分行列
+
+    # Boltzmann 因子（数値オーバーフロー防止のため clip）
+    arg_b = np.clip((γ_b/T_b) * (Φ - β_b * A), -100, 100)
+    arg_p = np.clip((γ_p/T_p) * (Φ - β_p * A), -100, 100)
+
+    # 支配 ODE の残差
+    eq_A   = D2_phys @ A   - 2*(γ_b*β_b*sinh(arg_b) + γ_p*β_p*sinh(arg_p))
+    eq_Phi = D2_phys @ Phi - 2*(γ_b    *sinh(arg_b) + γ_p    *sinh(arg_p))
+
+    # 内部点 + 4 つの境界条件
+    res[1:N]         = eq_A[1:N]            # ODE（内部）
+    res[N+2:2N+1]    = eq_Phi[1:N]          # ODE（内部）
+    res[0]           = A[0] - current_a0    # BC: A(0) = a0
+    res[N+1]         = (D_phys @ Φ)[0]      # BC: dΦ/dy(0) = 0
+    res[N]           = (D_phys @ A)[N]      # BC: dA/dy(L/2) = 0
+    res[2N+1]        = (D_phys @ Φ)[N]     # BC: dΦ/dy(L/2) = 0
+    return res</code></pre>
+
+    <h3>5.3 線形化による初期推定</h3>
+    <p>$a_0 \to 0$ 極限では方程式が線形化され、解析的に固有値を求められます：</p>
+
+    $$k^2 = -(C_{AA} + c_1 C_{A\Phi}), \quad L_\text{half} = \frac{\pi}{k}$$
+
+    <p>ここで $C_{AA},\, C_{A\Phi},\, C_{\Phi\Phi}$ は各成分の密度 $\times$ 速度の係数です。</p>
+    <pre><code class="language-python">C_AA     = -2 * (γ_b²β_b²/T_b + γ_p²β_p²/T_p)
+C_APhi   =  2 * (γ_b²β_b  /T_b + γ_p²β_p  /T_p)
+C_PhiPhi =  2 * (γ_b²     /T_b + γ_p²     /T_p)
+
+# 2x2 固有値問題を解く（phi_ratio = Φ/A の比）
+D_q = b_q**2 - 4 * a_q * c_q
+phi_ratio = (-b_q + sqrt(D_q)) / (2 * a_q)
+k2 = -(C_AA + phi_ratio * C_APhi)
+L_half_guess = π / sqrt(k2)</code></pre>
+
+    <h3>5.4 規格化</h3>
+    <p>
+      出力前に、プラズマ成分の最大密度 $\max(d_p)$ で全フィールドと密度を規格化します。
+      これにより異なる $a_0$ での比較が容易になります。
+    </p>
+  </section>
+
+  <!-- 6. Output -->
+  <section id="output">
+    <h2>6. 出力・可視化</h2>
+    <p>プロットは左右 2 パネルで構成されます：</p>
+
+    <table>
+      <thead>
+        <tr><th>パネル</th><th>縦軸</th><th>横軸</th><th>線種</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>左：電磁場</td>
+          <td>$y\ [c/\Omega_p]$</td>
+          <td>$B_{0z},\, E_{0y}\ [mc\Omega_p/e]$</td>
+          <td>実線 $B_{0z}$、破線 $E_{0y}$</td>
+        </tr>
+        <tr>
+          <td>右：見かけ密度</td>
+          <td>$y\ [c/\Omega_p]$</td>
+          <td>$d_\alpha^\pm / \max(d_p)$</td>
+          <td>赤 = plasma、青 = beam</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      「見かけ密度」は $d_\alpha^\pm = \gamma_\alpha e^{\pm\xi_\alpha}$ で定義され、
+      $+$ が進行方向、$-$ が逆行方向の粒子密度に対応します。
+    </p>
+
+    <p>
+      結果は <code>work/fig1_a0&lt;value&gt;.png</code> に保存されます。
+      $y$ 方向は半ドメイン解を反転対称化（$A$：偶関数、$\Phi$：奇関数）して全周期を表示します。
+    </p>
+  </section>
+
+  <!-- 7. How to run -->
+  <section id="run">
+    <h2>7. 実行方法</h2>
+    <p>このファイルは <strong>Marimo インタラクティブノートブック</strong> です。
+    通常の <code>python fig1_equilibrium.py</code> では UI は起動しません。</p>
+
+    <h3>インタラクティブモード（推奨）</h3>
+    <pre><code class="language-bash"># プロジェクトルートから
+marimo run notebooks/fig1_equilibrium.py
+# ブラウザで http://localhost:2718 を開く</code></pre>
+
+    <h3>編集モード</h3>
+    <pre><code class="language-bash">marimo edit notebooks/fig1_equilibrium.py</code></pre>
+
+    <div class="box info">
+      <strong>スライダー</strong> で $a_0$ を 0.05〜0.50 の範囲で変化させると、
+      均衡プロファイルが即座に再計算されます。
+      計算時間は約 2〜5 秒（$N = 64$ 点、25 継続ステップ）。
+    </div>
+
+    <h3>依存パッケージ</h3>
+    <pre><code class="language-bash">uv sync   # pyproject.toml から自動インストール
+# 主な依存: marimo, numpy, scipy, matplotlib</code></pre>
+  </section>
+
+</div>
+
+<footer>
+  fig1_equilibrium.py — FMI Equilibrium Profile Solver &nbsp;|&nbsp;
+  Vanthieghem et al. 2018 &nbsp;|&nbsp;
+  Generated by Claude Scholar
+</footer>
+
+</body>
+</html>

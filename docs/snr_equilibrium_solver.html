@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3成分SNRプラズマ電流フィラメント平衡ソルバー</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #252836;
+      --border: #2e3247;
+      --accent: #5c9cf5;
+      --accent2: #7ec8a0;
+      --accent3: #f5a623;
+      --text: #e2e4ed;
+      --text-muted: #8890aa;
+      --code-bg: #131622;
+      --kw: #c792ea;
+      --fn: #82aaff;
+      --str: #c3e88d;
+      --num: #f78c6c;
+      --cmt: #546e7a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    a { color: var(--accent); }
+
+    /* ── LAYOUT ── */
+    .page-wrap { display: flex; min-height: 100vh; }
+    nav {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 2rem 1.2rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    nav h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .12em;
+              color: var(--text-muted); margin-bottom: .6rem; }
+    nav ul { list-style: none; }
+    nav li { margin: .2rem 0; }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: .88rem;
+             display: block; padding: .25rem .5rem; border-radius: 4px; transition: .15s; }
+    nav a:hover { color: var(--accent); background: rgba(92,156,245,.08); }
+    nav .section-head { margin-top: 1.2rem; }
+
+    main {
+      flex: 1;
+      max-width: 860px;
+      padding: 3rem 3.5rem;
+    }
+
+    /* ── TYPOGRAPHY ── */
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: .4rem;
+         background: linear-gradient(135deg, var(--accent), var(--accent2));
+         -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--text-muted); margin-bottom: 2.5rem; font-size: .95rem; }
+    h2 { font-size: 1.35rem; color: var(--accent); margin: 2.5rem 0 .8rem;
+         padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1.05rem; color: var(--accent2); margin: 1.6rem 0 .5rem; }
+    h4 { font-size: .95rem; color: var(--accent3); margin: 1.2rem 0 .4rem; }
+    p  { margin-bottom: .9rem; }
+
+    /* ── CALLOUT / NOTE ── */
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: rgba(92,156,245,.07);
+      padding: .8rem 1.2rem;
+      border-radius: 0 6px 6px 0;
+      margin: 1rem 0;
+    }
+    .callout.green { border-color: var(--accent2); background: rgba(126,200,160,.07); }
+    .callout.orange { border-color: var(--accent3); background: rgba(245,166,35,.07); }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th { background: var(--surface2); color: var(--accent); padding: .55rem .9rem;
+         text-align: left; font-weight: 600; border: 1px solid var(--border); }
+    td { padding: .5rem .9rem; border: 1px solid var(--border); }
+    tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+
+    /* ── CODE ── */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      overflow-x: auto;
+      font-size: .84rem;
+      line-height: 1.6;
+      margin: .8rem 0 1.2rem;
+    }
+    code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+    p code, li code {
+      background: var(--surface2);
+      padding: .15em .4em;
+      border-radius: 3px;
+      font-size: .85em;
+    }
+
+    /* syntax colours (manual) */
+    .kw  { color: var(--kw); }
+    .fn  { color: var(--fn); }
+    .str { color: var(--str); }
+    .num { color: var(--num); }
+    .cmt { color: var(--cmt); font-style: italic; }
+    .op  { color: #89ddff; }
+
+    /* ── EQUATION BLOCK ── */
+    .eq-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.6rem;
+      text-align: center;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    /* ── BADGE ── */
+    .badge {
+      display: inline-block;
+      font-size: .72rem;
+      padding: .15em .55em;
+      border-radius: 999px;
+      font-weight: 600;
+      margin-left: .4rem;
+      vertical-align: middle;
+    }
+    .badge-blue  { background: rgba(92,156,245,.2);  color: var(--accent); }
+    .badge-green { background: rgba(126,200,160,.2); color: var(--accent2); }
+
+    /* ── STEP LIST ── */
+    .steps { counter-reset: step; list-style: none; margin: .5rem 0 1rem; }
+    .steps li { counter-increment: step; display: flex; gap: .9rem; margin-bottom: 1rem; }
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 1.6rem; height: 1.6rem;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: .8rem;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: .15rem;
+    }
+
+    /* ── DIAGRAM (ASCII) ── */
+    .diagram {
+      font-family: monospace;
+      font-size: .82rem;
+      color: var(--text-muted);
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.4rem;
+      white-space: pre;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- ══════════════════════════════════ NAV ══════════════════════════════════ -->
+<nav>
+  <h2>目次</h2>
+  <ul>
+    <li><a href="#overview">概要</a></li>
+    <li class="section-head"><h2 style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.8rem 0 .3rem">物理モデル</h2></li>
+    <li><a href="#components">3成分プラズマ系</a></li>
+    <li><a href="#normalization">正規化単位</a></li>
+    <li><a href="#density">密度分布（Boltzmann）</a></li>
+    <li><a href="#equations">支配方程式</a></li>
+    <li><a href="#neutrality">中性条件</a></li>
+    <li class="section-head"><h2 style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.8rem 0 .3rem">数値手法</h2></li>
+    <li><a href="#bcs">境界条件</a></li>
+    <li><a href="#chebyshev">Chebyshevスペクトル法</a></li>
+    <li><a href="#dispersion">線形分散初期推定</a></li>
+    <li><a href="#newton">Newton継続法</a></li>
+    <li><a href="#postproc">後処理と対称拡張</a></li>
+    <li class="section-head"><h2 style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.8rem 0 .3rem">実装</h2></li>
+    <li><a href="#structure">コード構成</a></li>
+    <li><a href="#residual">残差関数</a></li>
+    <li><a href="#api">API リファレンス</a></li>
+    <li><a href="#params">パラメータ一覧</a></li>
+  </ul>
+</nav>
+
+<!-- ══════════════════════════════════ MAIN ══════════════════════════════════ -->
+<main>
+
+<h1>3成分SNRプラズマ電流フィラメント平衡ソルバー</h1>
+<p class="subtitle">
+  Vanthieghem et al. (2018) のChebysehvスペクトル法 + Newton継続法を<br>
+  非相対論的な背景電子・入射イオン・反射イオン系に拡張した実装の解説
+</p>
+
+<!-- ── OVERVIEW ── -->
+<h2 id="overview">概要</h2>
+<p>
+  超新星残骸（SNR）の衝撃波前面付近では、入射イオン（shock-heated ions）と
+  反射イオン（reflected ions）が共存した3成分プラズマが形成される。
+  このソルバーは、その環境で自発的に発生する<strong>電流フィラメント</strong>の
+  非線形平衡解（周期的定常解）をChebyshevスペクトル法とNewton継続法で求める。
+</p>
+
+<div class="callout">
+  <strong>基本文献:</strong> Vanthieghem, A. et al. (2018), <em>Phys. Plasmas</em> 25, 072115 —
+  相対論的ペアプラズマ平衡のChebysehvスペクトル法による解法。
+  本実装はこのアルゴリズムを非相対論的3成分系に拡張したもの。
+</div>
+
+<!-- ── COMPONENTS ── -->
+<h2 id="components">3成分プラズマ系</h2>
+<table>
+  <thead>
+    <tr><th>成分</th><th>電荷</th><th>平均数密度</th><th>ドリフト速度</th><th>温度</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>背景電子 (e)</td><td>\(-e\)</td><td>\(\bar{n}_e\)（正規化基準 = 1）</td>
+        <td>\(\beta_e c\)</td><td>\(T_e\)</td></tr>
+    <tr><td>入射イオン (inc)</td><td>\(+e\)</td><td>\((1-\eta)\bar{n}_e\)</td>
+        <td>\(\beta_{inc} c\)</td><td>\(T_{inc}\)</td></tr>
+    <tr><td>反射イオン (ref)</td><td>\(+e\)</td><td>\(\eta\bar{n}_e\)</td>
+        <td>\(\beta_{ref} c\)</td><td>\(T_{ref}\)</td></tr>
+  </tbody>
+</table>
+<p>
+  \(\eta \in (0, 1)\) は反射イオンの割合（反射イオン密度比）。
+  \(\eta = 0\) の極限はペアプラズマ系に近似的に帰着するが、
+  \(\sinh\) 簡略化は使えない（後述）。
+</p>
+
+<!-- ── NORMALIZATION ── -->
+<h2 id="normalization">正規化単位</h2>
+<table>
+  <thead><tr><th>物理量</th><th>正規化スケール</th><th>記号</th></tr></thead>
+  <tbody>
+    <tr><td>長さ</td><td>電子プラズマ周波数の慣性長</td><td>\(c/\omega_{pe}\)</td></tr>
+    <tr><td>速度</td><td>光速 \(c\)（\(c=1\)）</td>
+        <td>\(\beta_s \equiv v_s / c\)（ドリフト・熱速度とも \(/c\) の無次元量）</td></tr>
+    <tr><td>スカラーポテンシャル</td><td>\(m_e c^2 / e\)</td><td>\(\Phi \equiv e\phi_0 / m_e c^2\)</td></tr>
+    <tr><td>ベクトルポテンシャル</td><td>\(m_e c^2 / e\)</td><td>\(A \equiv eA_{0x} / m_e c^2\)</td></tr>
+    <tr><td>温度</td><td>\(m_e c^2 / k_B\)</td><td>\(T_s \equiv k_B T_s^{\rm phys} / m_e c^2\)</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <strong>速度記法（統一規約）:</strong> すべての速度は \(c\) で正規化し、記号 \(\beta_{\langle 名\rangle}\)
+  で表す（\(\beta \equiv v/c\)）。ドリフト \(\beta_e,\beta_{inc},\beta_{ref}\)、熱速度
+  \(\beta_{th,s}=v_{th,s}/c\)、音速 \(\beta_{cs,s}=c_s/c\)、衝撃波 \(\beta_{sh}=V_{sh}/c\) はすべて同じ規約。
+  熱速度と温度は \(T_s = m_s\,\beta_{th,s}^2\)（\(m_e=1\)）で結ばれる。
+  <strong>別物の注意:</strong> 「プラズマ \(\beta\)」（圧力比 \(2 n k_B T/(B^2/2\mu_0)\)）は速度比ではない。
+  混同を避けるためコードでは圧力比のみ <code>beta_e_plasma</code> と綴る。
+</div>
+<div class="callout orange">
+  <strong>注意:</strong> 質量比 \(m_i/m_e\) はこの平衡方程式には陽に現れない。
+  物理的なイオン慣性スケール \(c/\omega_{pi} = c/\omega_{pe} \times \sqrt{m_i/m_e}\) への変換は
+  Floquet / 不安定性解析の段階で必要となる。
+</div>
+
+<!-- ── DENSITY ── -->
+<h2 id="density">密度分布（Boltzmann分布）</h2>
+<p>
+  各成分が局所的な熱平衡にあると仮定すると、電磁ポテンシャル \((\Phi, A)\) に対して
+  <strong>Boltzmann分布</strong>が成立する。
+  非相対論的極限（\(v_{\rm drift} \ll c\））での1粒子エネルギーを使うと、
+  各密度は指数Boltzmann因子に比例する。
+  ただし<strong>比例係数は化学ポテンシャル正規化定数</strong>であり、
+  指数因子の<strong>空間平均</strong>が背景密度に一致するように決める：
+</p>
+
+<div class="eq-block">
+  \[
+    \frac{n_e}{\bar{n}_e} = \frac{\exp\!\left[(\Phi - \beta_e A)/T_e\right]}
+                                 {\big\langle \exp\!\left[(\Phi - \beta_e A)/T_e\right]\big\rangle}
+  \]
+  \[
+    \frac{n_{inc}}{\bar{n}_e} = (1-\eta)\,
+      \frac{\exp\!\left[-(\Phi - \beta_{inc} A)/T_{inc}\right]}
+           {\big\langle \exp\!\left[-(\Phi - \beta_{inc} A)/T_{inc}\right]\big\rangle}
+  \]
+  \[
+    \frac{n_{ref}}{\bar{n}_e} = \eta\,
+      \frac{\exp\!\left[-(\Phi - \beta_{ref} A)/T_{ref}\right]}
+           {\big\langle \exp\!\left[-(\Phi - \beta_{ref} A)/T_{ref}\right]\big\rangle}
+  \]
+</div>
+
+<p>
+  ここで \(\langle f \rangle = \frac{1}{L_{1/2}}\int_0^{L_{1/2}} f\, d\tilde{y}\)
+  は1周期にわたる空間平均（密度は偶関数なので半周期平均と等しい）。
+  この正規化により定義上 \(\langle n_e\rangle = \bar{n}_e\),
+  \(\langle n_{inc}\rangle = (1-\eta)\bar{n}_e\),
+  \(\langle n_{ref}\rangle = \eta\bar{n}_e\) が厳密に成立する。
+</p>
+
+<div class="callout orange">
+  <strong>なぜ正規化が必須か（周期境界条件との整合）:</strong>
+  支配方程式を1周期積分すると、両端で \(\partial_y\Phi = \partial_y A = 0\)
+  （Neumann境界条件）のため左辺が消え、次の<strong>積分中性条件</strong>が要求される：
+  <div class="eq-block" style="margin:.7rem 0;">
+    \[
+      \int_0^{L_{1/2}} (n_e - n_{inc} - n_{ref})\, d\tilde{y} = 0,
+      \qquad
+      \int_0^{L_{1/2}} (\beta_e n_e - \beta_{inc} n_{inc} - \beta_{ref} n_{ref})\, d\tilde{y} = 0
+    \]
+  </div>
+  すなわち<strong>プロファイル平均での電荷中性・電流中性</strong>。
+  比例係数を背景値 \((1, 1-\eta, \eta)\) に固定すると
+  \(\langle\exp[\cdots]\rangle \neq 1\) のためこの2条件が破れ、
+  <strong>厳密な平衡解が存在しなくなる</strong>。
+  ソルバーは最小二乗で妥協し、Neumann境界条件が破れて
+  折り返し点（\(y=0,\,L_{1/2}\)）に不連続なキンクが現れる。
+  上記の空間平均正規化を施すと、\(\langle n_e\rangle = \langle n_{inc}\rangle + \langle n_{ref}\rangle\)
+  と \(\beta_e\langle n_e\rangle = \beta_{inc}\langle n_{inc}\rangle + \beta_{ref}\langle n_{ref}\rangle\)
+  （後者は電流中性条件 \(\beta_e = (1-\eta)\beta_{inc} + \eta\beta_{ref}\) そのもの）が
+  自動的に満たされ、2条件が解消されて残差は機械精度（\(\sim 10^{-10}\)）まで収束する。
+</div>
+
+<p>
+  空間平均は Gauss-Lobatto ノード上の <strong>Clenshaw-Curtis 求積重み</strong> \(w_k\) を用い、
+  \(\langle f \rangle = \sum_k w_k f_k / \sum_k w_k\) で評価する。
+  離散化と同一グリッド上で平均を取るため、整合性は機械精度で保たれる。
+</p>
+
+<div class="callout green">
+  <strong>ペアプラズマとの違い:</strong>
+  2成分ペアプラズマでは電子・陽電子の指数関数の差が \(\sinh\) にまとまり、
+  支配方程式が \(\sinh\) 型の非線形ODE（Liouville方程式）に帰着する。
+  この対称性により積分中性条件は<strong>自動的に</strong>満たされ、明示的な正規化は不要。
+  3成分系ではこの対称性が無いため、上記の化学ポテンシャル正規化が本質的に必要となる。
+</div>
+
+<!-- ── EQUATIONS ── -->
+<h2 id="equations">支配方程式</h2>
+<p>
+  \(y\)方向の空間変化のみを考える1次元平衡では、
+  Maxwell方程式から正規化後の以下の2本のODEが得られる：
+</p>
+
+<h3>Poisson方程式（ガウス則）</h3>
+<div class="eq-block">
+  \[
+    \frac{d^2\Phi}{dy^2} = n_e - n_{inc} - n_{ref}
+  \]
+</div>
+
+<h3>Ampere方程式</h3>
+<div class="eq-block">
+  \[
+    \frac{d^2 A}{dy^2} = \beta_e n_e - \beta_{inc}\, n_{inc} - \beta_{ref}\, n_{ref}
+  \]
+</div>
+
+<p>
+  右辺は非線形であり、\(\Phi\) と \(A\) に指数関数的に依存する。
+  これら2本の連成2階ODE（未知関数2個、未知パラメータ \(L_{1/2}\) 1個）を
+  Chebyshevスペクトル法で離散化してNewtonで解く。
+</p>
+
+<!-- ── NEUTRALITY ── -->
+<h2 id="neutrality">中性条件</h2>
+
+<h3>電荷中性（自動的に満足）</h3>
+<p>
+  平均数密度を \(\bar{n}_{inc} = (1-\eta)\bar{n}_e\)、
+  \(\bar{n}_{ref} = \eta\bar{n}_e\) と定義したことにより、
+  <em>一様な背景状態では</em> \(\bar{n}_e = \bar{n}_{inc} + \bar{n}_{ref}\) が
+  \(\eta\) の定義から自動的に成立する。
+  追加の方程式は不要。
+</p>
+
+<h3>電流中性（導出式）</h3>
+<p>
+  \(x\)方向の全電流が0という条件から \(\beta_e\) を導出する：
+</p>
+<div class="eq-block">
+  \[
+    \beta_e = (1-\eta)\beta_{inc} + \eta\beta_{ref}
+  \]
+</div>
+<p>
+  これは入力パラメータから解析的に求まるため、Newton方程式の未知数には含めない。
+  実装では1行の計算で処理する：
+</p>
+<pre><code><span class="cmt"># src/fmi/snr_equilibrium.py</span>
+beta_e <span class="op">=</span> (<span class="num">1.0</span> <span class="op">-</span> eta) <span class="op">*</span> beta_inc <span class="op">+</span> eta <span class="op">*</span> beta_ref</code></pre>
+
+<!-- ── BOUNDARY CONDITIONS ── -->
+<h2 id="bcs">境界条件</h2>
+<p>
+  解の対称性から <strong>半周期ドメイン</strong> \(\tilde{y} \in [0, L_{1/2}]\) のみを解く。
+  周期長 \(L_{1/2}\)（= 半周期）は未知数（固有値）として Newton 系に含める。
+</p>
+
+<div class="diagram">
+  y = 0                    y = L_half (= L/2)        y = 2*L_half (= L)
+  │  反射イオン中心         │  入射イオン中心(逆電流)   │  反射イオン中心(y=0と同種)
+  │                        │                          │
+  A(0) = a₀  (振幅固定)    dA/dy = 0                 A = a₀  (対称性)
+  dA/dy = 0  (対称点)      dΦ/dy = 0                 dA/dy = 0
+  dΦ/dy = 0  (対称点)
+</div>
+
+<table>
+  <thead><tr><th>位置</th><th>条件</th><th>物理的意味</th></tr></thead>
+  <tbody>
+    <tr><td>\(y = 0\)</td><td>\(A(0) = a_0\)</td><td>ベクトルポテンシャル振幅を規定（解の振幅固定）</td></tr>
+    <tr><td>\(y = 0\)</td><td>\(\partial_y A = 0\)</td><td>フィラメント中心で磁場 \(B_{0z}=0\)（対称性）</td></tr>
+    <tr><td>\(y = 0\)</td><td>\(\partial_y \Phi = 0\)</td><td>フィラメント中心で電場 \(E_{0y}=0\)（対称性）</td></tr>
+    <tr><td>\(y = L_{1/2}=L/2\)</td><td>\(\partial_y A = 0\)</td><td>逆向き電流の入射イオンフィラメント中心で磁場 \(B_{0z}=0\)（対称面、\(B\) は奇関数）</td></tr>
+    <tr><td>\(y = L_{1/2}=L/2\)</td><td>\(\partial_y \Phi = 0\)</td><td>入射イオンフィラメント中心で電場 \(E_{0y}=0\)（対称面）</td></tr>
+  </tbody>
+</table>
+
+<p>
+  5つの境界条件が、\(2N+3\) 個の未知数（\(N+1\) 個のA，\(N+1\) 個の\(\Phi\)，\(L_{1/2}\)）
+  に対して、\(2(N-1)\) 個の内部方程式と合わせて閉じた系を作る。
+</p>
+
+<!-- ── CHEBYSHEV ── -->
+<h2 id="chebyshev">Chebyshevスペクトル法</h2>
+<p>
+  Chebyshev-Gauss-Lobattoノード \(x_k = \cos(k\pi/N),\; k=0,\ldots,N\) を
+  物理座標 \(\tilde{y} = L_{1/2}(1-x)/2\) にマップし、
+  標準区間 \([-1, 1]\) 上の微分行列 \(\mathbf{D}\) を経由して
+  物理空間の微分を行列演算で表現する。
+</p>
+
+<h3>Chebyshev微分行列</h3>
+<div class="eq-block">
+  \[
+    D_{ij} = \begin{cases}
+      \dfrac{c_i}{c_j}\dfrac{(-1)^{i+j}}{x_i - x_j} & i \neq j \\[8pt]
+      \dfrac{(1+2N^2)/6}{} & i = j = 0 \\[4pt]
+      -\dfrac{(1+2N^2)/6}{} & i = j = N \\[4pt]
+      -\dfrac{x_j}{2(1-x_j^2)} & \text{otherwise}
+    \end{cases}
+    \quad c_i = \begin{cases}2 & i=0\text{ or }N \\ 1 & \text{otherwise}\end{cases}
+  \]
+</div>
+
+<h3>座標変換</h3>
+<p>
+  \(x \in [-1, 1]\) から \(\tilde{y} \in [0, L_{1/2}]\) へのマップは：
+</p>
+<div class="eq-block">
+  \[
+    \tilde{y} = \frac{L_{1/2}}{2}(1 - x),
+    \qquad
+    \frac{d}{d\tilde{y}} = \frac{1}{dy/dx} \frac{d}{dx},
+    \quad dy/dx = -\frac{L_{1/2}}{2}
+  \]
+</div>
+<p>
+  したがって物理空間の微分行列は：
+</p>
+<div class="eq-block">
+  \[
+    \mathbf{D}_{\rm phys} = \frac{\mathbf{D}_{\rm std}}{dy/dx}, \qquad
+    \mathbf{D}^2_{\rm phys} = \frac{\mathbf{D}^2_{\rm std}}{(dy/dx)^2}
+  \]
+</div>
+
+<pre><code><span class="kw">def</span> <span class="fn">_chebyshev_diff_matrix</span>(N: <span class="fn">int</span>) <span class="op">-></span> <span class="fn">tuple</span>[NDArray, NDArray]:
+    x = np.cos(np.arange(N <span class="op">+</span> <span class="num">1</span>) <span class="op">*</span> np.pi <span class="op">/</span> N)   <span class="cmt"># Gauss-Lobatto ノード</span>
+    D = np.zeros((N <span class="op">+</span> <span class="num">1</span>, N <span class="op">+</span> <span class="num">1</span>))
+    p = np.ones(N <span class="op">+</span> <span class="num">1</span>); p[<span class="num">0</span>] <span class="op">=</span> <span class="num">2.0</span>; p[N] <span class="op">=</span> <span class="num">2.0</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(N <span class="op">+</span> <span class="num">1</span>):
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(N <span class="op">+</span> <span class="num">1</span>):
+            <span class="kw">if</span> i <span class="op">!=</span> j:
+                D[i, j] <span class="op">=</span> (<span class="op">-</span><span class="num">1</span>) <span class="op">**</span> (i <span class="op">+</span> j) <span class="op">*</span> p[i] <span class="op">/</span> (p[j] <span class="op">*</span> (x[i] <span class="op">-</span> x[j]))
+    D[<span class="num">0</span>, <span class="num">0</span>]  <span class="op">=</span> (<span class="num">1</span> <span class="op">+</span> <span class="num">2</span><span class="op">*</span>N<span class="op">**</span><span class="num">2</span>) <span class="op">/</span> <span class="num">6.0</span>
+    D[N, N]  <span class="op">=</span> <span class="op">-</span>(<span class="num">1</span> <span class="op">+</span> <span class="num">2</span><span class="op">*</span>N<span class="op">**</span><span class="num">2</span>) <span class="op">/</span> <span class="num">6.0</span>
+    <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, N):
+        D[j, j] <span class="op">=</span> <span class="op">-</span>x[j] <span class="op">/</span> (<span class="num">2</span> <span class="op">*</span> (<span class="num">1</span> <span class="op">-</span> x[j]<span class="op">**</span><span class="num">2</span>))
+    <span class="kw">return</span> D, x</code></pre>
+
+<!-- ── DISPERSION ── -->
+<h2 id="dispersion">線形分散関係による初期推定値</h2>
+<p>
+  Newton法の収束性のため、<strong>線形分散関係</strong>から
+  \((A, \Phi, L_{1/2})\) の良い初期推定値を構成する。
+  \(\Phi = A = 0\) 周りで密度を線形化すると：
+</p>
+
+<div class="eq-block">
+  \[
+    \frac{d^2}{d\tilde{y}^2}\begin{pmatrix}\Phi \\ A\end{pmatrix}
+    = \begin{pmatrix}C_{PP} & -C_{AP} \\ C_{AP} & C_{AA}\end{pmatrix}
+      \begin{pmatrix}\Phi \\ A\end{pmatrix}
+  \]
+</div>
+
+<p>係数：</p>
+<div class="eq-block">
+  \[
+    C_{PP} = \frac{1}{T_e} + \frac{1-\eta}{T_{inc}} + \frac{\eta}{T_{ref}}
+  \]
+  \[
+    C_{AP} = \frac{\beta_e}{T_e} + \frac{(1-\eta)\beta_{inc}}{T_{inc}} + \frac{\eta\beta_{ref}}{T_{ref}}
+  \]
+  \[
+    C_{AA} = -\left(\frac{\beta_e^2}{T_e} + \frac{(1-\eta)\beta_{inc}^2}{T_{inc}} + \frac{\eta\beta_{ref}^2}{T_{ref}}\right)
+  \]
+</div>
+
+<p>
+  モード \(\Phi = r \cdot A\) の比 \(r\) が満たす2次方程式（Vanthieghem 2018と同じ構造）：
+</p>
+<div class="eq-block">
+  \[
+    C_{AP}\, r^2 + (C_{AA} - C_{PP})\, r + C_{AP} = 0
+  \]
+</div>
+<p>
+  2根のうち \(k^2 = -(C_{AP} r + C_{AA}) > 0\) を満たす根を選ぶ。
+  半周期の初期推定値：\(L_{1/2}^{\rm guess} = \pi / k\)。
+  振幅プロファイルの初期値：\(A^{(0)}_j = a_0^{\rm start} \cos(\pi(1-x_j)/2)\)。
+</p>
+
+<!-- ── NEWTON ── -->
+<h2 id="newton">Newton継続法（ホモトピー）</h2>
+<p>
+  小振幅 \(a_0^{\rm start} = 0.01\) から目標振幅 \(a_0^{\rm target}\) まで
+  段階的に振幅を増大させながら Newton 法を繰り返す（<em>continuation method</em>）。
+  大振幅では直接の Newton 法が収束しないため、前ステップの解を初期値として使うことで
+  安定した収束を実現する。
+</p>
+
+<div class="diagram">
+a₀ = 0.01   →   0.05   →   0.10   →   ...   →   a₀_target
+   ↓ Newton      ↓ Newton     ↓ Newton               ↓ Newton
+  u₀          u₁           u₂                   u_final
+(initial     (prev sol.   (prev sol.            (solution)
+  guess)      × scale)     × scale)</code></pre>
+</div>
+
+<p>ステップ間のスケーリング（線形外挿）:</p>
+<pre><code><span class="kw">if</span> i <span class="op">></span> <span class="num">0</span>:
+    u_guess[:<span class="num">2</span><span class="op">*</span>N <span class="op">+</span> <span class="num">2</span>] <span class="op">*=</span> current_a0 <span class="op">/</span> a0_ramp[i <span class="op">-</span> <span class="num">1</span>]
+sol <span class="op">=</span> root(_residual, u_guess, args<span class="op">=</span>(current_a0,), method<span class="op">=</span><span class="str">"lm"</span>)
+u_guess <span class="op">=</span> sol.x</code></pre>
+
+<p>
+  <code>scipy.optimize.root</code> の Levenberg-Marquardt 法（<code>method="lm"</code>）を使用。
+  LM法は過決定系・特異点近傍でも安定して動作するため、
+  非線形スペクトル方程式の解法に適している。
+</p>
+
+<!-- ── POSTPROC ── -->
+<h2 id="postproc">後処理と対称拡張</h2>
+<p>
+  Newton法で得た半周期解を1周期分に拡張する。
+  物理的な対称性から：
+</p>
+<ul style="margin: .5rem 0 1rem 1.5rem; line-height: 1.9;">
+  <li>\(B_{0z}, E_{0y}\) — 交互フィラメント系のため<strong>反対称（奇関数）</strong></li>
+  <li>\(n_e, n_{inc}, n_{ref}\) — 密度は<strong>対称（偶関数）</strong></li>
+  <li>\(y\) 座標 — 0 から \(2L_{1/2}\) まで単調増加</li>
+</ul>
+
+<pre><code><span class="kw">def</span> <span class="fn">_mirror_odd</span>(v):   <span class="cmt"># B, E の反対称拡張</span>
+    <span class="kw">return</span> np.concatenate([v, <span class="op">-</span>v[<span class="op">-</span><span class="num">2</span>::<span class="op">-</span><span class="num">1</span>]])
+
+<span class="kw">def</span> <span class="fn">_mirror_even</span>(v):  <span class="cmt"># 密度の対称拡張</span>
+    <span class="kw">return</span> np.concatenate([v, v[<span class="op">-</span><span class="num">2</span>::<span class="op">-</span><span class="num">1</span>]])
+
+<span class="cmt"># y は折り返し後も単調増加（2*L_half - y_half[-2::-1]）</span>
+y_full <span class="op">=</span> np.concatenate([y_half, <span class="num">2.0</span> <span class="op">*</span> L_half <span class="op">-</span> y_half[<span class="op">-</span><span class="num">2</span>::<span class="op">-</span><span class="num">1</span>]])</code></pre>
+
+<div class="callout">
+  <strong>境界での厳密施行:</strong>
+  Newton法の収束残差により \(B_{0z}[0]\), \(B_{0z}[N]\), \(E_{0y}[0]\), \(E_{0y}[N]\)
+  がわずかに非ゼロになる場合がある。折り返し点でのヒゲ（非滑らか点）を防ぐため、
+  ポスト処理で境界値を厳密に0にセットする：
+</div>
+<pre><code>B0z[<span class="num">0</span>] <span class="op">=</span> <span class="num">0.0</span>; B0z[N] <span class="op">=</span> <span class="num">0.0</span>
+E0y[<span class="num">0</span>] <span class="op">=</span> <span class="num">0.0</span>; E0y[N] <span class="op">=</span> <span class="num">0.0</span></code></pre>
+
+<!-- ── STRUCTURE ── -->
+<h2 id="structure">コード構成</h2>
+<pre><code>FMI/
+├── src/fmi/
+│   └── snr_equilibrium.py      <span class="cmt"># ライブラリ（marimo非依存）</span>
+│       ├── _chebyshev_diff_matrix(N)
+│       ├── _clenshaw_curtis_weights(N)  <span class="cmt"># 空間平均用の求積重み</span>
+│       └── solve_snr_equilibrium(...)
+├── notebooks/
+│   └── snr_equilibrium.py      <span class="cmt"># インタラクティブ marimoノートブック</span>
+└── tests/
+    └── test_snr_equilibrium.py <span class="cmt"># pytest ユニットテスト</span></code></pre>
+
+<p>設計方針：</p>
+<ul style="margin:.5rem 0 1rem 1.5rem; line-height: 1.9;">
+  <li>ソルバーロジックは<code>src/fmi/snr_equilibrium.py</code>に純ライブラリとして分離</li>
+  <li>ノートブックはUIのみ担当し、ソルバーをインポートして使う</li>
+  <li>これにより<code>pytest</code>やスクリプトからもソルバーを直接利用可能</li>
+</ul>
+
+<!-- ── RESIDUAL ── -->
+<h2 id="residual">残差関数の構造</h2>
+<p>
+  解ベクトル \(\mathbf{u} \in \mathbb{R}^{2N+3}\) のレイアウト：
+</p>
+<div class="diagram">
+  u = [ A[0], A[1], ..., A[N],  Phi[0], Phi[1], ..., Phi[N],  L_half ]
+       ← N+1 個 →              ←       N+1 個        →         ← 1個 →</div>
+
+<p>残差ベクトルのレイアウト：</p>
+<table>
+  <thead><tr><th>インデックス</th><th>方程式</th><th>物理的意味</th></tr></thead>
+  <tbody>
+    <tr><td><code>res[0]</code></td><td>\(A[0] - a_0 = 0\)</td><td>BC: A の振幅固定</td></tr>
+    <tr><td><code>res[1..N-1]</code></td><td>\(\mathbf{D}^2_{\rm phys} A - \text{rhs}_A = 0\)</td><td>Ampere（内部ノード）</td></tr>
+    <tr><td><code>res[N]</code></td><td>\((\mathbf{D}_{\rm phys} A)[N] = 0\)</td><td>BC: \(dA/dy = 0\) at \(L_{1/2}\)</td></tr>
+    <tr><td><code>res[N+1]</code></td><td>\((\mathbf{D}_{\rm phys} \Phi)[0] = 0\)</td><td>BC: \(d\Phi/dy = 0\) at \(0\)</td></tr>
+    <tr><td><code>res[N+2..2N]</code></td><td>\(\mathbf{D}^2_{\rm phys} \Phi - \text{rhs}_\Phi = 0\)</td><td>Poisson（内部ノード）</td></tr>
+    <tr><td><code>res[2N+1]</code></td><td>\((\mathbf{D}_{\rm phys} \Phi)[N] = 0\)</td><td>BC: \(d\Phi/dy = 0\) at \(L_{1/2}\)</td></tr>
+    <tr><td><code>res[2N+2]</code></td><td>\((\mathbf{D}_{\rm phys} A)[0] = 0\)</td><td>BC: \(dA/dy = 0\) at \(0\)</td></tr>
+  </tbody>
+</table>
+
+<p>
+  計5つの境界条件 + \(2(N-1)\) 個の内部方程式 = \(2N+3\) 個（未知数と一致）。
+  全残差に \((dy/dx)^2\) を乗じてスケーリングし、数値的なバランスを保つ。
+</p>
+
+<!-- ── API ── -->
+<h2 id="api">API リファレンス</h2>
+<pre><code><span class="kw">from</span> fmi.snr_equilibrium <span class="kw">import</span> solve_snr_equilibrium
+
+result <span class="op">=</span> <span class="fn">solve_snr_equilibrium</span>(
+    eta      <span class="op">=</span> <span class="num">0.1</span>,    <span class="cmt"># 反射イオン割合</span>
+    beta_inc <span class="op">=</span> <span class="num">0.3</span>,    <span class="cmt"># 入射イオンドリフト / c</span>
+    beta_ref <span class="op">=</span> <span class="op">-</span><span class="num">0.6</span>,   <span class="cmt"># 反射イオンドリフト / c（通常負）</span>
+    Te       <span class="op">=</span> <span class="num">0.5</span>,    <span class="cmt"># 電子温度 [m_e c² / k_B]</span>
+    Tinc     <span class="op">=</span> <span class="num">1.0</span>,    <span class="cmt"># 入射イオン温度</span>
+    Tref     <span class="op">=</span> <span class="num">0.5</span>,    <span class="cmt"># 反射イオン温度</span>
+    a0_target<span class="op">=</span> <span class="num">0.25</span>,   <span class="cmt"># A の目標振幅</span>
+    N_points <span class="op">=</span> <span class="num">64</span>,     <span class="cmt"># Chebyshev 分割数（ノード数 = N+1）</span>
+    n_steps  <span class="op">=</span> <span class="num">25</span>,     <span class="cmt"># Newton継続ステップ数</span>
+)</code></pre>
+
+<h3>戻り値 dict のキー</h3>
+<table>
+  <thead><tr><th>キー</th><th>型</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td><code>y_full</code></td><td>ndarray (2N+1,)</td><td>物理y座標 0 → 2L₁/₂ [c/ωpe]</td></tr>
+    <tr><td><code>B0z_full</code></td><td>ndarray (2N+1,)</td><td>磁場 \(B_{0z}\)（反対称）</td></tr>
+    <tr><td><code>E0y_full</code></td><td>ndarray (2N+1,)</td><td>電場 \(E_{0y}\)（反対称）</td></tr>
+    <tr><td><code>ne_full</code></td><td>ndarray (2N+1,)</td><td>電子密度 \(n_e/\bar{n}_e\)（対称）</td></tr>
+    <tr><td><code>ninc_full</code></td><td>ndarray (2N+1,)</td><td>入射イオン密度（対称）</td></tr>
+    <tr><td><code>nref_full</code></td><td>ndarray (2N+1,)</td><td>反射イオン密度（対称）</td></tr>
+    <tr><td><code>lambda0</code></td><td>float</td><td>全周期長 \(\lambda_0 = 2L_{1/2}\) [c/ωpe]</td></tr>
+    <tr><td><code>beta_e</code></td><td>float</td><td>電子ドリフト（電流中性条件から導出）</td></tr>
+    <tr><td><code>params</code></td><td>dict</td><td>入力パラメータの記録</td></tr>
+  </tbody>
+</table>
+
+<!-- ── PARAMS ── -->
+<h2 id="params">デフォルトSNRパラメータでの期待出力</h2>
+<table>
+  <thead><tr><th>量</th><th>値</th><th>備考</th></tr></thead>
+  <tbody>
+    <tr><td>\(\beta_e\)</td><td>0.2100</td><td>\((1-0.1)\times 0.3 + 0.1\times(-0.6)\)</td></tr>
+    <tr><td>\(\lambda_0\)</td><td>≈ 16.86 c/ωpe</td><td>Chebyshev N=64で収束</td></tr>
+    <tr><td>\(B_{0z}^{\rm peak}\)</td><td>≈ 0.099</td><td>\(a_0=0.25\) の場合</td></tr>
+    <tr><td>\(n_{inc}^{\rm peak}\)</td><td>≈ 0.93</td><td>\(y=0\) のフィラメント中心に集中</td></tr>
+    <tr><td>\(n_{ref}^{\rm peak}\)</td><td>≈ 0.15</td><td>もう一方のフィラメント中心（\(y=L/2\)、逆向き電流）に集中</td></tr>
+  </tbody>
+</table>
+
+<div class="callout green">
+  <strong>物理的妥当性チェック:</strong>
+  各 y 点で \(n_e \approx n_{inc} + n_{ref}\)（局所的電荷中性）が
+  成立することを目視で確認できる。
+  また \(B_{0z}\) が各フィラメント中心（\(y=0,\,L/2,\,L\)）でゼロになり、
+  隣り合う逆向きフィラメントの中間で最大値を持つことが、Weibel不安定性で生成される電流フィラメントの
+  典型的な磁場構造に対応している。
+</div>
+
+<hr>
+<p style="color:var(--text-muted);font-size:.82rem;text-align:center;margin-top:2rem;">
+  3成分SNRプラズマ電流フィラメント平衡ソルバー 実装解説 —
+  Vanthieghem et al. (2018) を基に3成分系へ拡張
+</p>
+</main>
+</div>
+</body>
+</html>

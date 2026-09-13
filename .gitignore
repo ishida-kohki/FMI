@@ -26,3 +26,10 @@ work/
 # OS/editor noise
 .DS_Store
 Thumbs.db
+
+# Claude Code local settings (machine-specific)
+.claude/settings.local.json
+
+# Marimo notebook runtime cache
+notebooks/__marimo__/
+*.bak

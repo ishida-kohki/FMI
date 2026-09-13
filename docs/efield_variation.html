@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNR平衡における電場 E0y の空間変動の起源</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #252836; --border: #2e3247;
+      --accent: #5c9cf5; --accent2: #7ec8a0; --accent3: #f5a623;
+      --text: #e2e4ed; --text-muted: #8890aa; --code-bg: #131622;
+      --kw: #c792ea; --fn: #82aaff; --str: #c3e88d; --num: #f78c6c; --cmt: #546e7a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.7; }
+    a { color: var(--accent); }
+    .page-wrap { display: flex; min-height: 100vh; }
+    nav { width: 260px; flex-shrink: 0; background: var(--surface);
+      border-right: 1px solid var(--border); padding: 2rem 1.2rem;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    nav h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .12em;
+      color: var(--text-muted); margin-bottom: .6rem; }
+    nav ul { list-style: none; }
+    nav li { margin: .2rem 0; }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: .88rem;
+      display: block; padding: .25rem .5rem; border-radius: 4px; transition: .15s; }
+    nav a:hover { color: var(--accent); background: rgba(92,156,245,.08); }
+    main { flex: 1; max-width: 860px; padding: 3rem 3.5rem; }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: .4rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--text-muted); margin-bottom: 2.5rem; font-size: .95rem; }
+    h2 { font-size: 1.35rem; color: var(--accent); margin: 2.5rem 0 .8rem;
+      padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1.05rem; color: var(--accent2); margin: 1.6rem 0 .5rem; }
+    h4 { font-size: .95rem; color: var(--accent3); margin: 1.2rem 0 .4rem; }
+    p  { margin-bottom: .9rem; }
+    .callout { border-left: 3px solid var(--accent); background: rgba(92,156,245,.07);
+      padding: .8rem 1.2rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+    .callout.green { border-color: var(--accent2); background: rgba(126,200,160,.07); }
+    .callout.orange { border-color: var(--accent3); background: rgba(245,166,35,.07); }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th { background: var(--surface2); color: var(--accent); padding: .55rem .9rem;
+      text-align: left; font-weight: 600; border: 1px solid var(--border); }
+    td { padding: .5rem .9rem; border: 1px solid var(--border); }
+    tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1.2rem 1.4rem; overflow-x: auto; font-size: .84rem; line-height: 1.6; margin: .8rem 0 1.2rem; }
+    code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+    p code, li code, td code { background: var(--surface2); padding: .15em .4em;
+      border-radius: 3px; font-size: .85em; }
+    .cmt { color: var(--cmt); font-style: italic; }
+    .eq-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem 1.6rem; text-align: center; overflow-x: auto; margin: 1rem 0; }
+    .badge { display: inline-block; font-size: .72rem; padding: .15em .55em; border-radius: 999px;
+      font-weight: 600; margin-left: .4rem; vertical-align: middle; }
+    .badge-blue { background: rgba(92,156,245,.2); color: var(--accent); }
+    .badge-green { background: rgba(126,200,160,.2); color: var(--accent2); }
+    .badge-orange { background: rgba(245,166,35,.2); color: var(--accent3); }
+    figure { margin: 1.2rem 0; text-align: center; }
+    figure img { max-width: 100%; border: 1px solid var(--border); border-radius: 8px; background:#fff; }
+    figcaption { color: var(--text-muted); font-size: .82rem; margin-top: .5rem; }
+    .diagram { font-family: monospace; font-size: .82rem; color: var(--text-muted);
+      background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem 1.4rem; white-space: pre; overflow-x: auto; margin: 1rem 0; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+<nav>
+  <h2>目次</h2>
+  <ul>
+    <li><a href="#overview">概要（この図の謎）</a></li>
+    <li class="section-head"><h2 style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.8rem 0 .3rem">基本</h2></li>
+    <li><a href="#source">E0y を作るのは電荷</a></li>
+    <li><a href="#harmonics">なぜ B は滑らか E は構造的か</a></li>
+    <li class="section-head"><h2 style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.8rem 0 .3rem">端の急変</h2></li>
+    <li><a href="#layer">冷イオン電荷層（不連続ではない）</a></li>
+    <li><a href="#temperature">温度依存（暖めると滑らか）</a></li>
+    <li><a href="#signs">E と B の符号関係</a></li>
+    <li><a href="#summary">まとめ</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<h1>SNR平衡における電場 \(E_{0y}\) の空間変動の起源</h1>
+<p class="subtitle">
+  <code>work/snr_equilibrium_2period.png</code> の \(E_{0y}\) プロファイルが<br>
+  なぜ複雑に変動するか — Gauss則・冷イオン電荷層・温度依存の解説
+</p>
+
+<!-- ── OVERVIEW ── -->
+<h2 id="overview">概要（この図の謎）</h2>
+<figure>
+  <img src="../work/equilibrium/snr_equilibrium_2period.png" alt="snr_equilibrium_2period">
+  <figcaption>対象の図。上段 \(B_{0z}\)（実線）/\(E_{0y}\)（破線）、下段 密度。
+    \(B_{0z}\) は1周期に山1・谷1の滑らかな波だが、\(E_{0y}\) はより細かく変動し、
+    フィラメント端付近で急峻な段状の変化を見せる。</figcaption>
+</figure>
+<p>
+  問いは2つ:(1) なぜ \(E_{0y}\) は \(B_{0z}\) より構造が細かいのか、(2) フィラメント端で
+  \(E_{0y}\) が見せる急峻な「段」は何か。結論から言うと、両方とも<strong>冷たいイオンが作る
+  鋭い電荷構造</strong>に起因する。以下、Gauss則から順に解く。
+</p>
+
+<!-- ── SOURCE ── -->
+<h2 id="source">E0y を作るのは電荷密度 \(\rho\)</h2>
+<p>
+  平衡は \(y\) のみに依存し、\(E_{0y}=-d\Phi/dy\)、\(B_{0z}=-dA/dy\)。
+  各ポテンシャルの源は Maxwell（正規化形）:
+</p>
+<div class="eq-block">
+  \[
+  \frac{d^2\Phi}{dy^2} = -\rho(y),\quad \rho=n_e-n_{inc}-n_{ref}
+  \qquad
+  \frac{d^2A}{dy^2} = -J_x(y),\quad J_x=\beta_e n_e-\beta_{inc}n_{inc}-\beta_{ref}n_{ref}
+  \]
+</div>
+<p>
+  つまり <strong>\(E_{0y}\) の変動 = 電荷密度 \(\rho\) の偏りの写し</strong>、
+  \(B_{0z}\) の変動 = 電流 \(J_x\) の偏りの写し。両者の「素材」が違うことが、見た目の違いの根。
+  密度は Boltzmann 閉包
+</p>
+<div class="eq-block">
+  \[
+  n_s \propto \exp\!\big[\mp(\Phi-\beta_s A)/\tilde T_s\big]
+  \]
+</div>
+<p>
+  で与えられ、合成ポテンシャル \((\Phi-\beta_s A)\) に指数的に応答する。
+</p>
+
+<!-- ── HARMONICS ── -->
+<h2 id="harmonics">なぜ \(B\) は滑らかで \(E\) は構造的か <span class="badge badge-blue">高調波</span></h2>
+<p>1周期の \(B_{0z},E_{0y},\rho\) を Fourier 分解すると（\(N=256\)、振幅を最大成分で規格化）:</p>
+<table>
+  <thead><tr><th>場</th><th>卓越する高調波（モード番号 : 振幅比）</th><th>1周期の極値数</th></tr></thead>
+  <tbody>
+    <tr><td>\(B_{0z}\)</td><td>#1 : 1.0,&nbsp; #2 : 0.31,&nbsp; #3 : 0.17</td><td><strong>2</strong>（ほぼ純基本波）</td></tr>
+    <tr><td>\(E_{0y}\)</td><td>#4 : 1.0,&nbsp; #3 : 0.94,&nbsp; #5 : 0.83,&nbsp; #2 : 0.60</td><td><strong>4</strong>（高調波リッチ）</td></tr>
+    <tr><td>\(\rho\)</td><td>#5 : 1.0,&nbsp; #4 : 0.96,&nbsp; #6 : 0.76,&nbsp; #10 : 0.73</td><td>さらに鋭い</td></tr>
+  </tbody>
+</table>
+<h3>(1) \(B_{0z}\) が滑らかな理由</h3>
+<p>
+  \(A\) を作る電流 \(J_x\) はフィラメント化の固有モードそのもので、系が磁気的に支えられる
+  波長は実質1つ（\(k_0\)）。よって \(A\approx a_0\cos k_0 y\) の単一余弦、
+  \(B_{0z}=-dA/dy\approx a_0 k_0\sin k_0 y\) → 山1・谷1の<strong>2極値</strong>。
+  磁気セクターは結合 \(C_{AA}\sim\beta^2/\tilde T\) が小さく「柔らかい」ため長波長しか持てない。
+</p>
+<h3>(2) \(E_{0y}\) が構造的な理由</h3>
+<p>\(\Phi\) を作る \(\rho\) が高調波だらけになる。三つの効果が重なる:</p>
+<ul style="margin:.3rem 0 1rem 1.4rem;">
+  <li><strong>指数応答 × 冷たいイオン:</strong> \(1/\tilde T_{inc}\approx1600\) なので、滑らかな \(A\) でも
+      指数 \(\exp[-\beta_s A/\tilde T_s]\) が<strong>鋭く尖った密度ピーク</strong>を作り高調波を生む。</li>
+  <li><strong>準中性の打ち消し残差:</strong> 電子が遮蔽して \(n_e\approx n_{inc}+n_{ref}\)。残る \(\rho\) は
+      大きく鋭い量の小さな差で、急勾配（フィラメント端）に集中する → \(\rho\) はさらに鋭い。</li>
+  <li><strong>積分のスケーリング:</strong> Fourier で \(\Phi_k=\rho_k/k^2\)、\(E_{0y,k}=\rho_k/k\)。
+      \(E_{0y}\) は \(\rho\) の高調波を \(1/k\) でしか減衰させない（\(\Phi\) は \(1/k^2\)）ため構造が残る。</li>
+</ul>
+<div class="callout">
+  一言で:<strong>両方ともポテンシャルの1階微分だが、源が違う。</strong>
+  \(B_{0z}\) は「滑らかなコヒーレント電流」由来 → 単一波長 → 2極値。
+  \(E_{0y}\) は「鋭い電荷残差」由来 → 高調波リッチ → 4極値。
+</div>
+
+<!-- ── LAYER ── -->
+<h2 id="layer">フィラメント端の急変：冷イオン電荷層 <span class="badge badge-orange">不連続ではない</span></h2>
+<p>
+  \(E_{0y}\) がフィラメント端（\(y/\lambda_0\approx0.1,0.9\)）で見せる急峻な「段」は、
+  反射イオン領域と入射イオン領域の<strong>境界に立つ薄い電荷二重層</strong>である。
+  そこで \(\rho\) が \(+0.24\) に尖り、Gauss則 \(dE_{0y}/dy=\rho\) により \(E_{0y}\) が急に落ちる。
+</p>
+<figure>
+  <img src="../work/floquet_diagnostics/E0y_edge_layer_diagnostic.png" alt="edge layer diagnostic">
+  <figcaption>(A) \(N=64/128/256\) が一致 → \(E_{0y}\) は<strong>連続かつ振幅収束</strong>。
+    急峻だが不連続ではない（解像度を上げても跳びは出ず、傾きだけ鋭くなる薄い層）。
+    (B) イオンを暖める（\(M_S\) を下げる）と層が広がり滑らかになる。</figcaption>
+</figure>
+<table>
+  <thead><tr><th>検証</th><th>結果</th><th>意味</th></tr></thead>
+  <tbody>
+    <tr><td>\(N=64,128,256\) での \(E_{0y}\) 振幅</td><td>\([-0.027,+0.027]\) で一定</td><td>収束（アーティファクトでない）</td></tr>
+    <tr><td>端での \(|dE_{0y}/dy|\) と \(\rho\)</td><td>ともに \(\approx0.22\)</td><td>Gauss則と整合（実在の電荷層）</td></tr>
+    <tr><td>サンプル毎の \(E_{0y}\) 変化</td><td>\(\le0.003\)/点</td><td>連続・滑らか（ジャンプなし）</td></tr>
+  </tbody>
+</table>
+<div class="callout orange">
+  見かけ上「不連続」に見えるのは、(1) 反射イオンが冷たく（\(\tilde T\approx6\times10^{-4}\)）層が極薄、
+  (2) 元図が \(N=128\)＋2周期タイルで薄い層をまばらな点で描いたため。
+  実体は<strong>急峻だが連続な \(S\) 字遷移</strong>で、真の不連続（電荷シート \(\delta\) 関数）ではない。
+</div>
+
+<!-- ── TEMPERATURE ── -->
+<h2 id="temperature">温度依存：暖めると滑らかになる</h2>
+<p>層の薄さはイオン温度で決まる（層幅 \(\propto\sqrt{\tilde T}\)）。\(M_S\) を下げて暖めると:</p>
+<table>
+  <thead><tr><th>\(M_S\)</th><th>\(\tilde T_i\)</th><th>端の最大勾配 \(|dE_{0y}/dy|\)</th></tr></thead>
+  <tbody>
+    <tr><td>154.92（既定）</td><td>\(6.25\times10^{-4}\)</td><td>0.21（急峻・段状）</td></tr>
+    <tr><td>80</td><td>\(2.34\times10^{-3}\)</td><td>0.089（緩む）</td></tr>
+    <tr><td>40</td><td>\(9.38\times10^{-3}\)</td><td>0.018（滑らか）</td></tr>
+  </tbody>
+</table>
+<div class="callout green">
+  この温度依存性こそ「数値アーティファクトではなく物理」の決定的証拠。
+  アーティファクトなら温度に反応しない。滑らかな \(E_{0y}\) が欲しければ反射イオンを暖める
+  （実効マッハを下げる／\(T_{ref}/T_{inc}\) を上げる）。
+</div>
+
+<!-- ── SIGNS ── -->
+<h2 id="signs">補足：\(E\) と \(B\) の符号関係</h2>
+<p>
+  半周期で \(A(y)\) は単調なので \(\Phi=\Phi(A)\) と見られ、
+  \(E_{0y}/B_{0z}=d\Phi/dA\)。同じ冷イオン非線形性がここにも効く。
+</p>
+<figure>
+  <img src="../work/floquet_diagnostics/EB_sign_warm_vs_cold.png" alt="E-B sign warm vs cold">
+  <figcaption>(A) \(\Phi\) vs \(A\):温かいイオンは直線（\(\Phi\propto A\)、傾き一定 \(>0\)）→ 符号常に一致。
+    冷たいイオンは非単調 → 傾き \(=E_{0y}/B_{0z}\) が符号反転。
+    (B) 比 \(E_{0y}/B_{0z}\):warm は常に正、cold はフィラメント中心で負へ潜る。</figcaption>
+</figure>
+<p>
+  暖かい（線形）領域では \(\Phi\propto A\) ゆえ \(E_{0y}\propto B_{0z}\) で符号がロックするが、
+  冷たい（非線形）領域では \(\Phi\) が \(A\) に無い電荷層構造を持ち、
+  \(d\Phi/dA\) が符号反転して<strong>所により \(E\) と \(B\) の符号が食い違う</strong>。
+  「符号一致」は暖かい/線形領域に特有の性質で普遍法則ではない。
+</p>
+
+<!-- ── SUMMARY ── -->
+<h2 id="summary">まとめ</h2>
+<div class="diagram">  E0y の変動の起源
+  ────────────────────────────────────────────────
+  E0y = −dΦ/dy,   Φ'' = −ρ   （Gauss則）
+        │
+        ├─ ρ は冷イオン(T̃≈6e-4)の指数応答で鋭い
+        │   → 高調波リッチ → E0y は B0z より構造的（4極値 vs 2極値）
+        │
+        ├─ 反射/入射イオン界面に薄い電荷二重層（ρ尖り +0.24）
+        │   → E0y が急峻な段（連続・Gauss整合・振幅収束）
+        │
+        └─ 温度を上げると層が広がり E0y は滑らかに（∝√T̃）</div>
+<ul style="margin:.3rem 0 1rem 1.4rem;">
+  <li>\(E_{0y}\) の変動は<strong>電荷密度 \(\rho\) の偏り</strong>を Gauss則で写したもの。</li>
+  <li>\(B_{0z}\) より細かいのは、\(\rho\) が冷イオンの指数応答＋準中性残差で<strong>高調波リッチ</strong>だから。</li>
+  <li>端の「段」は<strong>冷イオン電荷二重層</strong>。急峻だが連続（不連続ではない）。</li>
+  <li>すべて<strong>冷たいイオン</strong>が根。暖めれば滑らかになる（物理であってバグでない）。</li>
+</ul>
+<div class="callout">
+  関連ドキュメント:
+  <a href="snr_equilibrium_solver.html">3成分平衡ソルバー</a> ／
+  <a href="mach_parameter_scheme.html">マッハ数基準パラメータ設計</a> ／
+  <a href="electron_rest_frame.html">電子静止系への補正フロー</a>
+</div>
+
+<hr>
+<p style="color:var(--text-muted);font-size:.82rem;text-align:center;margin-top:2rem;">
+  SNR平衡における電場 E0y の空間変動の起源 —
+  Gauss則・冷イオン電荷層・温度依存の解説
+</p>
+</main>
+</div>
+</body>
+</html>

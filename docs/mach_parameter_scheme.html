@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マッハ数基準のパラメータ構築</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #252836;
+      --border: #2e3247;
+      --accent: #5c9cf5;
+      --accent2: #7ec8a0;
+      --accent3: #f5a623;
+      --text: #e2e4ed;
+      --text-muted: #8890aa;
+      --code-bg: #131622;
+      --kw: #c792ea;
+      --fn: #82aaff;
+      --str: #c3e88d;
+      --num: #f78c6c;
+      --cmt: #546e7a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    a { color: var(--accent); }
+
+    /* ── LAYOUT ── */
+    .page-wrap { display: flex; min-height: 100vh; }
+    nav {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 2rem 1.2rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    nav h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .12em;
+              color: var(--text-muted); margin-bottom: .6rem; }
+    nav ul { list-style: none; }
+    nav li { margin: .2rem 0; }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: .88rem;
+             display: block; padding: .25rem .5rem; border-radius: 4px; transition: .15s; }
+    nav a:hover { color: var(--accent); background: rgba(92,156,245,.08); }
+    nav .section-head { margin-top: 1.2rem; }
+
+    main {
+      flex: 1;
+      max-width: 860px;
+      padding: 3rem 3.5rem;
+    }
+
+    /* ── TYPOGRAPHY ── */
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: .4rem;
+         background: linear-gradient(135deg, var(--accent), var(--accent2));
+         -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--text-muted); margin-bottom: 2.5rem; font-size: .95rem; }
+    h2 { font-size: 1.35rem; color: var(--accent); margin: 2.5rem 0 .8rem;
+         padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1.05rem; color: var(--accent2); margin: 1.6rem 0 .5rem; }
+    h4 { font-size: .95rem; color: var(--accent3); margin: 1.2rem 0 .4rem; }
+    p  { margin-bottom: .9rem; }
+
+    /* ── CALLOUT / NOTE ── */
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: rgba(92,156,245,.07);
+      padding: .8rem 1.2rem;
+      border-radius: 0 6px 6px 0;
+      margin: 1rem 0;
+    }
+    .callout.green { border-color: var(--accent2); background: rgba(126,200,160,.07); }
+    .callout.orange { border-color: var(--accent3); background: rgba(245,166,35,.07); }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th { background: var(--surface2); color: var(--accent); padding: .55rem .9rem;
+         text-align: left; font-weight: 600; border: 1px solid var(--border); }
+    td { padding: .5rem .9rem; border: 1px solid var(--border); }
+    tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+
+    /* ── CODE ── */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      overflow-x: auto;
+      font-size: .84rem;
+      line-height: 1.6;
+      margin: .8rem 0 1.2rem;
+    }
+    code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+    p code, li code, td code {
+      background: var(--surface2);
+      padding: .15em .4em;
+      border-radius: 3px;
+      font-size: .85em;
+    }
+
+    /* syntax colours (manual) */
+    .kw  { color: var(--kw); }
+    .fn  { color: var(--fn); }
+    .str { color: var(--str); }
+    .num { color: var(--num); }
+    .cmt { color: var(--cmt); font-style: italic; }
+    .op  { color: #89ddff; }
+
+    /* ── EQUATION BLOCK ── */
+    .eq-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.6rem;
+      text-align: center;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    /* ── BADGE ── */
+    .badge {
+      display: inline-block;
+      font-size: .72rem;
+      padding: .15em .55em;
+      border-radius: 999px;
+      font-weight: 600;
+      margin-left: .4rem;
+      vertical-align: middle;
+    }
+    .badge-blue  { background: rgba(92,156,245,.2);  color: var(--accent); }
+    .badge-green { background: rgba(126,200,160,.2); color: var(--accent2); }
+    .badge-orange{ background: rgba(245,166,35,.2);  color: var(--accent3); }
+
+    /* ── STEP LIST ── */
+    .steps { counter-reset: step; list-style: none; margin: .5rem 0 1rem; }
+    .steps li { counter-increment: step; display: flex; gap: .9rem; margin-bottom: 1rem; }
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 1.6rem; height: 1.6rem;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: .8rem;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: .15rem;
+    }
+
+    /* ── DIAGRAM (ASCII) ── */
+    .diagram {
+      font-family: monospace;
+      font-size: .82rem;
+      color: var(--text-muted);
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.4rem;
+      white-space: pre;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- ══════════════════════════════════ NAV ══════════════════════════════════ -->
+<nav>
+  <h2>目次</h2>
+  <ul>
+    <li><a href="#overview">概要</a></li>
+    <li class="section-head"><h2 style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.8rem 0 .3rem">設計思想</h2></li>
+    <li><a href="#why">なぜマッハ数を基準にするか</a></li>
+    <li><a href="#symbols">記号と正規化</a></li>
+    <li><a href="#flow">導出フロー全体図</a></li>
+    <li class="section-head"><h2 style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.8rem 0 .3rem">導出チェーン</h2></li>
+    <li><a href="#velocity">速度: β_sh とドリフト</a></li>
+    <li><a href="#temperature">温度: 音速マッハから T</a></li>
+    <li><a href="#electron">電子温度（独立ノブ）</a></li>
+    <li><a href="#identity">マッハ恒等式</a></li>
+    <li><a href="#branch">磁化 / 非磁化の分岐</a></li>
+    <li class="section-head"><h2 style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.8rem 0 .3rem">実装と検算</h2></li>
+    <li><a href="#api">API と使い方</a></li>
+    <li><a href="#worked">検算表（現行ラン）</a></li>
+    <li><a href="#pic">PIC config の逆生成</a></li>
+  </ul>
+</nav>
+
+<!-- ══════════════════════════════════ MAIN ══════════════════════════════════ -->
+<main>
+
+<h1>マッハ数基準のパラメータ構築</h1>
+<p class="subtitle">
+  代表パラメータとしてマッハ数を1つ決めれば、<strong>速度 → 温度 → 各種 β</strong> の順で<br>
+  3成分SNRプラズマ平衡の全パラメータが一意に決まる前向き設計器の解説
+</p>
+
+<!-- ── OVERVIEW ── -->
+<h2 id="overview">概要</h2>
+<p>
+  3成分SNRプラズマ平衡ソルバー（<code>solve_snr_equilibrium</code>）と PIC シミュレーション
+  config は、本来 <code>ush, sigma, mime, alpha, betae/i/r</code> といった量を個別に手で
+  設定する。これは物理的に過剰パラメータ化されており、各値の<strong>導出根拠</strong>が
+  読み取りにくい。
+</p>
+<p>
+  本モジュール <code>fmi.mach_parameters</code> は、唯一のアンカーを
+  <strong>イオンAlfvénマッハ数 \(M_A\)</strong> と
+  <strong>イオン音速マッハ数 \(M_S\)</strong> に定め、そこから一貫した規則で
+  ソルバー入力 \((\eta, \beta_{inc}, \beta_{ref}, T_e, T_{inc}, T_{ref})\) と
+  PIC config の <code>[parameter]</code> 値を両方生成する。
+</p>
+
+<div class="callout">
+  <strong>設計の出発点:</strong> 「マッハ数を代表パラメータに決めれば、速度 → 温度の順で
+  他パラメータが自動的に決まるので、マッハ数を基準にパラメータ全体を構築するとわかりやすい」
+  — 指導教員のコメント。本資料はこれを実装した前向き設計器の導出チェーンと検算をまとめる。
+</div>
+
+<div class="callout green">
+  <strong>実装:</strong> <code>src/fmi/mach_parameters.py</code> ―
+  <code>MachConfig</code>（入力点）, <code>build_solver_params</code>（ソルバー入力）,
+  <code>build_pic_config</code>（PIC config）。回帰テスト
+  <code>tests/test_mach_parameters.py</code>。
+</div>
+
+<div class="callout orange">
+  <strong>本プロジェクトの決定（2026-06、非磁化基準を採用）:</strong>
+  SNR 電流フィラメント平衡と線形固有値解析は<strong>非磁化（\(\sigma=0\)）で構築する</strong>。
+  根拠:
+  <ul style="margin:.4rem 0 .2rem 1.2rem">
+    <li><strong>外部磁場を平衡に入れない:</strong> Jikei+ 2024 の外部磁場はイオンビーム
+      （ドリフト \(x\)）に<strong>垂直</strong>。ドリフトに直交する平均場は成分ごとに異なる
+      motional 力 \(q\,\mathbf u_s\times\mathbf B\) を生み、3成分差動ドリフトでは単一の
+      \(\langle E\rangle\) で同時に打ち消せず<strong>静的周期平衡が存在しない</strong>
+      （面内 \(y\)・面外 \(z\) いずれも非両立）。よって平衡に外部磁場を設定しない。</li>
+    <li><strong>自己場が支配的:</strong> 自己生成フィラメント磁場 peak \(|B_{0z}|\approx0.16\)
+      に対し仮想ガイド場 \(\sqrt\sigma=0.05\)、比約 3.2。フィラメント構造の駆動源は
+      対向流であり背景磁場ではないので、\(\sigma=0\) 平衡が本質を捉える。</li>
+    <li><strong>パラメータは音速マッハ基準:</strong> 非磁化では \(\beta_A\) が無く \(M_A\) は使えない。
+      速度は \(\beta_{sh}=V_{sh}/c\) を直接アンカーし、温度は音速マッハ \(M_S\) で決める
+      （下の「磁化/非磁化の分岐」参照）。数値は磁化版と機械精度で一致する。</li>
+  </ul>
+  磁化効果（\(\sigma=0.0025\) で \(\Omega_{ce}/\gamma\approx8\) → 電子は磁化）が必要な段では、
+  平衡ではなく<strong>線形演算子</strong>に面外ガイド場 \(\sqrt\sigma\) を加える補正で扱う。
+</div>
+
+<!-- ══════════════════════════════════ 設計思想 ══════════════════════════════════ -->
+<h2 id="why">なぜマッハ数を基準にするか</h2>
+<p>
+  プラズマの状態は「速度スケール」と「温度スケール」で決まる。マッハ数は両者を
+  <strong>無次元の物理的な比</strong>として表すので、これを固定すれば残りが従属的に決まる。
+</p>
+<table>
+  <thead><tr><th>マッハ数</th><th>定義</th><th>何を固定するか</th></tr></thead>
+  <tbody>
+    <tr><td>\(M_A = V_{sh}/v_{A,i} = \beta_{sh}/\beta_{A,i}\)</td><td>衝撃波速度 / イオンAlfvén速度</td>
+        <td><strong>速度スケール</strong>（→ ドリフト \(\beta_{inc}, \beta_{ref}\)）</td></tr>
+    <tr><td>\(M_S = V_{sh}/c_{s,i} = \beta_{sh}/\beta_{cs,i}\)</td><td>衝撃波速度 / イオン音速</td>
+        <td><strong>温度スケール</strong>（→ \(T_{inc}, T_{ref}\)）</td></tr>
+  </tbody>
+</table>
+<p class="note">マッハ数は速度比なので \(c\) で割っても同じ（\(V_{sh}/v_{A,i}=\beta_{sh}/\beta_{A,i}\)）。
+以降の作業変数はすべて \(\beta\)（\(c=1\)）で書く。</p>
+<p>
+  \(M_A\) を決めると（磁化 \(\sigma\) が既知なら）衝撃波速度 \(\beta_{sh}\) が決まり、
+  鏡面反射の規約からイオンドリフトが決まる。次に \(M_S\) を決めると、同じ \(\beta_{sh}\) を
+  音速で割ってイオン温度が決まる。電子温度だけは独立ノブとして別に与える
+  （現行ランが \(\beta_e=8\) を \(M_A/M_S\) と独立に設定する流儀と整合）。
+</p>
+
+<!-- ── SYMBOLS ── -->
+<h2 id="symbols">記号と正規化</h2>
+<table>
+  <thead><tr><th>記号</th><th>意味</th><th>コード上の名前</th></tr></thead>
+  <tbody>
+    <tr><td>\(M_A\)</td><td>イオンAlfvénマッハ数 \(\beta_{sh}/\beta_{A,i}\)</td><td><code>M_A</code></td></tr>
+    <tr><td>\(M_S\)</td><td>イオン音速マッハ数 \(\beta_{sh}/\beta_{cs,i}\)</td><td><code>M_S</code></td></tr>
+    <tr><td>\(\eta\)</td><td>反射イオン割合（PIC の <code>alpha</code>）</td><td><code>eta</code></td></tr>
+    <tr><td>\(m_i/m_e\)</td><td>質量比</td><td><code>mime</code></td></tr>
+    <tr><td>\(\sigma\)</td><td>磁化 \((v_{A,e}/c)^2 = (\Omega_{ce}/\omega_{pe})^2\)。\(\sigma=0\) で非磁化</td><td><code>sigma</code></td></tr>
+    <tr><td>\(\gamma\)</td><td>断熱指数（既定 \(5/3\)、1D断熱なら \(3\)）</td><td><code>gamma</code></td></tr>
+  </tbody>
+</table>
+<div class="callout orange">
+  <strong>正規化（<code>snr_equilibrium</code> と同一）:</strong> 長さ \(c/\omega_{pe}\)、
+  温度 \(m_e c^2/k_B\)、<strong>速度はすべて \(c\) で正規化し \(\beta_{\langle名\rangle}\equiv v/c\)</strong>
+  と綴る（ドリフト・熱速度・音速・衝撃波すべて同じ規約）。電子質量 \(m_e=1\)、イオン質量 \(m_i=\) <code>mime</code>。
+  規格化温度は \(\tilde T_s = k_B T_s/(m_e c^2)\) で、熱速度と
+  \(\tilde T_{inc} = m_i\,\beta_{th,i}^2\)、\(\tilde T_e = \beta_{th,e}^2\) で結ばれる。
+  <strong>別物の注意:</strong> 「プラズマ \(\beta\)」（圧力比 \(2nk_BT/(B^2/2\mu_0)\)）は速度比ではない。
+  混同回避のためコードでは圧力比のみ <code>beta_e_plasma</code> と綴る。
+</div>
+
+<!-- ── FLOW ── -->
+<h2 id="flow">導出フロー全体図</h2>
+<p>
+  入力は \((M_A, M_S)\) と補助パラメータ（\(\eta, m_i/m_e, \sigma, \gamma\) ＋ 電子温度ノブ）。
+  矢印1本ごとに1つの式が対応する。
+</p>
+<div class="diagram">  入力:  M_A          M_S          σ, mime, η, γ        電子温度ノブ
+          │            │                │                   │
+          ▼            │            (1) β_A,i = √(σ/mime)   │
+   (2) β_sh = M_A·β_A,i ◀──────────────┘                    │
+          │            │                                    │
+   (3) β_d = β_sh/2    │                                    │
+          │            │                                    │
+   (4) 鏡面反射ドリフト │                                    │
+     β_inc, β_ref      │                                    │
+          │       (5) β_cs,i = β_sh/M_S                     │
+          │            │                                    │
+          │       (6) T̃_inc = mime·β_cs,i²/γ               │
+          │            │                                    │
+          │       T̃_ref = (Tref/Tinc)·T̃_inc                │
+          │            │                                    ▼
+          │            │                        (7) T̃_e = σ·βe/2 等
+          ▼            ▼                                    │
+   ┌──────────────────────────────────────────────────────────┐
+   │  ソルバー入力: {η, β_inc, β_ref, T_e, T_inc, T_ref}       │
+   │  （β_e はソルバー内で電流中性条件から自動導出, ≈0）       │
+   └──────────────────────────────────────────────────────────┘</div>
+
+<!-- ══════════════════════════════════ 導出チェーン ══════════════════════════════════ -->
+<h2 id="velocity">速度: \(\beta_{sh}\) とドリフト <span class="badge badge-blue">式 (1)–(4)</span></h2>
+<p>
+  磁化 \(\sigma\) と質量比からイオンAlfvén速度 \(\beta_{A,i}=v_{A,i}/c\) が決まり、\(M_A\) を掛けて
+  衝撃波速度 \(\beta_{sh}=V_{sh}/c\) を得る。
+</p>
+<div class="eq-block">
+  \[
+  \text{(1)}\quad \beta_{A,i} = \sqrt{\frac{\sigma}{m_i/m_e}}
+  \qquad
+  \text{(2)}\quad \beta_{sh} = M_A \cdot \beta_{A,i}
+  \]
+</div>
+<p>
+  鏡面反射の規約では、入射流と反射流の相対ドリフトが衝撃波速度に等しい
+  （\(2\,\beta_{d} = \beta_{sh}\)、\(\beta_d\) は相対ドリフトの半分）。シム系（電子静止系）でのイオンドリフトは:
+</p>
+<div class="eq-block">
+  \[
+  \text{(3)}\quad \beta_{d} = \frac{\beta_{sh}}{2}
+  \qquad
+  \text{(4)}\quad
+  \beta_{inc} = \frac{-2\eta\,\beta_{d}}{1-(1-2\eta)\beta_{d}^2},\quad
+  \beta_{ref} = \frac{+2(1-\eta)\,\beta_{d}}{1+(1-2\eta)\beta_{d}^2}
+  \]
+</div>
+<div class="callout">
+  式 (4) は PIC <code>main.cpp:61-62</code>（<code>vdi, vdr</code>）と同式。電子ドリフト
+  \(\beta_e\) はソルバー側が<strong>電流中性条件</strong>
+  \(\beta_e = (1-\eta)\beta_{inc} + \eta\beta_{ref}\) から自動導出する
+  （<code>snr_equilibrium.py:110</code>）。設計器は \(\beta_e\) を返さない。鏡面反射の
+  定義から \(\beta_e \approx 0\)（電子静止系）になるのが正しい挙動で、検算で確認する。
+</div>
+
+<h2 id="temperature">温度: 音速マッハから \(T\) <span class="badge badge-blue">式 (5)–(6)</span></h2>
+<p>
+  同じ \(\beta_{sh}\) を音速マッハ \(M_S\) で割るとイオン音速 \(\beta_{cs,i}=c_{s,i}/c\) が決まる。
+  音速の定義 \(\beta_{cs,i} = \sqrt{\gamma}\,\beta_{th,i}\) と規格化 \(\tilde T_{inc} = m_i\,\beta_{th,i}^2\) から温度が出る。
+</p>
+<div class="eq-block">
+  \[
+  \text{(5)}\quad \beta_{cs,i} = \frac{\beta_{sh}}{M_S}
+  \qquad
+  \text{(6)}\quad \tilde T_{inc} = \frac{m_i}{m_e}\,\beta_{cs,i}^{2}\Big/\gamma
+  \]
+</div>
+<p>
+  反射イオン温度は比 <code>Tref_over_Tinc</code> で与える
+  （現行ランは <code>betar = betai</code> なので比は \(1.0\)）。
+</p>
+<div class="eq-block">
+  \[
+  \tilde T_{ref} = \left(\tfrac{T_{ref}}{T_{inc}}\right) \tilde T_{inc}
+  \]
+</div>
+
+<h2 id="electron">電子温度（独立ノブ） <span class="badge badge-orange">式 (7)</span></h2>
+<p>
+  電子温度はイオンマッハ数からは決まらず、<strong>独立に与える</strong>。
+  排他的に1つだけ指定する3つのノブがある（複数指定や未指定はエラー）:
+</p>
+<table>
+  <thead><tr><th>ノブ</th><th>式</th><th>用途</th></tr></thead>
+  <tbody>
+    <tr><td><code>beta_e_plasma</code></td><td>\(\tilde T_e = \beta_{th,e}^2 = \sigma\,\beta_e^{plasma}/2\)（プラズマβ）</td>
+        <td>磁化時。現行ラン <code>betae=8</code> を再現</td></tr>
+    <tr><td><code>beta_te</code></td><td>\(\tilde T_e = \beta_{th,e}^2\)（\(\beta_{th,e}=v_{th,e}/c\)）</td>
+        <td>非磁化向け（プラズマβ が定義できないとき）</td></tr>
+    <tr><td><code>Te_over_Tinc</code></td><td>\(\tilde T_e = (T_e/T_{inc})\,\tilde T_{inc}\)</td>
+        <td>温度比で与えたいとき</td></tr>
+  </tbody>
+</table>
+<div class="callout orange">
+  <code>beta_e_plasma</code> は磁化時（\(\sigma>0\)）のみ有効。\(\sigma=0\) で指定すると
+  \(\beta_{A,e}=0\) でプラズマβ が定義できないため <code>ValueError</code> になる。
+</div>
+
+<!-- ── IDENTITY ── -->
+<h2 id="identity">マッハ恒等式</h2>
+<p>
+  プラズマ \(\beta\)（圧力比）の定義 \(\beta_s^{plasma} = 2 \beta_{th,s}^2/\beta_{A,s}^2\) と
+  音速 \(\beta_{cs} = \sqrt{\gamma}\,\beta_{th}\) を組み合わせると、イオンプラズマ \(\beta\) が
+  2つのマッハ数の比だけで書ける。
+</p>
+<div class="eq-block">
+  \[
+  \frac{M_A}{M_S} = \frac{\beta_{cs,i}}{\beta_{A,i}} = \sqrt{\frac{\gamma\,\beta_i}{2}}
+  \quad\Longrightarrow\quad
+  \boxed{\;\beta_i = \frac{2}{\gamma}\left(\frac{M_A}{M_S}\right)^{2}\;}
+  \]
+</div>
+<p>
+  これが指導教員の式 \(\beta = (2/\gamma)(M_A/M_S)^2 \sim (M_A/M_S)^2\) に対応する。
+  恒等式なので <code>build_pic_config</code> の出力 <code>betai</code> はこの値と機械精度で一致する
+  （回帰テスト <code>test_beta_plasma_matches_mach_identity</code>）。
+</p>
+
+<!-- ── BRANCH ── -->
+<h2 id="branch">磁化 / 非磁化の分岐</h2>
+<table>
+  <thead><tr><th></th><th>磁化 \((\sigma>0)\)</th><th>非磁化 \((\sigma=0)\)</th></tr></thead>
+  <tbody>
+    <tr><td>速度アンカー</td><td>\(M_A\) → \(\beta_{sh}=M_A \beta_{A,i}\)</td><td><code>beta_sh</code> を直接指定（必須）</td></tr>
+    <tr><td>\(M_A\) の意味</td><td>有効</td><td>\(\beta_A\to0\) で \(M_A\to\infty\)、無意味</td></tr>
+    <tr><td>温度</td><td>\(M_S\) とプラズマβ で表現可</td><td>\(M_S\) のみが温度を決める</td></tr>
+    <tr><td>PIC 温度指定</td><td><code>betae/betai/betar</code></td><td><code>vte/vti/vtr</code> を直接指定</td></tr>
+    <tr><td>フラグ</td><td><code>needs_direct_temperature=False</code></td><td><code>needs_direct_temperature=True</code></td></tr>
+  </tbody>
+</table>
+<div class="callout green">
+  <strong>本プロジェクトはこの非磁化列を採用</strong>（上記「本プロジェクトの決定」参照）。
+  非磁化では「背景磁場を考えないなら音速マッハ数のみ考えれば良い」という整理に対応する。
+  速度アンカーは <code>beta_sh</code> を直接指定（\(M_A\) は不使用）、温度は \(M_S\)、電子温度は
+  <code>beta_te</code>。<code>build_pic_config</code> は <code>needs_direct_temperature=True</code>
+  を返し、将来 PIC を新規設計する際は温度を \(\beta_A\) から切り離して直接指定する初期化
+  （<code>main.cpp</code> 小改修、<code>vte/vti/vtr</code>）が必要であることを示す（線形解析のみなら無関係）。
+</div>
+
+<!-- ══════════════════════════════════ 実装と検算 ══════════════════════════════════ -->
+<h2 id="api">API と使い方</h2>
+<pre><code><span class="kw">from</span> fmi.mach_parameters <span class="kw">import</span> MachConfig, build_solver_params, build_pic_config
+<span class="kw">from</span> fmi.snr_equilibrium <span class="kw">import</span> solve_snr_equilibrium
+
+<span class="cmt"># 代表パラメータを1点決める（本プロジェクト既定: 非磁化・音速マッハ基準）</span>
+<span class="cmt"># 速度は Vsh を直接、温度は M_S、電子温度は vte 直接。M_A は使わない。</span>
+cfg = <span class="fn">MachConfig</span>(M_S=<span class="num">154.92</span>, beta_sh=<span class="num">0.25</span>, beta_te=<span class="num">0.1</span>,
+                 sigma=<span class="num">0.0</span>, eta=<span class="num">0.2</span>, mime=<span class="num">400</span>, gamma=<span class="num">5</span>/<span class="num">3</span>)
+<span class="cmt"># （磁化版 MachConfig(M_A=100, M_S=154.92, sigma=0.0025, beta_e_plasma=8.0)</span>
+<span class="cmt">#   と β・T は機械精度で一致。σ は平衡 ODE に現れないため結果は同一。）</span>
+
+<span class="cmt"># ソルバー入力を一意に導出</span>
+sp = <span class="fn">build_solver_params</span>(cfg)
+<span class="cmt"># → {eta, beta_inc, beta_ref, Te, Tinc, Tref}</span>
+
+<span class="cmt"># そのままソルバーへ</span>
+r = <span class="fn">solve_snr_equilibrium</span>(**sp, a0_target=<span class="num">0.25</span>)
+
+<span class="cmt"># PIC config の [parameter] 値（新規ラン設計用）</span>
+pic = <span class="fn">build_pic_config</span>(cfg)
+<span class="cmt"># → {mime, alpha, sigma, ush, betae, betai, betar, needs_direct_temperature}</span></code></pre>
+
+<h2 id="worked">検算表（現行ラン）</h2>
+<p>
+  <code>config_2d_inp_xy.toml</code>: \(\sigma=0.0025\), \(m_i/m_e=400\), <code>ush</code>\(=0.125\),
+  \(\eta=\alpha=0.2\), <code>betae</code>\(=8\), <code>betai</code>\(=\)<code>betar</code>\(=0.5\), \(\gamma=5/3\)。
+  これは \(M_A=100\)、\(M_S\approx155\)（厳密 \(154.92\)）に対応する。
+  下表は <code>build_solver_params</code> の実出力（厳密 \(M_S=154.92\)）。
+</p>
+<table>
+  <thead><tr><th>量</th><th>導出</th><th><code>build_solver_params</code> 出力</th><th>config 実値</th></tr></thead>
+  <tbody>
+    <tr><td>\(\beta_{A,i}\)</td><td>\(\sqrt{0.0025/400}\)</td><td>\(0.00250\)</td><td>\(0.0025\)</td></tr>
+    <tr><td>\(\beta_{sh}\)</td><td>\(M_A\cdot \beta_{A,i}\)</td><td>\(0.25000\)</td><td>\(2\beta_{d}\approx0.25\)</td></tr>
+    <tr><td>\(\beta_{d}\)</td><td>\(\beta_{sh}/2\)</td><td>\(0.12500\)</td><td><code>ush</code> 由来 \(0.125\)</td></tr>
+    <tr><td>\(\beta_{inc}\)</td><td>式 (4)</td><td>\(-0.05047\)</td><td>—</td></tr>
+    <tr><td>\(\beta_{ref}\)</td><td>式 (4)</td><td>\(+0.19814\)</td><td>—</td></tr>
+    <tr><td>\(\beta_e\)（中性条件）</td><td>\((1-\eta)\beta_{inc}+\eta\beta_{ref}\)</td><td>\(-7.5\times10^{-4}\approx0\)</td><td>電子静止系で \(\approx0\)</td></tr>
+    <tr><td>\(\tilde T_{inc}\)</td><td>式 (6)</td><td>\(6.25\times10^{-4}\)</td><td><code>betai</code>\(=0.5\Rightarrow6.25\times10^{-4}\)</td></tr>
+    <tr><td>\(\tilde T_e\)</td><td>\(\sigma\,\beta_e^{plasma}/2\)</td><td>\(0.01000\)</td><td><code>betae</code>\(=8\Rightarrow \beta_{th,e}=0.1\)</td></tr>
+    <tr><td>\(\beta_i\)（恒等式）</td><td>\((2/\gamma)(M_A/M_S)^2\)</td><td>\(0.50000\)</td><td><code>betai</code>\(=0.5\)</td></tr>
+  </tbody>
+</table>
+<div class="callout green">
+  設計器の式は既知のソルバー入力／config 値を厳密に再現する。\(M_S=155\) の丸めでは
+  <code>betai</code>/\(\tilde T_{inc}\) が約 0.1% ずれる（\(\tilde T_{inc}=6.243\times10^{-4}\),
+  <code>betai</code>\(=0.4995\)）。厳密 \(M_S=154.92\) で完全一致する。
+</div>
+
+<h2 id="pic">PIC config の逆生成</h2>
+<p>
+  <code>build_pic_config(cfg)</code> は新規ラン設計用に PIC <code>[parameter]</code> 値を返す。
+  磁化時はプラズマ \(\beta\)、非磁化時は熱速度 \(\beta_{th}\) を直接返す。
+</p>
+<div class="eq-block">
+  \[
+  \texttt{ush} = \frac{\beta_{d}}{\sqrt{1-\beta_{d}^2}},\qquad
+  \texttt{betae} = \frac{2 \beta_{th,e}^2}{\sigma},\qquad
+  \texttt{betai} = \frac{2 \beta_{th,i}^2}{\sigma/(m_i/m_e)}
+  \]
+</div>
+<table>
+  <thead><tr><th>PIC キー</th><th>現行ラン再現値</th><th>config 実値</th></tr></thead>
+  <tbody>
+    <tr><td><code>ush</code></td><td>\(0.12599\)</td><td>\(0.125\)</td></tr>
+    <tr><td><code>betae</code></td><td>\(8.0000\)</td><td>\(8\)</td></tr>
+    <tr><td><code>betai</code></td><td>\(0.50000\)</td><td>\(0.5\)</td></tr>
+    <tr><td><code>betar</code></td><td>\(0.50000\)</td><td>\(0.5\)</td></tr>
+    <tr><td><code>needs_direct_temperature</code></td><td><code>False</code>（磁化）</td><td>—</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <strong>注:</strong> <code>ush</code> は 4-velocity \(\beta_{d}/\sqrt{1-\beta_{d}^2}\) で、
+  \(\beta_{d}=0.125\) に対し \(0.12599\)（相対論補正で約 0.8% 大きい）。config の
+  <code>ush=0.125</code> は \(\beta_{d}\) を直接書いた値で、厳密には 4-velocity 換算で僅かに異なる。
+</div>
+
+<hr>
+<p class="subtitle" style="margin-top:1.5rem">
+  関連資料:
+  <a href="snr_equilibrium_solver.html">3成分SNRプラズマ電流フィラメント平衡ソルバー</a> /
+  <a href="mach_parameter_scheme.md">mach_parameter_scheme.md（同内容のMarkdownノート）</a>
+</p>
+
+</main>
+</div>
+</body>
+</html>

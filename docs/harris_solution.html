@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harris解の導出と数値平衡解との対応</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #252836;
+      --border: #2e3247;
+      --accent: #5c9cf5;
+      --accent2: #7ec8a0;
+      --accent3: #f5a623;
+      --text: #e2e4ed;
+      --text-muted: #8890aa;
+      --code-bg: #131622;
+      --kw: #c792ea;
+      --fn: #82aaff;
+      --str: #c3e88d;
+      --num: #f78c6c;
+      --cmt: #546e7a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    a { color: var(--accent); }
+
+    /* ── LAYOUT ── */
+    .page-wrap { display: flex; min-height: 100vh; }
+    nav {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 2rem 1.2rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    nav h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .12em;
+              color: var(--text-muted); margin-bottom: .6rem; }
+    nav ul { list-style: none; }
+    nav li { margin: .2rem 0; }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: .88rem;
+             display: block; padding: .25rem .5rem; border-radius: 4px; transition: .15s; }
+    nav a:hover { color: var(--accent); background: rgba(92,156,245,.08); }
+    nav .section-head { margin-top: 1.2rem; }
+
+    main {
+      flex: 1;
+      max-width: 860px;
+      padding: 3rem 3.5rem;
+    }
+
+    /* ── TYPOGRAPHY ── */
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: .4rem;
+         background: linear-gradient(135deg, var(--accent), var(--accent2));
+         -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--text-muted); margin-bottom: 2.5rem; font-size: .95rem; }
+    h2 { font-size: 1.35rem; color: var(--accent); margin: 2.5rem 0 .8rem;
+         padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1.05rem; color: var(--accent2); margin: 1.6rem 0 .5rem; }
+    h4 { font-size: .95rem; color: var(--accent3); margin: 1.2rem 0 .4rem; }
+    p  { margin-bottom: .9rem; }
+
+    /* ── CALLOUT / NOTE ── */
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: rgba(92,156,245,.07);
+      padding: .8rem 1.2rem;
+      border-radius: 0 6px 6px 0;
+      margin: 1rem 0;
+    }
+    .callout.green { border-color: var(--accent2); background: rgba(126,200,160,.07); }
+    .callout.orange { border-color: var(--accent3); background: rgba(245,166,35,.07); }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th { background: var(--surface2); color: var(--accent); padding: .55rem .9rem;
+         text-align: left; font-weight: 600; border: 1px solid var(--border); }
+    td { padding: .5rem .9rem; border: 1px solid var(--border); }
+    tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+
+    /* ── CODE ── */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      overflow-x: auto;
+      font-size: .84rem;
+      line-height: 1.6;
+      margin: .8rem 0 1.2rem;
+    }
+    code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+    p code, li code {
+      background: var(--surface2);
+      padding: .15em .4em;
+      border-radius: 3px;
+      font-size: .85em;
+    }
+
+    /* syntax colours (manual) */
+    .kw  { color: var(--kw); }
+    .fn  { color: var(--fn); }
+    .str { color: var(--str); }
+    .num { color: var(--num); }
+    .cmt { color: var(--cmt); font-style: italic; }
+    .op  { color: #89ddff; }
+
+    /* ── EQUATION BLOCK ── */
+    .eq-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.6rem;
+      text-align: center;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    /* ── BADGE ── */
+    .badge {
+      display: inline-block;
+      font-size: .72rem;
+      padding: .15em .55em;
+      border-radius: 999px;
+      font-weight: 600;
+      margin-left: .4rem;
+      vertical-align: middle;
+    }
+    .badge-blue  { background: rgba(92,156,245,.2);  color: var(--accent); }
+    .badge-green { background: rgba(126,200,160,.2); color: var(--accent2); }
+
+    /* ── STEP LIST ── */
+    .steps { counter-reset: step; list-style: none; margin: .5rem 0 1rem; }
+    .steps li { counter-increment: step; display: flex; gap: .9rem; margin-bottom: 1rem; }
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 1.6rem; height: 1.6rem;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: .8rem;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: .15rem;
+    }
+
+    /* ── DIAGRAM (ASCII) ── */
+    .diagram {
+      font-family: monospace;
+      font-size: .82rem;
+      color: var(--text-muted);
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.4rem;
+      white-space: pre;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+<nav>
+  <h2>目次</h2>
+  <ul>
+    <li><a href="#overview">概要</a></li>
+    <li class="section-head"><h2 style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.8rem 0 .3rem">理論</h2></li>
+    <li><a href="#family">同じ平衡族の特殊解</a></li>
+    <li><a href="#symmetric">対称化の設定</a></li>
+    <li><a href="#phi-small" style="padding-left:1.2rem">なぜ Φ≈0 か</a></li>
+    <li><a href="#sinh">sinh-Poisson と解析解</a></li>
+    <li><a href="#nonlinearity">非線形性と Harris 極限</a></li>
+    <li><a href="#nl-scan" style="padding-left:1.2rem">非線形スキャン</a></li>
+    <li class="section-head"><h2 style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.8rem 0 .3rem">数値</h2></li>
+    <li><a href="#howto">数値解の求め方</a></li>
+    <li><a href="#result">結果（温度スキャン）</a></li>
+    <li><a href="#interpret">プロファイルの解釈</a></li>
+    <li><a href="#verify">検証</a></li>
+    <li><a href="#caveat">限界と留意点</a></li>
+    <li><a href="#api">コード参照</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<h1>Harris解の導出と数値平衡解との対応</h1>
+<p class="subtitle">
+  3成分SNR電流フィラメント平衡を対称化した極限で、解析的 Harris 電流シート解<br>
+  （\(B\propto\tanh\), \(n\propto\mathrm{sech}^2\), \(\Phi=0\)）へ帰着することを示す検証ノート
+</p>
+
+<h2 id="overview">概要</h2>
+<p>
+  低温 SNR 設定（\(T_e\approx0.01\), \(T_i\approx6\times10^{-4}\)）で数値平衡プロファイルが
+  「角ばった」形になり、これが正しい解か疑問が生じた。これを確かめるため、
+  設定を<strong>対称化</strong>（反射割合 \(\eta=0.5\)、逆流ドリフト \(\beta_{\rm ref}=-\beta_{\rm inc}\)、
+  等温）した数値平衡解を、その極限で成り立つべき<strong>解析的 Harris 解</strong>と重ねて比較した。
+</p>
+<div class="callout green">
+  <strong>結論：</strong> 数値平衡解は Harris 解の構造（中心の磁場反転 \(\propto\tanh\)、
+  密度ピーク \(\propto\mathrm{sech}^2\)、\(\Phi\approx0\)）を局所的に再現する。ただし孤立単一シートではなく
+  <strong>周期チェーン</strong>であり、シート外の平坦部は Harris の飽和裾に対応する物理的構造である。
+  低温ほどシートが鋭くなる（sinh-Poisson の冷極限）。「歪み」は非収束ではなく物理的形状。
+</div>
+
+<h2 id="family">同じ平衡族の特殊解としての Harris</h2>
+<p>
+  本ソルバの平衡は、各成分が drifting-Maxwellian の Boltzmann 閉包
+</p>
+<div class="eq-block">\[ n_s(y) \;\propto\; \exp\!\Big[\mp\frac{\Phi(y)-\beta_s A(y)}{T_s}\Big] \]</div>
+<p>
+  に従い、Poisson 則 \(\Phi''=\rho\) と Ampère 則 \(A''=j_x\) を満たす
+  Grad–Shafranov 型の族である。古典的 <strong>Harris 電流シート</strong>
+</p>
+<div class="eq-block">\[ B_z(y)=B_0\tanh(y/L),\qquad n(y)=n_0\,\mathrm{sech}^2(y/L),\qquad \Phi=0 \]</div>
+<p>
+  は、この族の 2 成分・対称・\(\Phi=0\) の解析的特殊解にあたる。したがって、SNR 平衡を対称極限へ
+  持っていけば Harris 解に帰着するはずで、これが数値解の妥当性の傍証になる。
+</p>
+
+<h2 id="symmetric">対称化の設定</h2>
+<p>次のパラメータで対称化する：</p>
+<table>
+  <tr><th>量</th><th>設定</th><th>帰結</th></tr>
+  <tr><td>反射割合 \(\eta\)</td><td>0.5</td><td>入射・反射が等量</td></tr>
+  <tr><td>ドリフト</td><td>\(\beta_{\rm inc}=+\beta,\ \beta_{\rm ref}=-\beta\)（\(\beta=0.1\)）</td><td>逆流対称</td></tr>
+  <tr><td>温度</td><td>\(T_e=T_{\rm inc}=T_{\rm ref}=T\)</td><td>等温</td></tr>
+  <tr><td>電子ドリフト</td><td>\(\beta_e=(1-\eta)\beta_{\rm inc}+\eta\beta_{\rm ref}=0\)</td><td>電流中性が自動成立</td></tr>
+</table>
+<p>
+  \(\beta_e=0\) なので電子はベクトルポテンシャル \(A\) に応答せず、静電ポテンシャル \(\Phi\) にのみ
+  応答する（純遮蔽体）。この配置で \(\Phi\) はほぼ消え（数値上 \(|E_{0y}|_{\max}\sim5\times10^{-4}\!-\!7\times10^{-3}\)、
+  下記のとおり \(|E_{0y}|/|B|\) は数%）、Harris の前提 \(\Phi=0\) に対応する。ただし厳密に 0 ではない。
+</p>
+
+<h3 id="phi-small">なぜ \(\Phi\approx0\) と言えるか</h3>
+<p>
+  まず \(\Phi=0\) は<strong>厳密解ではない</strong>。\(\Phi=0\) とすると電子は一様 \(n_e=1\) だが、
+  イオンは \(A\) に沿って変調するため、電荷密度
+</p>
+<div class="eq-block">\[ \rho = n_e-(n_{\rm inc}+n_{\rm ref}) = 1-\frac{\cosh(\beta A/T)}{\langle\cosh\rangle}\neq 0 \]</div>
+<p>が残り、Gauss 則 \(\Phi''=\rho\) から有限の \(\Phi\) が立つ。それでも \(\Phi\) が小さいのは、独立な 2 つの理由による。</p>
+
+<h4>理由1（対称性）：電荷源は場の 2 次、電流源は 1 次</h4>
+<p>場の振幅 \(f\equiv\beta A/T\) で展開すると、逆流対称（\(\beta_{\rm inc}=+\beta,\ \beta_{\rm ref}=-\beta\)、等温）では</p>
+<div class="eq-block">\[ \underbrace{n_{\rm inc}+n_{\rm ref}\approx 1+\tfrac12\big(f^2-\langle f^2\rangle\big)}_{\text{電荷源：}O(f^2)}\;,\qquad
+\underbrace{n_{\rm ref}-n_{\rm inc}\approx f-\langle f\rangle}_{\text{電流源：}O(f^1)} \]</div>
+<p>
+  2 ビームの 1 次応答 \(\pm\beta A/T\) は<strong>電荷密度で相殺し、電流で足し合う</strong>。よって \(B\) を作る電流
+  \(j_x=-\beta(n_{\rm inc}-n_{\rm ref})\) は場の 1 次で tanh 磁場を主導する一方、\(\Phi\) を作る電荷 \(\rho\) は場の
+  <strong>2 次</strong>で、最初から一桁小さい。対称性が崩れると 1 次の電荷分離が復活し \(\Phi\) は大きくなる。
+</p>
+
+<h4>理由2（電子遮蔽）：\(\beta_e=0\) 電子が Debye 遮蔽する</h4>
+<p>電子応答 \(n_e\approx 1+(\Phi-\langle\Phi\rangle)/T_e\) を Gauss 則に入れると（モード \(k\)）</p>
+<div class="eq-block">\[ -k^2\Phi_k=\frac{\Phi_k}{T_e}-\delta\rho_{{\rm ion},k}
+\;\Longrightarrow\;
+\Phi_k=\frac{\delta\rho_{{\rm ion},k}}{1/T_e+k^2}=\frac{T_e\,\delta\rho_{{\rm ion},k}}{1+k^2T_e} \]</div>
+<p>
+  \(1/T_e\) は電子の逆 Debye 長²（\(\lambda_{De}^2=T_e\)）。イオンの残余電荷を電子が短距離で遮蔽し、
+  \(\Phi\sim T_e\,\delta\rho_{\rm ion}\) に抑える。電子の可動性（Boltzmann 応答）が \(\Phi\) を潰す。
+</p>
+
+<div class="callout green">
+  <strong>まとめ：</strong> \(\Phi\) が小さいのは
+  <strong>(1) 対称性で電荷源が場の 2 次に落ちる</strong>ことと
+  <strong>(2) \(\beta_e=0\) 電子が Debye 遮蔽する</strong>ことの二重による。数値上
+  \(|E_{0y}|/|B|\approx1.1\%\,(T{=}0.1)\to3.6\%\,(T{=}0.01)\) で、低温ほど \(f=\beta A/T\) が増えて僅かに大きくなるが
+  数%に留まる。厳密 Harris の \(\Phi=0\) は「電子も同じ \(\mathrm{sech}^2\) に従う／完全遮蔽する」極限に対応する。
+</div>
+
+<div class="callout orange">
+  <strong>適用範囲の注意（非線形性）：</strong> 上の理由1（電荷源が場の \(O(f^2)\)）は<strong>弱場 \(\xi\ll1\) の展開</strong>で、
+  Harris が現れる \(\xi\gtrsim1\)（下記「非線形性と Harris 極限」）では成り立たない。\(\Phi\) を小さく保つ頑健な根拠は
+  <strong>理由2（Debye 遮蔽、全 \(\xi\) で有効）</strong>で、実際 \(\xi=10\) でも \(|E_{0y}|/|B|\le4.8\%\) に留まる。
+  なお本系の \(\Phi\) は厳密には 0 でない：Vanthieghem+ 2018 の \(\phi_0=0\) は \(e^-\!/e^+\) の完全ペア対称による厳密結果だが、
+  本系（電子＋2 イオンビーム）は電子にペア相手がいないため \(\Phi\) が数% 残る。
+</div>
+
+<h2 id="sinh">sinh-Poisson 方程式と解析解</h2>
+<p>\(\Phi\approx0\) を代入すると密度は</p>
+<div class="eq-block">\[ n_{\rm inc}\propto e^{+\beta A/T},\quad n_{\rm ref}\propto e^{-\beta A/T},\quad n_e=\text{const} \]</div>
+<p>となり、Ampère 則は <strong>sinh-Poisson 方程式</strong>に帰着する：</p>
+<div class="eq-block">\[ \frac{d^2A}{dy^2}=j_x=-\beta\,(n_{\rm inc}-n_{\rm ref})=-\frac{\beta}{\langle\cosh\rangle}\,\sinh\!\Big(\frac{\beta A}{T}\Big) \]</div>
+<p>
+  その孤立（単一シート）解が \(B=-A'\propto\tanh(y/L)\)、
+  イオン総密度 \(n_{\rm inc}+n_{\rm ref}\propto\cosh(\beta A/T)\propto\mathrm{sech}^2(y/L)\) である。
+  幅 \(L\) は \(\beta,T\) と振幅で決まり、温度が低いほど \(L\) が縮んでシートが鋭くなる。
+</p>
+
+<h2 id="nonlinearity">非線形性と Harris 極限（\(\xi\) パラメータ）</h2>
+<p>
+  Harris への漸近は温度そのものではなく、<strong>非線形（ピンチ）パラメータ \(\xi\)</strong> が支配する
+  （Vanthieghem+ 2018, Eq. 17–25）:
+</p>
+<div class="eq-block">\[ \xi \equiv \frac{\gamma_0\beta_0 a_0}{T_0}\ \ (\text{非相対論 }\gamma_0\!\approx\!1:\ \xi\approx\beta a_0/T),
+\qquad \lambda_0=\frac{2\sqrt{T_0}}{\beta_0\gamma_0}\,K\!\big[-\sinh^2(\xi/2)\big]\,\frac{c}{\omega_p} \]</div>
+<p>
+  \(a_0=(e/mc^2)\max A_{0x}\) はベクトルポテンシャル振幅、\(K\) は第1種完全楕円積分。解は Jacobi パラメータ
+  \(\kappa=\coth(\xi/2)\) の cnoidal 波で、2つの極限を持つ:
+</p>
+<table>
+  <tr><th>極限</th><th>条件</th><th>プロファイル</th></tr>
+  <tr><td>弱場</td><td>\(\xi\to0\)（\(\kappa\to\infty\)）</td><td>正弦波的（\(\lambda_0=\pi\sqrt{T_0}/\beta_0\gamma_0\)）</td></tr>
+  <tr><td><strong>強ピンチ</strong></td><td>\(\xi\gg1\)（\(\kappa\to1^+\)）</td>
+      <td><strong>Harris</strong>：\(n_0\to N e^{\xi}\mathrm{sech}^2(uy)\)、well-separated な中性シートの周期鎖</td></tr>
+</table>
+<p>
+  すなわち <strong>Harris 解は強非線形極限 \(\xi\gg1\) で局所的に回復する</strong>。この視点で本ノートの温度スキャン
+  （\(a_0=0.25\) 固定）を測ると \(\xi=\beta a_0/T\) は次のとおり:
+</p>
+<table>
+  <tr><th>\(T\)</th><th>\(\xi=\beta a_0/T\)</th><th>\(\kappa=\coth(\xi/2)\)</th><th>peak/trough</th></tr>
+  <tr><td>0.10</td><td>0.25</td><td>8.04</td><td>1.02</td></tr>
+  <tr><td>0.03</td><td>0.83</td><td>2.54</td><td>1.17</td></tr>
+  <tr><td>0.01</td><td>2.5</td><td>1.18</td><td>2.52</td></tr>
+</table>
+<div class="callout orange">
+  <strong>注意：</strong> 温度スキャンは \(\xi\lesssim2.5\)（弱〜中程度）にしか達しておらず \(\kappa\) はまだ 1 から遠い。
+  「温度を下げる」＝「\(\xi\) を上げる」だが、温度スキャン図は<strong>真の Harris 極限（\(\xi\gg1\)）には届いていない</strong>。
+</div>
+
+<h3 id="nl-scan">非線形スキャン（\(\xi\) を上げると Harris へ）</h3>
+<p>
+  \(T=0.02\) 固定で \(a_0\) を上げ \(\xi\) を 1.25→5→10 と増やすと、\(\kappa\to1\)、密度が鋭いスパイク＋広い平坦谷
+  （well-separated シート）となり Harris へ漸近する。B0z も tanh 的な広い飽和平坦部を持つ。
+</p>
+<img src="../work/equilibrium/harris_nonlinearity_scan.png" alt="非線形性 xi を上げたときの Harris への漸近"
+     style="width:100%;border:1px solid var(--border);border-radius:8px;margin:1rem 0;background:#fff">
+<table>
+  <tr><th>\(a_0\)</th><th>\(\xi\)</th><th>\(\kappa=\coth(\xi/2)\)</th><th>peak/trough</th><th>\(|E_{0y}|/|B|\)</th></tr>
+  <tr><td>0.25</td><td>1.25</td><td>1.80</td><td>1.4</td><td>2.5%</td></tr>
+  <tr><td>1.0</td><td>5.0</td><td>1.014</td><td>9.2</td><td>4.5%</td></tr>
+  <tr><td>2.0</td><td>10.0</td><td>1.000</td><td>159</td><td>4.8%</td></tr>
+</table>
+<p>
+  \(\kappa\to1\) と peak/trough の急増（→159）が Vanthieghem+ 2018 の強ピンチ Harris 極限（Eq. 24–25 の
+  \(n_0\to N e^\xi\mathrm{sech}^2\)）に対応する。\(\Phi\)（\(|E_{0y}|/|B|\)）は \(\xi\) とともに増えるが数% 止まり。
+</p>
+
+<h2 id="howto">数値解の求め方</h2>
+<ol class="steps">
+  <li>対称パラメータ（\(\eta=0.5,\ \beta_{\rm inc}=+0.1,\ \beta_{\rm ref}=-0.1,\ T_e=T_{\rm inc}=T_{\rm ref}=T\)、
+      \(a_0=0.25\)）で <code>solve_snr_equilibrium</code> を呼び、周期平衡を Chebyshev + Newton 継続法で解く。</li>
+  <li>温度を \(T=0.1\to0.03\to0.01\)（warm→cold）とスキャンする。</li>
+  <li>各解について、密度ピーク（＝電流シート中心）を \(\zeta=0\) に巻き直し、1 シートを取り出す（\(\zeta\equiv y-y_{\rm sheet}\)、非線形パラメータ \(\xi\) とは別物）。</li>
+  <li>解析 Harris \(B_0\tanh(\zeta/L)\) と \(n_0\,\mathrm{sech}^2(\zeta/L)+c\) を数値 1 シートに合わせ（振幅・幅の整合）、重ね描きする。</li>
+  <li>ソルバ自身の Chebyshev 微分で <strong>native 残差</strong>を測り、描いている解が方程式を満たす（収束済み）ことを担保する。</li>
+</ol>
+<p>スクリプト：<code>work/plot_harris_vs_numeric.py</code>（読み取り専用、ソルバは変更しない）。</p>
+
+<h2 id="result">結果（温度スキャン）</h2>
+<img src="../work/equilibrium/harris_vs_numeric.png" alt="数値平衡解 vs 解析Harris解 温度スキャン"
+     style="width:100%;border:1px solid var(--border);border-radius:8px;margin:1rem 0;background:#fff">
+<p>
+  上段 \(B_{0z}\)、下段 \(n_{\rm inc}+n_{\rm ref}\)。青実線が数値解、赤破線が解析 Harris。
+  列は温度（左 warm → 右 cold）。各温度の非線形度は \(\xi=\beta a_0/T=0.25\to2.5\)（上記
+  <a href="#nonlinearity">非線形性と Harris 極限</a>）で、まだ弱〜中程度である点に注意。
+</p>
+<table>
+  <tr><th>\(T\)</th><th>\(\lambda_0\)</th><th>native resA</th><th>\(|E_{0y}|_{\max}\)</th><th>シート密度振幅 \(n_0\)</th></tr>
+  <tr><td>0.10</td><td>19.98</td><td>5.0e-09</td><td>4.8e-04</td><td>0.009</td></tr>
+  <tr><td>0.03</td><td>11.53</td><td>2.6e-08</td><td>2.5e-03</td><td>0.088</td></tr>
+  <tr><td>0.01</td><td>8.46</td><td>7.6e-08</td><td>6.7e-03</td><td>0.480</td></tr>
+</table>
+
+<h2 id="interpret">プロファイルの解釈</h2>
+<h3>磁場 \(B_{0z}\)：中心反転は tanh、外側は平坦部</h3>
+<p>
+  シート中心（\(\zeta=0\)）で \(B_{0z}\) が符号反転し、その傾きは解析 tanh と一致する。
+  一方、シートから離れると数値解は \(B\approx\)一定の<strong>平坦部</strong>を持ち、周期端で再び反転する。
+  これは孤立 Harris の飽和裾 \(B\to\pm B_0\) の周期版であり、周期チェーン構造の帰結である。
+</p>
+<h3>密度 \(n_{\rm inc}+n_{\rm ref}\)：シート中心でピーク</h3>
+<p>
+  シート中心で密度がピークを持ち（Harris の \(\mathrm{sech}^2\) ピーク）、シート間で凹む。
+  低温ほどピークが鋭く高くなる（\(n_0:0.009\to0.48\)）。中心付近の形は \(\mathrm{sech}^2\) に対応するが、
+  数値解は頂部が平坦で裾に凹みを持つ（周期解＝cnoidal 型で、孤立 \(\mathrm{sech}^2\) は長周期極限）。
+</p>
+<div class="callout">
+  <strong>「歪み」の正体：</strong> シート外の平坦部（\(\rho,\ j_x\) が平均値に張り付き \(B,E\) の傾きがゼロになる領域）は、
+  Harris の飽和裾に対応する<strong>物理的構造</strong>である。低温でシートが薄く鋭くなるのも sinh-Poisson の冷極限として自然。
+  数値誤差や非収束ではない。
+</div>
+
+<h2 id="verify">検証</h2>
+<ul>
+  <li><strong>収束：</strong> 全温度で native Chebyshev 残差 resA \(\le7.6\times10^{-8}\)（補間なしの厳密残差）。描いている解は方程式を満たす。</li>
+  <li><strong>Harris 前提：</strong> \(|E_{0y}|_{\max}\lesssim7\times10^{-3}\) で \(\Phi\approx0\)。対称化により静電場がほぼ消えることを確認。</li>
+  <li><strong>非対称 SNR 冷解も収束する：</strong> canonical SNR（\(\eta=0.2\), drift \((-0.05,0.2)\), \(T_e=0.01,T_i=6\times10^{-4}\)）を
+      正しい seed（frame-homotopy）で解くと \(\lambda_0=7.94\)、resA \(=1.6\times10^{-7}\) で収束する。</li>
+</ul>
+<div class="callout orange">
+  <strong>落とし穴：</strong> \(\beta_e=0\) のドリフトを <code>solve_snr_equilibrium</code> に直接渡すと、
+  線形 seed の結合係数 \(C_{AP}\) が縮退し \(\lambda_0\) が崩壊した spurious 解（resA \(\sim10^{-1}\)）に落ちる。
+  <code>scipy.optimize.root(lm)</code> はこの崩壊解でも <code>success=True</code> を返すため、
+  <strong>native 残差の独立チェックが必須</strong>。
+</div>
+
+<h2 id="caveat">限界と留意点</h2>
+<ul>
+  <li><strong>Harris-like であって厳密 Harris ではない：</strong> 可動な Boltzmann 電子があるため \(\Phi\) は厳密に 0 ではなく
+      \(O(10^{-3})\) 残る。厳密 \(\Phi=0\) は電子が完全遮蔽する極限。</li>
+  <li><strong>Harris には強非線形が必要：</strong> Vanthieghem+ 2018（Eq. 24–25）どおり Harris は \(\xi=\gamma_0\beta_0 a_0/T_0\gg1\)
+      の強ピンチ極限で回復する。温度スキャン図は \(\xi\lesssim2.5\) で弱〜中程度に留まるため、真の Harris は
+      <a href="#nl-scan">非線形スキャン</a>（\(a_0\) を上げ \(\xi\!\sim\!10\)）で確認した。</li>
+  <li><strong>周期チェーン vs 孤立シート：</strong> 本ソルバは周期境界（\(A(0)=a_0,\ A'=0\)）を課すため、解は交互フィラメントの
+      周期チェーンになる。古典的な孤立単一 tanh シート（\(B\to\pm B_0\) の漸近、正味電流あり）はパラメータ調整では到達できず、
+      周期 \(\lambda_0\to\infty\)（非周期化）の別実装が要る。</li>
+  <li>解析解の振幅・幅は数値 1 シートへ合わせた重ね描きであり、目的は形状対応の目視確認（R² 適合ではない）。</li>
+</ul>
+
+<h2 id="api">コード参照</h2>
+<table>
+  <tr><th>ファイル</th><th>役割</th></tr>
+  <tr><td><code>work/plot_harris_vs_numeric.py</code></td><td>対称平衡を解き、解析 Harris と重ね描き＋ native 残差を出力（温度スキャン）</td></tr>
+  <tr><td><code>work/plot_harris_nonlinearity.py</code></td><td>\(\xi=\beta a_0/T\) を上げて Harris(強ピンチ)への漸近を可視化（非線形スキャン）</td></tr>
+  <tr><td><code>src/fmi/snr_equilibrium.py</code></td><td>平衡ソルバ <code>solve_snr_equilibrium</code>（Chebyshev + Newton 継続）</td></tr>
+  <tr><td><code>work/harris_vs_numeric.png</code>, <code>work/harris_nonlinearity_scan.png</code></td><td>本ノートの図</td></tr>
+</table>
+
+</main>
+</div>
+</body>
+</html>

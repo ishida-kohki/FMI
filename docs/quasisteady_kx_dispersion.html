@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>準定常平衡の kx 分散関係とモード同定</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #252836; --border: #2e3247;
+      --accent: #5c9cf5; --accent2: #7ec8a0; --accent3: #f5a623;
+      --text: #e2e4ed; --text-muted: #8890aa; --code-bg: #131622;
+      --kw: #c792ea; --fn: #82aaff; --str: #c3e88d; --num: #f78c6c; --cmt: #546e7a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.7; }
+    a { color: var(--accent); }
+    .page-wrap { display: flex; min-height: 100vh; }
+    nav { width: 280px; flex-shrink: 0; background: var(--surface);
+      border-right: 1px solid var(--border); padding: 2rem 1.2rem;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    nav h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .12em;
+      color: var(--text-muted); margin-bottom: .6rem; }
+    nav ul { list-style: none; }
+    nav li { margin: .2rem 0; }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: .88rem;
+      display: block; padding: .25rem .5rem; border-radius: 4px; transition: .15s; }
+    nav a:hover { color: var(--accent); background: rgba(92,156,245,.08); }
+    nav .section-head h2 { font-size:.72rem; color:var(--text-muted);
+      text-transform:uppercase; letter-spacing:.1em; margin:.8rem 0 .3rem; }
+    main { flex: 1; max-width: 900px; padding: 3rem 3.5rem; }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: .4rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: .95rem; }
+    h2 { font-size: 1.35rem; color: var(--accent); margin: 2.5rem 0 .8rem;
+      padding-bottom: .4rem; border-bottom: 1px solid var(--border); scroll-margin-top: 1rem; }
+    h3 { font-size: 1.05rem; color: var(--accent2); margin: 1.6rem 0 .5rem; }
+    h4 { font-size: .95rem; color: var(--accent3); margin: 1.2rem 0 .4rem; }
+    p  { margin-bottom: .9rem; }
+    ul, ol { margin: .3rem 0 1rem 1.4rem; }
+    li { margin: .25rem 0; }
+    .callout { border-left: 3px solid var(--accent); background: rgba(92,156,245,.07);
+      padding: .8rem 1.2rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+    .callout.green { border-color: var(--accent2); background: rgba(126,200,160,.07); }
+    .callout.orange { border-color: var(--accent3); background: rgba(245,166,35,.07); }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th { background: var(--surface2); color: var(--accent); padding: .55rem .9rem;
+      text-align: left; font-weight: 600; border: 1px solid var(--border); }
+    td { padding: .5rem .9rem; border: 1px solid var(--border); }
+    tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1.2rem 1.4rem; overflow-x: auto; font-size: .84rem; line-height: 1.6; margin: .8rem 0 1.2rem; }
+    code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+    p code, li code, td code { background: var(--surface2); padding: .15em .4em;
+      border-radius: 3px; font-size: .85em; }
+    .kw{color:var(--kw)} .fn{color:var(--fn)} .str{color:var(--str)}
+    .num{color:var(--num)} .cmt{color:var(--cmt);font-style:italic}
+    .eq-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem 1.6rem; text-align: center; overflow-x: auto; margin: 1rem 0; }
+    .badge { display: inline-block; font-size: .72rem; padding: .15em .55em; border-radius: 999px;
+      font-weight: 600; margin-left: .4rem; vertical-align: middle; }
+    .badge-blue { background: rgba(92,156,245,.2); color: var(--accent); }
+    .badge-green { background: rgba(126,200,160,.2); color: var(--accent2); }
+    .badge-orange { background: rgba(245,166,35,.2); color: var(--accent3); }
+    figure { margin: 1.2rem 0; text-align: center; }
+    figure img { max-width: 100%; border: 1px solid var(--border); border-radius: 8px; background:#fff; }
+    figcaption { color: var(--text-muted); font-size: .82rem; margin-top: .5rem; }
+    .diagram { font-family: monospace; font-size: .82rem; color: var(--text-muted);
+      background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem 1.4rem; white-space: pre; overflow-x: auto; margin: 1rem 0; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    /* ---- 折りたたみ（詳細・参照）---- */
+    details { border: 1px solid var(--border); border-radius: 8px; margin: 1rem 0;
+      background: var(--surface); }
+    details > summary { cursor: pointer; padding: .75rem 1.2rem; font-weight: 600;
+      color: var(--accent2); list-style: none; user-select: none; border-radius: 8px; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::before { content: "▸"; color: var(--text-muted);
+      display: inline-block; width: 1.1em; transition: transform .15s; }
+    details[open] > summary::before { content: "▾"; }
+    details > summary:hover { color: var(--accent); }
+    details[open] > summary { border-bottom: 1px solid var(--border); border-radius: 8px 8px 0 0; }
+    .details-body { padding: .4rem 1.4rem 1rem; }
+    .summary-tag { font-size: .72rem; color: var(--text-muted); font-weight: 400; margin-left: .5rem; }
+    /* ---- 目次（本文冒頭）---- */
+    .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.2rem 1.6rem; margin: 1rem 0 2rem; }
+    .toc h2 { border: none; margin: 0 0 .6rem; font-size: 1.05rem; padding: 0; color: var(--accent2); }
+    .toc ol { margin: 0 0 0 1.2rem; }
+    .toc a { text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    .toc .lead { color: var(--text-muted); font-size: .85rem; margin-left: -.6rem; }
+    .approach-card { border:1px solid var(--border); border-left-width:4px; border-radius:8px;
+      padding:.7rem 1.1rem; margin:.6rem 0; background:var(--surface); }
+    .approach-card.a1 { border-left-color: var(--accent); }
+    .approach-card.a2 { border-left-color: var(--accent2); }
+    .approach-card.a3 { border-left-color: var(--accent3); }
+    .approach-card h4 { margin:.1rem 0 .3rem; color: var(--text); font-size:1rem; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+<nav>
+  <h2>目次</h2>
+  <ul>
+    <li><a href="#summary">結論</a></li>
+    <li class="section-head"><h2>前提</h2></li>
+    <li><a href="#why">なぜ引き直したか</a></li>
+    <li><a href="#setup">計算の設定</a></li>
+    <li><a href="#criterion">モード選別の基準</a></li>
+    <li class="section-head"><h2>分散関係</h2></li>
+    <li><a href="#dispersion">γ(kx)</a></li>
+    <li><a href="#ky">最速モードの横波数</a></li>
+    <li><a href="#convergence">解像度収束</a></li>
+    <li class="section-head"><h2>モードの同定</h2></li>
+    <li><a href="#indicators">固有関数の指標</a></li>
+    <li><a href="#eigfun">固有関数の形</a></li>
+    <li><a href="#driver">駆動源の切り分け</a></li>
+    <li><a href="#identity">2 つの枝の正体</a></li>
+    <li class="section-head"><h2>含意</h2></li>
+    <li><a href="#fmi">FMI が消えている</a></li>
+    <li><a href="#picgap">PIC との 3 倍の差</a></li>
+    <li><a href="#limits">限界</a></li>
+    <li><a href="#next">次にやること</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<h1>準定常平衡の k<sub>x</sub> 分散関係とモード同定</h1>
+<p class="subtitle">
+  絶対密度版で引き直した K=0 分散関係、および固有関数と対照実験によるモードの正体判定。
+  研究方針〈目標に向けてのステップ 1: 波数ベクトルの拡張〉に対応。2026-08-27 作成。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="summary">結論</h2>
+
+<div class="callout green">
+  <p><strong>1. 成長モードは 2 系統あり、成長率がほぼ同等である。</strong></p>
+  <ul>
+    <li><strong>DKI</strong>（k<sub>y</sub>=6k<sub>0</sub>, k<sub>x</sub>/k<sub>0</sub>=0.25&ndash;0.35, γ=2.23e-03）&mdash;
+        反射ビーム駆動、界面局在、イオン 2 種が逆相。</li>
+    <li><strong>電流駆動モード</strong>（k<sub>y</sub>=0, k<sub>x</sub>/k<sub>0</sub>=0.4&ndash;0.9, γ=2.73e-03）&mdash;
+        <strong>反射イオンが一切関与しない</strong>。電子&ndash;入射イオンの相対ドリフト、
+        背景磁場、密度勾配の 3 つが必須。</li>
+  </ul>
+  <p>差は 20% しかなく、どちらが「支配的」かを断定できる差ではない。</p>
+</div>
+
+<div class="callout orange">
+  <p><strong>2. FMI（k<sub>x</sub>=0）は成長モードが 1 つも無い。</strong>
+  準定常温度では熱的に安定化されている。以前の一様背景 filamentation 検査で
+  「反射イオンの T<sub>yy</sub> が Weibel 臨界の 1.05 倍」と分かっていたことと整合する。</p>
+</div>
+
+<div class="callout">
+  <p><strong>3. PIC との 3 倍の差は、平衡の密度勾配で説明できる可能性がある。</strong>
+  対照実験で密度勾配を消すと DKI が 3.4 倍に跳ね上がり γ=7.47e-03 となり、
+  <strong>PIC 実測帯 6.6&ndash;9.0e-03 のほぼ中央</strong>に入る。
+  検証可能な仮説として <a href="#picgap">§PIC との差</a>に示す。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="why">なぜ引き直したか</h2>
+
+<p>
+従来の準定常平衡の分散関係（<code>scan_snr_quasisteady_k0.py</code>,
+<code>dispersion_snr_quasisteady_ppp300.py</code>）は<strong>相対密度版</strong>の演算子
+<code>build_operator_bloch_relative</code> を使っていた。この演算子は急峻な密度勾配に対し
+<code>D @ log(n0)</code> の Gibbs 現象で格子カットオフに偽の成長モードを上乗せし、
+最速モードだけを見るとその偽モードを掴む。
+</p>
+
+<p>
+本稿はすべて<strong>絶対密度版</strong> <code>build_operator_bloch</code> で計算し直したものである。
+経緯の詳細は <code>docs/linear_operator_density_variables.html</code>。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="setup">計算の設定</h2>
+
+<table>
+  <tr><th>項目</th><th>値</th><th>出典・根拠</th></tr>
+  <tr><td>T<sub>e</sub></td><td>1.4507e-02</td>
+      <td rowspan="3">PIC <code>data_sigma0_m400</code>（σ=0, mime=400, α=0.2）の
+          ω<sub>pi</sub>t=70 における <strong>T<sub>yy</sub></strong> 実測値</td></tr>
+  <tr><td>T<sub>inc</sub></td><td>1.3089e-03</td></tr>
+  <tr><td>T<sub>ref</sub></td><td>7.9791e-03</td></tr>
+  <tr><td>η（反射イオン割合）</td><td>0.2</td>
+      <td rowspan="3">MachConfig(M<sub>S</sub>=154.92, β<sub>sh</sub>=0.25, mime=400)</td></tr>
+  <tr><td>β<sub>inc</sub></td><td>&minus;0.050473</td></tr>
+  <tr><td>β<sub>ref</sub></td><td>0.198142</td></tr>
+  <tr><td>a<sub>0</sub></td><td>0.14</td><td>PIC の B<sub>z</sub> ピーク 0.1098 に整合（ソルバー 0.1103）</td></tr>
+  <tr><td>λ<sub>0</sub></td><td>6.6383 c/ω<sub>pe</sub></td><td>平衡の出力（合わせていない）</td></tr>
+  <tr><td>n<sub>ref,min</sub></td><td>1.858e-03</td><td>正則化不要な水準</td></tr>
+  <tr><td>解像度</td><td>ppp=192（行列 2304 角）</td><td>1 点あたり約 19 秒、41 点で 840 秒</td></tr>
+</table>
+
+<figure>
+  <img src="../work/snr_quasisteady/equilibrium_profile.png"
+       alt="平衡の 1 周期プロファイル">
+  <figcaption>平衡の 1 周期プロファイル。密度（対数軸）、B<sub>0z</sub> と E<sub>0y</sub>、電流 j<sub>x</sub>。</figcaption>
+</figure>
+
+<!-- ============================================================ -->
+<h2 id="criterion">モード選別の基準</h2>
+
+<div class="callout">
+  <p>
+    選別は格子解像度ではなく<strong>物理</strong>で決める。断熱流体閉包には Landau 減衰が
+    無いので、\(k\lambda_{De}>1\) のモードは数値的に収束していても成長率として意味を持たない。
+  </p>
+</div>
+
+<div class="eq-block">
+  \[ \lambda_{De}=\frac{v_{te}}{\omega_{pe}}=\sqrt{T_e}=0.1204\ c/\omega_{pe},
+     \qquad k_y\lambda_{De}\leq1 \iff n\leq 8.77 \]
+</div>
+
+<p>
+以前使っていた「卓越調波が Nyquist の 1/4 未満」という閾値は恣意的で根拠がなかった。
+図では選別前（<span style="color:#888">灰</span>）と選別後（<span style="color:#5c9cf5">青</span>）の
+2 本を並べ、どこまでが信用できるかを判別できるようにしてある。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="dispersion">分散関係 γ(k<sub>x</sub>)</h2>
+
+<figure>
+  <img src="../work/snr_quasisteady/dispersion_absolute.png"
+       alt="K=0 分散関係">
+  <figcaption>
+    K=0 の成長率 γ(k<sub>x</sub>)。灰 = 全成長モードの最大、青 = \(k_y\lambda_{De}\leq1\) のみ。
+    帯は PIC 実測の線形成長率 6.6&ndash;9.0&times;10<sup>&minus;3</sup>。
+  </figcaption>
+</figure>
+
+<table>
+  <tr><th>k<sub>x</sub>/k<sub>0</sub></th><th>valid γ</th><th>k<sub>y</sub>/k<sub>0</sub></th><th>性質</th></tr>
+  <tr><td>0.00</td><td>0</td><td>&mdash;</td><td><span class="badge badge-orange">成長モードなし</span> FMI は死んでいる</td></tr>
+  <tr><td>0.05&ndash;0.20</td><td>1.94&ndash;2.72e-03</td><td>0&ndash;1</td><td>電流駆動</td></tr>
+  <tr><td>0.25&ndash;0.35</td><td>2.23&ndash;2.47e-03</td><td>6&ndash;8</td><td><span class="badge badge-green">DKI</span></td></tr>
+  <tr><td>0.40&ndash;0.90</td><td>1.20&ndash;2.73e-03</td><td>0&ndash;1</td><td><span class="badge badge-blue">電流駆動</span> プラトーの大半</td></tr>
+  <tr><td>0.95&ndash;1.10</td><td>2.6&ndash;5.2e-04</td><td>7&ndash;8</td><td>急落域</td></tr>
+  <tr><td>1.15 以上</td><td>0</td><td>&mdash;</td><td>流体近似の範囲内に成長モードなし</td></tr>
+</table>
+
+<p>
+最大は k<sub>x</sub>/k<sub>0</sub>=0.75 の γ=2.734e-03。
+灰と青は k<sub>x</sub>/k<sub>0</sub>&le;0.9 でほぼ重なる &mdash; つまり
+<strong>この範囲では最速モードが最初から流体近似の内側にあり、選別が結果を変えない</strong>。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="ky">最速モードの横波数</h2>
+
+<figure>
+  <img src="../work/snr_quasisteady/dispersion_absolute_ky.png"
+       alt="最速モードの横波数">
+  <figcaption>
+    最速モードの卓越調波 k<sub>y</sub>/k<sub>0</sub>。赤破線が流体近似の限界 n=8.8。
+    灰の点は k<sub>x</sub>/k<sub>0</sub>&gt;0.9 で 26&rarr;59 と直線的に上がる非物理な枝。
+  </figcaption>
+</figure>
+
+<p>
+青（妥当なモード）の k<sub>y</sub> が <strong>0 と 6&ndash;8 の二群にはっきり分かれる</strong>。
+中間の値がほとんど無い。これがモード同定の出発点になった。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="convergence">解像度収束</h2>
+
+<table>
+  <tr><th>k<sub>x</sub>/k<sub>0</sub></th><th>ppp=96</th><th>ppp=144</th><th>ppp=192</th></tr>
+  <tr><td>0.30</td><td>2.2256e-03 (n=6)</td><td>2.2256e-03 (n=6)</td><td>2.2256e-03 (n=6)</td></tr>
+  <tr><td>0.60</td><td>2.2056e-03 (n=0)</td><td>2.2056e-03 (n=0)</td><td>2.2056e-03 (n=0)</td></tr>
+  <tr><td>1.10</td><td>2.8340e-04 (n=0)</td><td>2.8340e-04 (n=0)</td><td>2.8340e-04 (n=0)</td></tr>
+</table>
+
+<p>3 解像度で<strong>完全一致</strong>。相対密度版では同じ点が解像度ごとに別の値になっていた。</p>
+
+<!-- ============================================================ -->
+<h2 id="indicators">固有関数の指標</h2>
+
+<p>各代表点の最速（妥当）モードについて 5 つの指標を測った。</p>
+
+<table>
+  <tr><th>k<sub>x</sub>/k<sub>0</sub></th><th>γ</th><th>k<sub>y</sub></th><th>parity(δE<sub>x</sub>)</th>
+      <th>|δB|²/|δE|²</th><th>e : inc : ref</th><th>cos(inc,ref)</th><th>ref 局在</th></tr>
+  <tr><td>0.05</td><td>2.7227e-03</td><td>1</td><td>kink (odd=1.00)</td><td>3.96e+01</td>
+      <td>0.32 : 0.32 : 0.36</td><td>&minus;0.51</td><td>0.96</td></tr>
+  <tr><td>0.30</td><td>2.2256e-03</td><td>6</td><td>sausage (odd=0.00)</td><td>8.93e&minus;02</td>
+      <td>0.18 : 0.55 : <strong>0.28</strong></td><td><strong>&minus;0.67</strong></td><td>0.91</td></tr>
+  <tr><td>0.50</td><td>2.4177e-03</td><td>0</td><td>kink (odd=1.00)</td><td>1.35e+02</td>
+      <td>0.49 : 0.51 : <strong>0.01</strong></td><td>+0.40</td><td>1.00</td></tr>
+  <tr><td>0.75</td><td>2.7342e-03</td><td>0</td><td>kink (odd=1.00)</td><td>5.44e+01</td>
+      <td>0.48 : 0.52 : <strong>0.00</strong></td><td>+0.42</td><td>1.00</td></tr>
+  <tr><td>0.90</td><td>1.2031e-03</td><td>0</td><td>kink (odd=1.00)</td><td>3.20e+01</td>
+      <td>0.45 : 0.54 : <strong>0.01</strong></td><td>+0.55</td><td>1.00</td></tr>
+  <tr><td>1.00</td><td>4.1169e-04</td><td>8</td><td>sausage (odd=0.00)</td><td>4.98e&minus;02</td>
+      <td>0.22 : 0.76 : 0.02</td><td>+0.53</td><td>1.00</td></tr>
+</table>
+
+<table>
+  <tr><th>指標</th><th>意味</th></tr>
+  <tr><td>parity(δE<sub>x</sub>)</td><td>y 反転で奇なら kink、偶なら sausage</td></tr>
+  <tr><td>|δB|²/|δE|²</td><td>大きいほど電磁的、小さいほど静電的</td></tr>
+  <tr><td>e : inc : ref</td><td>密度揺らぎのノルム比。どの粒子種が担うか</td></tr>
+  <tr><td>cos(inc,ref)</td><td>入射/反射イオンの位相相関。+1 同相、&minus;1 逆相</td></tr>
+  <tr><td>ref 局在</td><td>|δn<sub>ref</sub>|² のうちフィラメント中心側に乗る割合（0.5 で一様）</td></tr>
+</table>
+
+<div class="callout orange">
+  <p>
+    <strong>k<sub>y</sub>=0 の 3 点で反射イオンの寄与が 0.00&ndash;0.01。</strong>
+    DKI は入射イオンと反射イオンが互いに押し合うモードなので、
+    反射イオンが関与しないこのモードは DKI ではない。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="eigfun">固有関数の形</h2>
+
+<h3>k<sub>y</sub>=0 枝（k<sub>x</sub>/k<sub>0</sub>=0.75）</h3>
+
+<figure>
+  <img src="../work/snr_quasisteady/eigfun_kx0p75.png"
+       alt="kx/k0=0.75 の固有関数">
+  <figcaption>
+    δn<sub>e</sub> と δn<sub>inc</sub> が全域でぴったり重なる（準中性）。
+    δn<sub>ref</sub> は平坦部でゼロ。δB<sub>z</sub> は滑らかで大きな直流成分を持つ。
+  </figcaption>
+</figure>
+
+<ul>
+  <li>δn<sub>e</sub> &asymp; δn<sub>inc</sub> が<strong>領域全体</strong>で成立。局在していない。</li>
+  <li>δB<sub>z</sub> が直流オフセットを持つ &mdash; これが k<sub>y</sub>=0 の実体で、
+      <strong>面外磁束の平均値が変化する</strong>モードである。</li>
+  <li>δn<sub>ref</sub> は n<sub>ref,0</sub> が大きい端でだけ立つが、振幅比は 0.00。</li>
+</ul>
+
+<h3>k<sub>y</sub>=6 枝（k<sub>x</sub>/k<sub>0</sub>=0.30）</h3>
+
+<figure>
+  <img src="../work/snr_quasisteady/eigfun_kx0p30.png"
+       alt="kx/k0=0.30 の固有関数">
+  <figcaption>
+    すべての場が y/λ<sub>0</sub>=0.05&ndash;0.25 と 0.75&ndash;0.95 に強く局在する。
+    そこは n<sub>ref,0</sub> と n<sub>inc,0</sub> が入れ替わる遷移層。
+  </figcaption>
+</figure>
+
+<ul>
+  <li><strong>界面局在モード</strong>。イオン 2 種が入れ替わる遷移層に張り付いている。</li>
+  <li>δn<sub>ref</sub> が最大振幅で、3 種すべてが参加。</li>
+  <li>平坦部（y/λ<sub>0</sub>=0.3&ndash;0.7）ではほぼ静か。</li>
+  <li>cos(inc,ref)=&minus;0.67 &mdash; <strong>入射イオンと反射イオンが界面で押し合う</strong>。</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="driver">駆動源の切り分け</h2>
+
+<p>
+背景の各要素を 1 つずつ潰し、どの自由エネルギー源が各枝を駆動しているかを調べた。
+背景を改変すると平衡は破れるが、駆動源の同定には有効である。
+</p>
+
+<table>
+  <tr><th>背景の改変</th><th colspan="2">k<sub>y</sub>=0 枝 (k<sub>x</sub>/k<sub>0</sub>=0.75)</th>
+      <th colspan="2">k<sub>y</sub>=6 枝 (k<sub>x</sub>/k<sub>0</sub>=0.30)</th></tr>
+  <tr><th></th><th>γ</th><th>n</th><th>γ</th><th>n</th></tr>
+  <tr><td>そのまま</td><td>2.7342e-03</td><td>0</td><td>2.2256e-03</td><td>6</td></tr>
+  <tr><td>β<sub>ref</sub>=β<sub>inc</sub><br><span class="summary-tag">反射ビームの相対ドリフトを消す</span></td>
+      <td>3.2027e-03</td><td>0</td>
+      <td><strong>1.1798e-03</strong> <span class="badge badge-orange">半減</span></td><td>1</td></tr>
+  <tr><td>β<sub>inc</sub>=β<sub>e</sub><br><span class="summary-tag">電子&minus;入射イオンの相対ドリフトを消す</span></td>
+      <td><strong>3.9596e-04</strong> <span class="badge badge-orange">1/7</span></td><td>2</td>
+      <td>2.2368e-03</td><td>0</td></tr>
+  <tr><td>β すべて 0</td><td>8.1460e-04</td><td>1</td><td>9.1269e-04</td><td>1</td></tr>
+  <tr><td>B<sub>0z</sub>=0</td>
+      <td><strong>1.7295e-04</strong> <span class="badge badge-orange">1/16</span></td><td>5</td>
+      <td>2.6847e-03</td><td>8</td></tr>
+  <tr><td>E<sub>0y</sub>=0</td><td>3.8307e-03</td><td>0</td><td>2.1618e-03</td><td>0</td></tr>
+  <tr><td>密度を一様に</td>
+      <td><strong>2.6517e-04</strong> <span class="badge badge-orange">1/10</span></td><td>8</td>
+      <td><strong>7.4678e-03</strong> <span class="badge badge-green">3.4 倍</span></td><td>0</td></tr>
+  <tr><td>反射イオンを消す<br>(n<sub>ref</sub>&rarr;0)</td>
+      <td>2.7344e-03 <span class="badge badge-blue">不変</span></td><td>0</td>
+      <td>1.4919e-03</td><td>0</td></tr>
+</table>
+
+<div class="callout green">
+  <p>
+    <strong>反射イオンを消しても k<sub>y</sub>=0 枝の γ が 5 桁目まで一致する</strong>
+    （2.7342e-03 &rarr; 2.7344e-03）。このモードは反射ビームと完全に無関係である。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="identity">2 つの枝の正体</h2>
+
+<h3>k<sub>y</sub>=6 枝 = DKI</h3>
+
+<table>
+  <tr><th>証拠</th><th>内容</th></tr>
+  <tr><td>駆動源</td><td>反射ビームの相対ドリフト（消すと半減）</td></tr>
+  <tr><td>電子&minus;イオン電流</td><td>無関係（β<sub>inc</sub>=β<sub>e</sub> で変化なし）</td></tr>
+  <tr><td>空間構造</td><td>イオン 2 種が入れ替わる界面に局在</td></tr>
+  <tr><td>位相関係</td><td>入射/反射イオンが逆相（cos=&minus;0.67）</td></tr>
+  <tr><td>粒子種寄与</td><td>反射イオンが 28% を担う</td></tr>
+</table>
+
+<p>
+界面局在・イオン 2 種が逆相・反射ビーム駆動・電子&minus;イオン電流に非依存。
+これらから <strong>DKI（ion-ion kink 系）</strong>と同定する。
+ただし静電的（|δB|²/|δE|²=0.089）である点が通常の DKI と異なる。
+</p>
+
+<h3>k<sub>y</sub>=0 枝 = 電流駆動の電磁モード</h3>
+
+<table>
+  <tr><th>必要な要素</th><th>消したときの γ</th></tr>
+  <tr><td>電子&minus;入射イオンの相対ドリフト</td><td>1/7 に低下</td></tr>
+  <tr><td>背景磁場 B<sub>0z</sub></td><td>1/16 に低下</td></tr>
+  <tr><td>密度勾配</td><td>1/10 に低下</td></tr>
+  <tr><td>反射イオン</td><td><strong>変化なし</strong></td></tr>
+</table>
+
+<p>
+必要なのは「電流」「磁場」「密度勾配」の 3 つで、反射ビームは不要。
+電流が作った B<sub>0z</sub> の中で、密度勾配を持つプラズマが電子&minus;イオン相対ドリフトによって
+不安定化する構造である。
+</p>
+
+<div class="callout orange">
+  <p>
+    <strong>これは SNR フット特有のモードではない。</strong>
+    電流フィラメントさえあれば成立する。研究方針の「やれそうなこと（パラメータ依存を調べる）」
+    の対象としては自然だが、「SNR と同じパラメータでどのモードが支配的か」への答えとしては
+    予想（DKI や FMI）から外れる。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="fmi">FMI が消えている</h2>
+
+<p>
+k<sub>x</sub>=0 で成長モードが 1 つも無い。FMI（フィラメント併合）は
+準定常温度では完全に安定化されている。
+</p>
+
+<p>
+これは以前の一様背景 filamentation 検査と整合する。そこでは PIC 準定常温度で
+k<sub>y</sub> をどう変えても Weibel が安定（max Im ω &le; 1e-10）であり、
+反射イオンの臨界温度 7.571e-03 に対し実測 7.979e-03 &mdash;
+<strong>臨界のちょうど 1.05 倍</strong>だった。教科書的な不安定性の飽和である。
+</p>
+
+<figure>
+  <img src="../work/snr_quasisteady/uniform_filamentation_cutoff.png"
+       alt="一様背景の filamentation 臨界">
+  <figcaption>
+    一様背景での filamentation。左: γ(k<sub>y</sub>)、右: γ<sub>max</sub> の T<sub>ref</sub> 依存。
+    PIC 準定常温度は臨界の 1.05 倍にある。
+  </figcaption>
+</figure>
+
+<!-- ============================================================ -->
+<h2 id="picgap">PIC との 3 倍の差</h2>
+
+<table>
+  <tr><th>条件</th><th>γ/ω<sub>pe</sub></th><th>PIC 帯との関係</th></tr>
+  <tr><td>本計算の最大（k<sub>y</sub>=0 枝）</td><td>2.73e-03</td><td>PIC の 1/2.4&ndash;1/3.3</td></tr>
+  <tr><td>本計算の DKI</td><td>2.23e-03</td><td>PIC の 1/3.0&ndash;1/4.0</td></tr>
+  <tr><td><strong>DKI（密度勾配なし）</strong></td><td><strong>7.47e-03</strong></td>
+      <td><span class="badge badge-green">PIC 帯のほぼ中央</span></td></tr>
+  <tr><td>PIC 実測</td><td>6.6&ndash;9.0e-03</td><td>&mdash;</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong>仮説</strong>: 平衡ソルバーの Boltzmann 閉包が作る密度コントラスト
+    （n<sub>max</sub>/n<sub>min</sub>=678）が PIC の実際の状態より急峻すぎ、
+    DKI を過剰に安定化しているのではないか。
+  </p>
+  <p>
+    <strong>検証方法</strong>: a<sub>0</sub> を下げて密度コントラストを緩めたとき、
+    γ が PIC 帯に近づくかを見る。ただし a<sub>0</sub> は PIC の B<sub>z</sub> ピークに
+    合わせた量なので、下げると別の整合性を失う。トレードオフの評価が要る。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="limits">限界</h2>
+
+<table>
+  <tr><th>限界</th><th>内容</th></tr>
+  <tr><td>K=0 に固定</td>
+      <td>Bloch 位相 K を 0 に固定している。k<sub>y</sub> は K + n·k<sub>0</sub> で
+          折り返されるので、K&ne;0 の枝は本稿に含まれない。ステップ 1 の残り。</td></tr>
+  <tr><td>x 圧力項の温度</td>
+      <td>運動量方程式 x 成分の圧力項に T<sub>yy</sub> を使っている。本来は T<sub>xx</sub>。
+          反射イオンで T<sub>yy</sub>/T<sub>xx</sub>=8.43 なので x 方向の圧力を過大評価しており、
+          k<sub>x</sub>&ne;0 のモードを過剰に安定化している可能性がある。
+          詳細は <code>docs/anisotropic_pressure_closure.html</code>。</td></tr>
+  <tr><td>断熱指数</td>
+      <td>γ<sub>ad</sub>=5/3 を両方向に使用。方向間のエネルギー交換が弱い実態からは
+          γ=3 が示唆される（1.8 倍の差）。未検討。</td></tr>
+  <tr><td>「電流駆動モード」の同定が暫定</td>
+      <td>駆動源（電流・磁場・密度勾配が必須、反射ビーム不要）は確定したが、
+          文献上のどの不安定性に対応するかは未照合。
+          ドリフト波系か、電流シート内部の tearing 系かの判別が要る。</td></tr>
+  <tr><td>参照 PIC が旧ラン</td>
+      <td>温度は <code>data_sigma0_m400</code>（N<sub>x</sub>=8, N<sub>y</sub>=512、実質 1D）
+          の実測値。新しい 4096&times;4096 の σ=0 ラン（ジョブ 8404433 完了済み）で
+          測り直す価値がある。</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="next">次にやること</h2>
+
+<ol>
+  <li><strong>密度勾配仮説の検証</strong> &mdash; a<sub>0</sub> を振って
+      密度コントラストと γ の関係を調べ、PIC 帯に届く条件を探す。</li>
+  <li><strong>「電流駆動モード」の文献照合</strong> &mdash;
+      k<sub>y</sub>=0・電磁的・電流と密度勾配が必須という特徴に合う既知の不安定性を探す。</li>
+  <li><strong>K&ne;0 への拡張</strong> &mdash; ステップ 1 の残り。
+      K=0 は k<sub>y</sub> が k<sub>0</sub> の整数倍の場合しか見ていない。</li>
+  <li><strong>x 圧力項に T<sub>xx</sub> を入れる</strong> &mdash;
+      k<sub>x</sub>&ne;0 の結果に直接効く。検証は k<sub>x</sub>=0 での厳密不変性で行える。</li>
+</ol>
+
+<hr>
+
+<h2>再現方法</h2>
+
+<pre><code><span class="cmt"># 分散関係（41 点、約 14 分）</span>
+uv run python work/python/dispersion_snr_quasisteady_absolute.py
+
+<span class="cmt"># モード同定（6 点、約 2 分）</span>
+uv run python work/python/identify_quasisteady_modes.py</code></pre>
+
+<table>
+  <tr><th>出力</th><th>内容</th></tr>
+  <tr><td><code>work/snr_quasisteady/dispersion_absolute.png</code></td><td>分散関係</td></tr>
+  <tr><td><code>work/snr_quasisteady/dispersion_absolute_ky.png</code></td><td>最速モードの横波数</td></tr>
+  <tr><td><code>work/snr_quasisteady/dispersion_absolute.csv</code></td><td>数値データ</td></tr>
+  <tr><td><code>work/snr_quasisteady/mode_identity.txt</code></td><td>モード判定の指標</td></tr>
+  <tr><td><code>work/snr_quasisteady/eigfun_kx*.png</code></td><td>固有関数（6 点）</td></tr>
+</table>
+
+<h2>参照</h2>
+<ul>
+  <li><code>docs/linear_operator_density_variables.html</code> &mdash; 絶対/相対密度版の違いと訂正の経緯</li>
+  <li><code>docs/anisotropic_pressure_closure.html</code> &mdash; 異方性温度 T<sub>xx</sub> と CGL</li>
+  <li><code>docs/snr_linear_modes.md</code> &mdash; 線形化方程式と演算子ブロックの定義</li>
+  <li><code>src/fmi/wi_saturated_temperature.py</code> &mdash; PIC 実測温度と準定常窓の定義</li>
+</ul>
+
+</main>
+</div>
+</body>
+</html>

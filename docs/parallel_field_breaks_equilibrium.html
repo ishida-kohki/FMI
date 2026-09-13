@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>衝撃波に平行な背景磁場が静的平衡を壊す理由</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #252836;
+      --border: #2e3247;
+      --accent: #5c9cf5;
+      --accent2: #7ec8a0;
+      --accent3: #f5a623;
+      --danger: #f56c6c;
+      --text: #e2e4ed;
+      --text-muted: #8890aa;
+      --code-bg: #131622;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    a { color: var(--accent); }
+
+    .page-wrap { display: flex; min-height: 100vh; }
+    nav {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 2rem 1.2rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    nav h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .12em;
+              color: var(--text-muted); margin-bottom: .6rem; }
+    nav ul { list-style: none; }
+    nav li { margin: .2rem 0; }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: .88rem;
+             display: block; padding: .25rem .5rem; border-radius: 4px; transition: .15s; }
+    nav a:hover { color: var(--accent); background: rgba(92,156,245,.08); }
+    nav .section-head { margin-top: 1.2rem; font-size:.72rem; color:var(--text-muted);
+             text-transform:uppercase; letter-spacing:.1em; margin:.8rem 0 .3rem; }
+
+    main { flex: 1; max-width: 860px; padding: 3rem 3.5rem; }
+
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: .4rem;
+         background: linear-gradient(135deg, var(--accent), var(--accent2));
+         -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--text-muted); margin-bottom: 2.5rem; font-size: .95rem; }
+    h2 { font-size: 1.35rem; color: var(--accent); margin: 2.5rem 0 .8rem;
+         padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1.05rem; color: var(--accent2); margin: 1.6rem 0 .5rem; }
+    h4 { font-size: .95rem; color: var(--accent3); margin: 1.2rem 0 .4rem; }
+    p  { margin-bottom: .9rem; }
+    ul, ol { margin: .4rem 0 1rem 1.3rem; }
+    li { margin: .3rem 0; }
+
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: rgba(92,156,245,.07);
+      padding: .8rem 1.2rem;
+      border-radius: 0 6px 6px 0;
+      margin: 1rem 0;
+    }
+    .callout.green  { border-color: var(--accent2); background: rgba(126,200,160,.07); }
+    .callout.orange { border-color: var(--accent3); background: rgba(245,166,35,.07); }
+    .callout.danger { border-color: var(--danger);  background: rgba(245,108,108,.07); }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th { background: var(--surface2); color: var(--accent); padding: .55rem .9rem;
+         text-align: left; font-weight: 600; border: 1px solid var(--border); }
+    td { padding: .5rem .9rem; border: 1px solid var(--border); }
+    tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+
+    p code, li code, td code {
+      background: var(--surface2);
+      padding: .15em .4em;
+      border-radius: 3px;
+      font-size: .85em;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    .eq-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.6rem;
+      text-align: center;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    .eq-block.bad  { border-color: var(--danger); background: rgba(245,108,108,.05); }
+    .eq-block.good { border-color: var(--accent2); background: rgba(126,200,160,.05); }
+
+    .diagram {
+      font-family: monospace;
+      font-size: .82rem;
+      color: var(--text-muted);
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.4rem;
+      white-space: pre;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    .badge { display:inline-block; font-size:.72rem; padding:.15em .55em;
+      border-radius:999px; font-weight:600; margin-left:.4rem; vertical-align:middle; }
+    .badge-green { background: rgba(126,200,160,.2); color: var(--accent2); }
+    .badge-red   { background: rgba(245,108,108,.2); color: var(--danger); }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    strong { color: #fff; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- ══════════════ NAV ══════════════ -->
+<nav>
+  <h2>目次</h2>
+  <ul>
+    <li><a href="#tldr">結論（一言）</a></li>
+    <li class="section-head">設定</li>
+    <li><a href="#geometry">幾何と「衝撃波に平行」の意味</a></li>
+    <li><a href="#framework">平衡の枠組み</a></li>
+    <li class="section-head">証明</li>
+    <li><a href="#sigma0">σ=0（外部場なし）は解ける</a></li>
+    <li><a href="#motional">外部場を入れると motional 力が入る</a></li>
+    <li><a href="#core">核心：周期平均が過剰条件になる</a></li>
+    <li><a href="#numbers">具体数値で見る非両立</a></li>
+    <li class="section-head">対比と帰結</li>
+    <li><a href="#parallel-normal">法線に平行なら壊れない</a></li>
+    <li><a href="#justify">σ=0 で十分な理由</a></li>
+    <li><a href="#practice">実装への帰結</a></li>
+  </ul>
+</nav>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main>
+
+<h1>衝撃波に平行な背景磁場が静的平衡を壊す理由</h1>
+<p class="subtitle">
+  SNR 電流フィラメント平衡を非磁化（\(\sigma=0\)）で構築する決定の物理的根拠。<br>
+  なぜ「ビームに垂直＝衝撃波面に平行」な平均磁場を平衡ソルバーに入れられないのかを、
+  周期平均した運動量収支から示す。
+</p>
+
+<!-- ── TL;DR ── -->
+<h2 id="tldr">結論（一言）</h2>
+<div class="callout danger">
+  <strong>ドリフトに直交する平均磁場</strong>（＝衝撃波面に平行な背景場）は、成分ごとに
+  異なる motional 力 \(q_s\,\mathbf{u}_s\times\mathbf{B}\) を生む。3成分（電子・入射イオン・
+  反射イオン）のドリフト \(\beta_e,\beta_{inc},\beta_{ref}\) がすべて異なるため、
+  この力を全成分同時に打ち消す<strong>単一の平均電場 \(\langle E_y\rangle\) が存在しない</strong>。
+  したがって<strong>静的な周期平衡が存在しない</strong>。だから外部磁場は平衡ソルバーに入れず、
+  \(\sigma=0\) で平衡を構築する。
+</div>
+<p>
+  逆に、<strong>衝撃波法線（＝ビームドリフト \(x\)）に平行</strong>な背景場なら
+  \(\mathbf{u}_s\times\mathbf{B}=0\) となり、平衡は一切影響を受けない。
+  破れるのは「ドリフトを横切る成分」だけである。
+</p>
+
+<!-- ── GEOMETRY ── -->
+<h2 id="geometry">幾何と「衝撃波に平行」の意味</h2>
+<p>座標系を固定する。</p>
+<table>
+  <tr><th>軸</th><th>向き</th><th>物理量</th></tr>
+  <tr><td>\(\hat{x}\)</td><td>ビームドリフト方向 ＝ <strong>衝撃波法線</strong></td>
+      <td>各成分のドリフト \(\beta_s c\)（入射・反射イオンが相対流）</td></tr>
+  <tr><td>\(\hat{y}\)</td><td>横方向（<strong>衝撃波面内</strong>）</td>
+      <td>フィラメントが周期的に並ぶ方向。平衡は \(y\) のみに依存</td></tr>
+  <tr><td>\(\hat{z}\)</td><td>面外（<strong>衝撃波面内</strong>）</td>
+      <td>自己生成フィラメント磁場 \(B_{0z}(y)\) の向き</td></tr>
+</table>
+<div class="diagram">
+   衝撃波面 (shock front) = y–z 平面
+   ┌─────────────────────────────┐
+   │        ↑ y                   │   ビーム →→→  x̂ （衝撃波法線）
+   │        │      ● B_0z(z)      │
+   │  ●●●●●●│●●●●●●   フィラメント  │   「衝撃波に平行」= y-z 面内
+   │        │                     │                = x に垂直 = ドリフトを横切る
+   │        └────→ z              │   「衝撃波法線に平行」= x̂ = ドリフトと同じ向き
+   └─────────────────────────────┘
+</div>
+<div class="callout">
+  <strong>用語の対応:</strong> 「衝撃波に平行な磁場」とは衝撃波<em>面</em>に平行、すなわち
+  \(y\text{–}z\) 面内の場を指す。これは法線 \(x\)（＝ビームドリフト）に<strong>垂直</strong>である。
+  Jikei+ 2024 が外部磁場を「イオンビームに垂直」に置いているのはこの向きで、
+  垂直衝撃波（\(\mathbf{B}\perp\) 衝撃波法線）の標準的配置に一致する。
+</div>
+
+<!-- ── FRAMEWORK ── -->
+<h2 id="framework">平衡の枠組み</h2>
+<p>
+  各成分 \(s\) は \(x\) 方向に一様ドリフト \(\mathbf{u}_s=\beta_s c\,\hat{x}\) し、密度 \(n_s(y)\)、
+  温度 \(T_s\)（等温）を持つ。定常・\(y\) 依存の運動量収支のうち、構造を決めるのは
+  <strong>\(y\) 方向成分</strong>である：
+</p>
+<div class="eq-block">
+  \[ \partial_y \big(n_s T_s\big) \;=\; n_s\,q_s\Big[\,E_y \;+\;\big(\mathbf{u}_s\times\mathbf{B}\big)_y\,\Big] \]
+</div>
+<p>
+  ここで \(\mathbf{B}=B_{0z}(y)\,\hat{z}\)（自己場）とすると
+  \((\mathbf{u}_s\times\mathbf{B})_y = (\beta_s c\,\hat{x}\times B_{0z}\hat{z})_y = -\beta_s c\,B_{0z}\)。
+  電場 \(E_y\) は Poisson、磁場 \(B_{0z}\) は Ampère で自己整合に閉じ、Boltzmann 型の閉包
+  \(n_s\propto \exp(-q_s\phi_s/T_s)\) が得られる。これが標準の多成分電流フィラメント平衡であり、
+  \(E_y\) と \(\beta_s B_{0z}\) が<strong>同じ自己場構造</strong>に比例するため一貫して解ける。
+</p>
+
+<!-- ── SIGMA0 ── -->
+<h2 id="sigma0">σ=0（外部場なし）は解ける <span class="badge badge-green">解が存在</span></h2>
+<p>
+  外部場がなければ場は自己生成 \(B_{0z}(y)\) のみ。対称なフィラメント配置では
+  \(\langle B_{0z}\rangle = 0\)（周期平均でゼロ）。\(y\) 方向運動量収支を1周期で平均すると、
+  左辺は周期関数の微分なので \(\langle \partial_y(n_sT_s)\rangle=0\)。したがって
+</p>
+<div class="eq-block good">
+  \[ 0 \;=\; q_s\Big[\langle E_y\rangle - \beta_s c\,\langle B_{0z}\rangle\Big]
+       \;=\; q_s\,\langle E_y\rangle
+     \quad\Longrightarrow\quad \langle E_y\rangle = 0 \]
+</div>
+<p>
+  すべての成分について \(\langle E_y\rangle=0\) で同時に満たされる。矛盾はなく、
+  静的周期平衡が存在する。<strong>これが現行ソルバーが解いている系である。</strong>
+</p>
+
+<!-- ── MOTIONAL ── -->
+<h2 id="motional">外部場を入れると motional 力が入る</h2>
+<p>
+  ここに衝撃波面に平行な一様背景場、まず代表として面外成分
+  \(\mathbf{B}_{\rm ext}=B_0\,\hat{z}\) を加える（全磁場は \(B_{0z}(y)+B_0\)）。
+  \(y\) 方向収支は
+</p>
+<div class="eq-block">
+  \[ \partial_y\big(n_sT_s\big) \;=\; n_s\,q_s\Big[\,E_y - \beta_s c\,\big(B_{0z}(y)+B_0\big)\,\Big] \]
+</div>
+<p>
+  追加された \(-\,q_s\,\beta_s c\,B_0\) が、成分ごとに大きさの異なる<strong>一定の横向き力</strong>
+  （motional 力）である。電子・入射イオン・反射イオンで \(\beta_s\) が違うので、
+  この力は3通りの異なる値をとる。
+</p>
+
+<!-- ── CORE ── -->
+<h2 id="core">核心：周期平均が過剰条件になる</h2>
+<p>
+  同じく1周期で平均する。\(\langle\partial_y(n_sT_s)\rangle=0\) と
+  \(\langle B_{0z}\rangle=0\) より、各成分ごとに次を要求する：
+</p>
+<div class="eq-block bad">
+  \[ 0 \;=\; q_s\Big[\langle E_y\rangle - \beta_s c\,B_0\Big]
+     \quad\Longrightarrow\quad
+     \boxed{\;\langle E_y\rangle \;=\; \beta_s\,c\,B_0\;}\qquad(s=e,\,\mathrm{inc},\,\mathrm{ref}) \]
+</div>
+<p>
+  ここが要点である。左辺 \(\langle E_y\rangle\) は<strong>全成分で共通の1つの量</strong>
+  （場は1つしかない）。ところが右辺 \(\beta_s c B_0\) は<strong>成分ごとに違う</strong>。
+  したがって
+</p>
+<div class="callout danger">
+  \[ \langle E_y\rangle = \beta_e c B_0 = \beta_{inc} c B_0 = \beta_{ref} c B_0 \]
+  は \(\beta_e=\beta_{inc}=\beta_{ref}\) でない限り成立しない。3つの差動ドリフトがある以上
+  <strong>解となる \(\langle E_y\rangle\) が存在せず、静的周期平衡は存在しない。</strong>
+</div>
+<p>
+  物理的には、各成分の感じる横向き motional 力を平均電場で相殺しようとしても、
+  相殺できるのは高々1成分ぶんで、残りの成分には正味の横向き力が残る。
+  残った力は \(E\times B\) ドリフトや偏極を駆動し、系は時間発展してしまう
+  ——静的解に落ち着かない。これが「背景磁場を入れると平衡が壊れる」の中身である。
+</p>
+<p>
+  面内成分 \(\mathbf{B}_{\rm ext}=B_y\hat{y}\) を加えた場合も同様で、
+  motional 力 \((\mathbf{u}_s\times\mathbf{B})_z=+\beta_s c B_y\) が \(z\) 方向に現れる。
+  平衡は \(z\) に依存しない（\(\partial_z=0\)）ため、この力を相殺するには
+  \(\langle E_z\rangle=\beta_s c B_y\) が全成分で必要になり、やはり過剰条件で解けない。
+  結局、<strong>ドリフト \(x\) を横切る任意の平均場成分</strong>（＝衝撃波面に平行な成分すべて）が
+  平衡を壊す。
+</p>
+
+<!-- ── NUMBERS ── -->
+<h2 id="numbers">具体数値で見る非両立</h2>
+<p>
+  現行 SNR ラン（\(\eta=0.2\)、電子静止系で構築）の代表ドリフトを入れると、
+  過剰条件は次のように<strong>互いに矛盾する3つの要求</strong>になる：
+</p>
+<table>
+  <tr><th>成分</th><th>ドリフト \(\beta_s\)</th><th>要求される \(\langle E_y\rangle/(cB_0)\)</th></tr>
+  <tr><td>電子</td><td>\(\beta_e \approx -0.0008\)</td><td>\(\approx -0.0008\)</td></tr>
+  <tr><td>入射イオン</td><td>\(\beta_{inc} \approx -0.050\)</td><td>\(-0.050\)</td></tr>
+  <tr><td>反射イオン</td><td>\(\beta_{ref} \approx +0.198\)</td><td>\(+0.198\)</td></tr>
+</table>
+<p>
+  1つの \(\langle E_y\rangle\) が同時に \(-0.0008\)、\(-0.050\)、\(+0.198\)（単位 \(cB_0\)）に等しくなる
+  ことはあり得ない。とくに反射イオンは符号まで逆で、最もドリフトが大きいぶん最も強く外れる。
+  <strong>差動ドリフトが本質的な系（＝まさに SNR フィラメント）ほど、背景場は平衡と両立しない。</strong>
+</p>
+
+<!-- ── PARALLEL VS NORMAL ── -->
+<h2 id="parallel-normal">法線に平行なら壊れない <span class="badge badge-green">例外</span></h2>
+<p>
+  同じ「背景磁場」でも、<strong>衝撃波法線（ビームドリフト \(x\)）に平行</strong>な
+  \(\mathbf{B}_{\rm ext}=B_\parallel\hat{x}\) は事情が違う：
+</p>
+<div class="eq-block good">
+  \[ \mathbf{u}_s\times\mathbf{B}_{\rm ext} = \beta_s c\,\hat{x}\times B_\parallel\hat{x} = 0 \]
+</div>
+<p>
+  motional 力がそもそも生じないので、\(y\) 方向収支は \(\sigma=0\) の場合と完全に同じ。
+  平衡は影響を受けない。つまり破れの原因は「磁場があること」自体ではなく、
+  <strong>ドリフトを横切る成分があること</strong>である。一般の \(\mathbf{B}_{\rm ext}\) を
+  \(B_\parallel\hat{x}\)（無害）と面内の垂直成分（有害）に分解すれば、後者だけが問題になる。
+</p>
+<div class="callout">
+  <strong>まとめの対比：</strong>
+  <ul>
+    <li>衝撃波<strong>法線</strong>に平行（\(\parallel\) ビーム）→ \(\mathbf{u}\times\mathbf{B}=0\) → <span class="badge badge-green">平衡は保たれる</span></li>
+    <li>衝撃波<strong>面</strong>に平行（\(\perp\) ビーム）→ 成分依存の motional 力 → <span class="badge badge-red">静的平衡が存在しない</span></li>
+  </ul>
+</div>
+
+<!-- ── JUSTIFY ── -->
+<h2 id="justify">σ=0 で十分な理由</h2>
+<p>
+  外部場を落として \(\sigma=0\) で平衡を張っても、物理の本質は失われない：
+</p>
+<ul>
+  <li><strong>自己場が支配的。</strong> 自己生成フィラメント磁場のピーク
+    \(|B_{0z}|\approx 0.16\) に対し、ガイド場 \(\sqrt{\sigma}=0.05\)（\(\sigma=0.0025\) 相当）。
+    比 \(\sim 3.2\) で自己場が勝つ。フィラメント形成を駆動するのは対向流であって背景場ではない。</li>
+  <li><strong>スケール分離。</strong> \(\sigma=0.0025\) では電子は FMI 成長時間で磁化する
+    （\(\Omega_{ce}/\gamma\approx 8\)）が、イオンは非磁化（\(\Omega_{ci}/\gamma\approx0.02\)）。
+    フィラメント構造の骨格は非磁化イオンの対向流が決める。</li>
+  <li><strong>新規性。</strong> SNR 電流フィラメントの線形解析はほぼ未開拓なので、
+    まずクリーンな非磁化ベースで足場を固める価値がある。</li>
+</ul>
+
+<!-- ── PRACTICE ── -->
+<h2 id="practice">実装への帰結</h2>
+<div class="callout green">
+  <strong>平衡ソルバーには外部磁場を入れない。</strong>
+  <code>fmi.snr_equilibrium</code> / <code>fmi.snr_linear</code> は \(\sigma=0\) で構築する。
+  <code>MachConfig(..., sigma=0.0)</code> を使い、速度は \(V_{sh}/c\)、温度は音速マッハ \(M_S\)、
+  電子温度は \(v_{te}/c\) で与える（Alfvén マッハ \(M_A\) は使わない）。
+</div>
+<p>
+  磁化効果を後で調べたい場合は、<strong>線形演算子にのみ</strong>面外ガイド場
+  \(\sqrt{\sigma}\) を加える（\(v\times B\) 項は既に実装済み、P 偏光・12場構造は保存）。
+  <strong>平衡ソルバーには決して加えない。</strong>静的平衡は \(\sigma=0\) のまま、
+  背景場は摂動の伝播にのみ効かせる、という切り分けである。
+</p>
+<div class="callout orange">
+  <strong>回帰ロック:</strong>
+  <code>tests/test_mach_parameters.py::test_unmagnetized_form_reproduces_magnetized_params</code>
+  ——\(\sigma=0\) の非磁化形が、以前の磁化パラメータ（\(\sigma=0.0025,\ M_A=100\)）の
+  \(\beta\)・\(T\) を機械精度で再現することを確認する（\(\sigma\) は平衡 ODE に現れないため）。
+</div>
+
+<hr>
+<p style="color:var(--text-muted); font-size:.85rem">
+  関連: <code>docs/mach_parameter_scheme.html</code>（非磁化基準の決定 callout）、
+  <code>docs/snr_equilibrium_solver.html</code>（平衡 ODE の構造）、
+  <code>docs/electron_rest_frame.html</code>（電子静止系での \(\beta_s\) 定義）。
+  決定日 2026-06-19。
+</p>
+
+</main>
+</div>
+</body>
+</html>

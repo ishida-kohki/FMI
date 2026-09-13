@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>異方性温度 T_xx をどの式に入れるか</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #252836; --border: #2e3247;
+      --accent: #5c9cf5; --accent2: #7ec8a0; --accent3: #f5a623;
+      --text: #e2e4ed; --text-muted: #8890aa; --code-bg: #131622;
+      --kw: #c792ea; --fn: #82aaff; --str: #c3e88d; --num: #f78c6c; --cmt: #546e7a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.7; }
+    a { color: var(--accent); }
+    .page-wrap { display: flex; min-height: 100vh; }
+    nav { width: 280px; flex-shrink: 0; background: var(--surface);
+      border-right: 1px solid var(--border); padding: 2rem 1.2rem;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    nav h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .12em;
+      color: var(--text-muted); margin-bottom: .6rem; }
+    nav ul { list-style: none; }
+    nav li { margin: .2rem 0; }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: .88rem;
+      display: block; padding: .25rem .5rem; border-radius: 4px; transition: .15s; }
+    nav a:hover { color: var(--accent); background: rgba(92,156,245,.08); }
+    nav .section-head h2 { font-size:.72rem; color:var(--text-muted);
+      text-transform:uppercase; letter-spacing:.1em; margin:.8rem 0 .3rem; }
+    main { flex: 1; max-width: 900px; padding: 3rem 3.5rem; }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: .4rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: .95rem; }
+    h2 { font-size: 1.35rem; color: var(--accent); margin: 2.5rem 0 .8rem;
+      padding-bottom: .4rem; border-bottom: 1px solid var(--border); scroll-margin-top: 1rem; }
+    h3 { font-size: 1.05rem; color: var(--accent2); margin: 1.6rem 0 .5rem; }
+    h4 { font-size: .95rem; color: var(--accent3); margin: 1.2rem 0 .4rem; }
+    p  { margin-bottom: .9rem; }
+    ul, ol { margin: .3rem 0 1rem 1.4rem; }
+    li { margin: .25rem 0; }
+    .callout { border-left: 3px solid var(--accent); background: rgba(92,156,245,.07);
+      padding: .8rem 1.2rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+    .callout.green { border-color: var(--accent2); background: rgba(126,200,160,.07); }
+    .callout.orange { border-color: var(--accent3); background: rgba(245,166,35,.07); }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th { background: var(--surface2); color: var(--accent); padding: .55rem .9rem;
+      text-align: left; font-weight: 600; border: 1px solid var(--border); }
+    td { padding: .5rem .9rem; border: 1px solid var(--border); }
+    tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1.2rem 1.4rem; overflow-x: auto; font-size: .84rem; line-height: 1.6; margin: .8rem 0 1.2rem; }
+    code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+    p code, li code, td code { background: var(--surface2); padding: .15em .4em;
+      border-radius: 3px; font-size: .85em; }
+    .kw{color:var(--kw)} .fn{color:var(--fn)} .str{color:var(--str)}
+    .num{color:var(--num)} .cmt{color:var(--cmt);font-style:italic}
+    .eq-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem 1.6rem; text-align: center; overflow-x: auto; margin: 1rem 0; }
+    .badge { display: inline-block; font-size: .72rem; padding: .15em .55em; border-radius: 999px;
+      font-weight: 600; margin-left: .4rem; vertical-align: middle; }
+    .badge-blue { background: rgba(92,156,245,.2); color: var(--accent); }
+    .badge-green { background: rgba(126,200,160,.2); color: var(--accent2); }
+    .badge-orange { background: rgba(245,166,35,.2); color: var(--accent3); }
+    figure { margin: 1.2rem 0; text-align: center; }
+    figure img { max-width: 100%; border: 1px solid var(--border); border-radius: 8px; background:#fff; }
+    figcaption { color: var(--text-muted); font-size: .82rem; margin-top: .5rem; }
+    .diagram { font-family: monospace; font-size: .82rem; color: var(--text-muted);
+      background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem 1.4rem; white-space: pre; overflow-x: auto; margin: 1rem 0; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    /* ---- 折りたたみ（詳細・参照）---- */
+    details { border: 1px solid var(--border); border-radius: 8px; margin: 1rem 0;
+      background: var(--surface); }
+    details > summary { cursor: pointer; padding: .75rem 1.2rem; font-weight: 600;
+      color: var(--accent2); list-style: none; user-select: none; border-radius: 8px; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::before { content: "▸"; color: var(--text-muted);
+      display: inline-block; width: 1.1em; transition: transform .15s; }
+    details[open] > summary::before { content: "▾"; }
+    details > summary:hover { color: var(--accent); }
+    details[open] > summary { border-bottom: 1px solid var(--border); border-radius: 8px 8px 0 0; }
+    .details-body { padding: .4rem 1.4rem 1rem; }
+    .summary-tag { font-size: .72rem; color: var(--text-muted); font-weight: 400; margin-left: .5rem; }
+    /* ---- 目次（本文冒頭）---- */
+    .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.2rem 1.6rem; margin: 1rem 0 2rem; }
+    .toc h2 { border: none; margin: 0 0 .6rem; font-size: 1.05rem; padding: 0; color: var(--accent2); }
+    .toc ol { margin: 0 0 0 1.2rem; }
+    .toc a { text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    .toc .lead { color: var(--text-muted); font-size: .85rem; margin-left: -.6rem; }
+    .approach-card { border:1px solid var(--border); border-left-width:4px; border-radius:8px;
+      padding:.7rem 1.1rem; margin:.6rem 0; background:var(--surface); }
+    .approach-card.a1 { border-left-color: var(--accent); }
+    .approach-card.a2 { border-left-color: var(--accent2); }
+    .approach-card.a3 { border-left-color: var(--accent3); }
+    .approach-card h4 { margin:.1rem 0 .3rem; color: var(--text); font-size:1rem; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+<nav>
+  <h2>目次</h2>
+  <ul>
+    <li><a href="#answer">結論</a></li>
+    <li class="section-head"><h2>なぜ必要か</h2></li>
+    <li><a href="#current">いま使っている閉包</a></li>
+    <li><a href="#measured">PIC が示す異方性</a></li>
+    <li><a href="#cgl-what">CGL とは何か</a></li>
+    <li><a href="#not-cgl">CGL では扱えない理由</a></li>
+    <li class="section-head"><h2>どの式に入るか</h2></li>
+    <li><a href="#derivation">圧力テンソルからの導出</a></li>
+    <li><a href="#where">線形化式と演算子ブロック</a></li>
+    <li><a href="#equilibrium">平衡は変わらない</a></li>
+    <li><a href="#bgforce">背景場力項は T_yy のまま</a></li>
+    <li class="section-head"><h2>効果と手順</h2></li>
+    <li><a href="#estimate">効果の見積り</a></li>
+    <li><a href="#gamma">未解決: 断熱指数</a></li>
+    <li><a href="#implementation">実装</a></li>
+    <li><a href="#verification">検証</a></li>
+    <li><a href="#limits">限界</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<h1>異方性温度 T<sub>xx</sub> をどの式に入れるか</h1>
+<p class="subtitle">
+  SNR 周期電流フィラメント平衡の線形解析 &mdash; 圧力テンソルの対角成分を区別する場合の
+  定式化・入る箇所・平衡への影響・検証方法。2026-08-21 作成。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="answer">結論</h2>
+
+<div class="callout green">
+  <p><strong>T<sub>xx</sub> は運動量方程式の x 成分の圧力勾配項にだけ入る。</strong>
+  その項が圧力テンソルの <em>xx</em> 成分を x で微分したものだからである。</p>
+  <p><strong>平衡には一切入らない。</strong>平衡は y にしか依存せず
+  \(\partial_x p_{s,xx}=0\) が恒等的に成り立つため、T<sub>xx</sub> は 0 次の方程式に現れない。
+  したがって既存の平衡解も a<sub>0</sub> の校正もそのまま使える。</p>
+  <p><strong>k<sub>x</sub>=0 の結果は厳密に不変。</strong>この項は k<sub>x</sub> に比例するので、
+  FMI（k<sub>x</sub>=0）の成長率は T<sub>xx</sub> をどう変えても変わらない。
+  変わるのは斜め枝・DKI など k<sub>x</sub>&ne;0 のモードだけである。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="current">いま使っている閉包</h2>
+
+<p>
+現在の実装は<strong>等方 1 温度の断熱流体閉包</strong>である。粒子種 s ごとに
+スカラー \(T_s\) を 1 個だけ持ち、圧力は \(p_{s}=n_{s}T_{s}\)、摂動圧力は
+\(\delta p_s=\gamma_{\rm ad}T_s\,\delta n_s\)（\(\gamma_{\rm ad}=5/3\)）とする。
+</p>
+
+<p>この 1 個のスカラーが、運動量方程式の <strong>x 成分と y 成分の両方</strong>で使われている。</p>
+
+<div class="eq-block">
+  \[ \text{運動 } x:\quad m_s n_{s0}(-i\Omega_s)\,\delta v_{sx}
+     \;=\; q_s n_{s0}\delta E_x + q_s n_{s0}B_{0z}\delta v_{sy}
+     \;\underbrace{-\,i k_x\,\gamma_{\rm ad}T_s\,\delta n_s}_{\text{圧力}} \]
+</div>
+<div class="eq-block">
+  \[ \text{運動 } y:\quad m_s n_{s0}(-i\Omega_s)\,\delta v_{sy}
+     \;=\; q_s n_{s0}\delta E_y - q_s n_{s0}\big(B_{0z}\delta v_{sx}+u_{s0x}\delta B_z\big)
+     + q_s\delta n_s\big(E_{0y}-\beta_sB_{0z}\big)
+     \;\underbrace{-\,\partial_y\big(\gamma_{\rm ad}T_s\,\delta n_s\big)}_{\text{圧力}} \]
+</div>
+
+<p>
+コード上では <code>BackgroundProfiles.T</code> が <code>dict[str, float]</code>、
+すなわち粒子種名からスカラー 1 個への写像になっている
+（<code>src/fmi/snr_linear.py:41</code>）。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="measured">PIC が示す異方性</h2>
+
+<p>
+PIC は圧力テンソルの対角成分 \(P_{xx},P_{yy},P_{zz}\) を別々に出力する
+（<code>um[...,s,5..7]</code>）。σ=0 コントロールラン <code>data_sigma0_m400</code> の実測値。
+単位は \(k_BT/(m_ec^2)\)。
+</p>
+
+<table>
+  <tr><th>時刻</th><th>粒子種</th><th>T<sub>xx</sub></th><th>T<sub>yy</sub></th><th>T<sub>zz</sub></th><th>T<sub>iso</sub></th><th>T<sub>yy</sub>/T<sub>xx</sub></th></tr>
+  <tr><td rowspan="3">t = 0<br><span class="summary-tag">初期条件</span></td>
+      <td>電子</td><td>9.929e-03</td><td>9.859e-03</td><td>9.897e-03</td><td>9.895e-03</td><td>0.99</td></tr>
+  <tr><td>入射イオン</td><td>6.139e-04</td><td>6.152e-04</td><td>6.162e-04</td><td>6.151e-04</td><td>1.00</td></tr>
+  <tr><td>反射イオン</td><td>5.952e-04</td><td>5.763e-04</td><td>5.877e-04</td><td>5.864e-04</td><td>0.97</td></tr>
+  <tr><td rowspan="3">ω<sub>pi</sub>t = 70<br><span class="summary-tag">準定常</span></td>
+      <td>電子</td><td>1.303e-02</td><td>1.451e-02</td><td>9.855e-03</td><td>1.247e-02</td><td><strong>1.11</strong></td></tr>
+  <tr><td>入射イオン</td><td>6.985e-04</td><td>1.309e-03</td><td>6.163e-04</td><td>8.746e-04</td><td><strong>1.87</strong></td></tr>
+  <tr><td>反射イオン</td><td>9.460e-04</td><td>7.979e-03</td><td>5.912e-04</td><td>3.172e-03</td><td><strong>8.43</strong></td></tr>
+</table>
+
+<p>
+初期条件は等方（比が 0.97&ndash;1.00）。Weibel 加熱によって <strong>y 方向だけが選択的に熱くなる</strong>。
+反射イオンで 8.43 倍。面外方向 z はほぼ初期値のまま。
+</p>
+
+<p>
+現在の線形解析はこの 3 成分をスカラー 1 個に潰す必要があり、<strong>T<sub>yy</sub> を採用している</strong>
+（<code>WI_SATURATED_TY</code>）。等方平均 \(T_{\rm iso}\) ではない。理由は次節以降で述べる
+「平衡と y 運動量が T<sub>yy</sub> を要求する」ことによる。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="cgl-what">CGL とは何か</h2>
+
+<p>
+<strong>CGL</strong> は Chew&ndash;Goldberger&ndash;Low の頭文字、すなわち 1956 年の論文の
+著者 3 名の名前である
+（<em>Proc. R. Soc. Lond. A</em> <strong>236</strong>, 112, 1956）。
+無衝突磁化プラズマにおける<strong>異方性圧力の流体閉包</strong>を指し、
+<strong>double-adiabatic（二重断熱）理論</strong>とも呼ばれる。
+異方性プラズマの流体記述としては最も標準的な枠組みである。
+</p>
+
+<h3>解こうとしている問題</h3>
+
+<p>
+衝突があるプラズマでは、衝突が速度分布を等方化するので圧力はスカラー 1 個で足りる。
+無衝突プラズマではこれが成り立たず、<strong>圧力は 2 階のテンソル</strong>
+\(\mathsf{P}_{ij}=m\!\int (v_i-u_i)(v_j-u_j)\,f\,d^3v\) になる。
+独立成分は 6 個あり、そのままでは流体方程式が閉じない。
+</p>
+
+<p>CGL はこれを<strong>磁場の存在を使って 2 成分に減らす</strong>。</p>
+
+<h3>鍵はジャイロ運動による対称化</h3>
+
+<p>
+磁場中の荷電粒子は磁力線のまわりを角振動数 \(\Omega_c=qB/mc\) で旋回する。
+着目する現象の時間スケールがこの旋回より遅ければ
+（\(\omega \ll \Omega_c\)、かつ空間スケールがラーマー半径より大きければ）、
+分布関数は<strong>磁力線方向を軸として回転対称</strong>になるまで均される。
+この性質を<strong>ジャイロトロピック</strong>という。
+</p>
+
+<div class="diagram">        B の向き（磁力線）
+             |
+             |   粒子はこの軸のまわりを高速で旋回する
+      \      |      /
+       \     |     /        → 軸に垂直な面内では方向の区別がなくなる
+        \    |    /            すなわち p_xx = p_yy = p_perp
+     ---------------
+        /    |    \
+       /     |     \        → 軸に平行な方向だけが別扱い
+      /      |      \           すなわち p_zz = p_para
+             |
+             |</div>
+
+<p>ジャイロトロピックなら、圧力テンソルの独立成分は <strong>2 個だけ</strong>になる。</p>
+
+<div class="eq-block">
+  \[ \mathsf{P} \;=\; p_\parallel\,\hat{b}\hat{b} \;+\; p_\perp\big(\mathsf{I}-\hat{b}\hat{b}\big),
+     \qquad \hat{b}\equiv\mathbf{B}/|\mathbf{B}| \]
+</div>
+
+<table>
+  <tr><th>記号</th><th>意味</th></tr>
+  <tr><td>\(\hat{b}\)</td><td>磁力線方向の単位ベクトル</td></tr>
+  <tr><td>\(p_\parallel\)</td><td>磁力線に<strong>平行</strong>方向の圧力</td></tr>
+  <tr><td>\(p_\perp\)</td><td>磁力線に<strong>垂直</strong>な面内の圧力。この面内では等方</td></tr>
+</table>
+
+<h3>なぜ「二重断熱」なのか</h3>
+
+<p>
+等方の断熱則は \(p/n^{5/3}=\) 一定 の 1 本だけである。
+CGL では \(p_\parallel\) と \(p_\perp\) の 2 つを決める必要があり、
+<strong>2 本の保存則</strong>を使う。どちらも粒子運動の断熱不変量から来る。
+</p>
+
+<div class="eq-block">
+  \[ \frac{d}{dt}\!\left(\frac{p_\perp}{n B}\right)=0
+     \qquad\Longleftarrow\qquad
+     \text{磁気モーメント } \mu=\frac{m v_\perp^2}{2B} \text{ の保存} \]
+</div>
+<div class="eq-block">
+  \[ \frac{d}{dt}\!\left(\frac{p_\parallel B^2}{n^3}\right)=0
+     \qquad\Longleftarrow\qquad
+     \text{縦方向（磁力線に沿う往復運動）の断熱不変量} \]
+</div>
+
+<p>
+断熱則が 2 本あるので「二重断熱」と呼ばれる。
+物理的な中身は「磁場が強まると垂直方向の運動エネルギーが増え
+（\(p_\perp\propto nB\)）、磁力線が伸びると平行方向が圧縮される
+（\(p_\parallel\propto n^3/B^2\)）」である。
+</p>
+
+<h3>成り立つための仮定</h3>
+
+<table>
+  <tr><th>仮定</th><th>内容</th><th>破れると</th></tr>
+  <tr><td>無衝突</td><td>衝突が異方性を均さない</td><td>等方に戻り通常の流体になる</td></tr>
+  <tr><td>ジャイロ運動が速い</td><td>\(\omega\ll\Omega_c\)、\(kr_L\ll1\)</td><td><strong>ジャイロトロピックでなくなる</strong></td></tr>
+  <tr><td>熱流ゼロ</td><td>磁力線に沿う熱の輸送を無視</td><td>Landau 減衰などが入り閉じない</td></tr>
+  <tr><td>磁場が有限</td><td>\(\hat{b}\) が定義できる</td><td>異方性の軸自体が決まらない</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong>CGL の異方性は「磁場に対する平行 / 垂直」でしか表現できない。</strong>
+    これが本研究で使えない直接の理由になる（次節）。
+  </p>
+</div>
+
+<details>
+  <summary>CGL から出る代表的な不安定性<span class="summary-tag">背景知識</span></summary>
+  <div class="details-body">
+    <p>
+      CGL の異方性は、それ自体が不安定性の自由エネルギー源になる。
+      磁気圏物理や太陽風の研究で標準的に使われるのはこのためである。
+    </p>
+    <ul>
+      <li><strong>ファイアホース不安定性</strong>（\(p_\parallel > p_\perp\)）&mdash;
+          磁力線に沿う圧力が磁気張力に打ち勝ち、磁力線が横にたわむ。
+          消防ホースが暴れる様子から名前が付いている。</li>
+      <li><strong>ミラー不安定性</strong>（\(p_\perp > p_\parallel\)）&mdash;
+          磁場が弱い場所に粒子が溜まり、磁場をさらに押しのける。</li>
+    </ul>
+    <p>
+      本研究の異方性は \(T_{yy}\gg T_{xx}\) であり、これらのどちらの分類にも
+      そのままでは当てはまらない。異方性の軸が磁場方向ではないためである。
+    </p>
+  </div>
+</details>
+
+<!-- ============================================================ -->
+<h2 id="not-cgl">CGL では扱えない理由</h2>
+
+<div class="callout orange">
+  <p>異方性プラズマの標準的な閉包は CGL（double-adiabatic）だが、<strong>ここでは使えない。</strong></p>
+</div>
+
+<p>
+CGL は磁力線方向を軸とするジャイロトロピック異方性
+\(\mathsf{P}=p_\parallel\hat{b}\hat{b}+p_\perp(\mathsf{I}-\hat{b}\hat{b})\) を仮定する。
+本系の背景磁場は面外成分のみ \(\mathbf{B}_0=B_{0z}(y)\hat{z}\) なので、
+ジャイロトロピックなら \(\hat{b}=\hat{z}\) となり
+</p>
+
+<div class="eq-block">
+  \[ p_\parallel = p_{zz},\qquad p_\perp = p_{xx}=p_{yy} \]
+</div>
+
+<p>
+すなわち <strong>CGL は T<sub>xx</sub>=T<sub>yy</sub> を予言する</strong>。
+しかし実測は T<sub>yy</sub>/T<sub>xx</sub> = 8.43 である。予言と実測が真っ向から矛盾する。
+</p>
+
+<p>
+物理的な理由は明確である。異方性を作っているのは磁場ではなく、
+<strong>2 つの独立した特別な方向</strong>である。
+</p>
+
+<ul>
+  <li><strong>x = ビーム方向</strong>。相対ドリフト 2v<sub>sh</sub>&asymp;0.25c が自由エネルギー源。</li>
+  <li><strong>y = Weibel 変調方向</strong>。フィラメントが並ぶ方向で、粒子はここで磁場に跳ね返されて加熱される。</li>
+  <li>z = 面外方向。自由エネルギーも変調もないので加熱されない（実測 T<sub>zz</sub> は初期値のまま）。</li>
+</ul>
+
+<p>
+ジャイロ運動が異方性を均す前に Weibel が加熱するため、分布は<strong>非ジャイロトロピック</strong>になる。
+したがって必要なのは CGL ではなく、<strong>実験室系 (x,y,z) の対角圧力テンソル</strong>である。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="derivation">圧力テンソルからの導出</h2>
+
+<p>出発点は圧力テンソルを持つ運動量方程式。</p>
+
+<div class="eq-block">
+  \[ m_s n_s\Big[\partial_t + (\mathbf{v}_s\cdot\nabla)\Big]\mathbf{v}_s
+     \;=\; q_s n_s\big(\mathbf{E}+\mathbf{v}_s\times\mathbf{B}\big) \;-\; \nabla\cdot\mathsf{P}_s \]
+</div>
+
+<p>非対角成分をゼロと仮定し（後述の限界を参照）、対角テンソルを取る。</p>
+
+<div class="eq-block">
+  \[ \mathsf{P}_s = \mathrm{diag}\big(p_{s,xx},\,p_{s,yy},\,p_{s,zz}\big),
+     \qquad p_{s,ii}=n_s T_{s,ii} \]
+</div>
+
+<p>
+本系は z 方向に一様（\(\partial_z=0\)）なので、発散の各成分は 1 項ずつしか残らない。
+<strong>ここが決定的な点である。</strong>
+</p>
+
+<div class="eq-block">
+  \[ (\nabla\cdot\mathsf{P}_s)_x
+     = \partial_x p_{s,xx} + \underbrace{\partial_y p_{s,yx}}_{=0} + \underbrace{\partial_z p_{s,zx}}_{=0}
+     = \partial_x p_{s,xx} \]
+</div>
+<div class="eq-block">
+  \[ (\nabla\cdot\mathsf{P}_s)_y
+     = \underbrace{\partial_x p_{s,xy}}_{=0} + \partial_y p_{s,yy} + \underbrace{\partial_z p_{s,zy}}_{=0}
+     = \partial_y p_{s,yy} \]
+</div>
+
+<div class="callout">
+  <p><strong>x 成分には xx 成分しか、y 成分には yy 成分しか現れない。</strong>
+  対角テンソルかつ z 一様であれば、両者は完全に分離する。
+  したがって「T<sub>xx</sub> をどこに入れるか」に曖昧さはない。</p>
+</div>
+
+<p>摂動を \(\delta g \propto \exp(ik_xx-i\omega t)\) と置き、断熱閉包を各軸に適用すると</p>
+
+<div class="eq-block">
+  \[ \delta p_{s,xx}=\gamma_x T_{s,xx}\,\delta n_s,\qquad
+     \delta p_{s,yy}=\gamma_y T_{s,yy}\,\delta n_s \]
+</div>
+
+<p>圧力勾配の力は</p>
+
+<div class="eq-block">
+  \[ -(\nabla\cdot\delta\mathsf{P}_s)_x = -\,i k_x\,\gamma_x T_{s,xx}\,\delta n_s,
+     \qquad
+     -(\nabla\cdot\delta\mathsf{P}_s)_y = -\,\partial_y\big(\gamma_y T_{s,yy}\,\delta n_s\big) \]
+</div>
+
+<!-- ============================================================ -->
+<h2 id="where">線形化式と演算子ブロック</h2>
+
+<h3>変更前 / 変更後</h3>
+
+<table>
+  <tr><th>式</th><th>現在</th><th>異方性版</th></tr>
+  <tr><td>運動 x の圧力項</td>
+      <td>\(-ik_x\,\gamma_{\rm ad}T_s\,\delta n_s\)</td>
+      <td>\(-ik_x\,\gamma_x T_{s,xx}\,\delta n_s\)</td></tr>
+  <tr><td>運動 y の圧力項</td>
+      <td>\(-\partial_y(\gamma_{\rm ad}T_s\,\delta n_s)\)</td>
+      <td>\(-\partial_y(\gamma_y T_{s,yy}\,\delta n_s)\)</td></tr>
+  <tr><td>運動 y の背景場力項</td>
+      <td>\(q_s\delta n_s(E_{0y}-\beta_sB_{0z})\)</td>
+      <td><strong>変更なし</strong>（<a href="#bgforce">§背景場力項</a>）</td></tr>
+  <tr><td>連続式・Faraday・Ampère</td>
+      <td colspan="2" style="text-align:center">T を含まない &mdash; <strong>変更なし</strong></td></tr>
+  <tr><td>平衡（Boltzmann 閉包）</td>
+      <td colspan="2" style="text-align:center">T<sub>yy</sub> のみ &mdash; <strong>変更なし</strong>（<a href="#equilibrium">§平衡</a>）</td></tr>
+</table>
+
+<h3>標準固有値形 ω x = L x のブロック係数</h3>
+
+<p>
+<code>docs/snr_linear_modes.md</code> §4 の表記で、変更が要るのは
+δn<sub>s</sub> から δv<sub>sx</sub> / δv<sub>sy</sub> への 2 ブロックだけである。
+</p>
+
+<pre><code><span class="cmt"># 現在</span>
+運動x (δv_sx):  δn_s: ( k_x γ_ad <span class="num">T_s</span> / m_s )(1/n_s0)
+運動y (δv_sy):  δn_s: −i( γ_ad <span class="num">T_s</span> / m_s )(1/n_s0) ∂_y
+
+<span class="cmt"># 異方性版</span>
+運動x (δv_sx):  δn_s: ( k_x γ_x <span class="str">T_s,xx</span> / m_s )(1/n_s0)     <span class="cmt">← ここに T_xx</span>
+運動y (δv_sy):  δn_s: −i( γ_y <span class="str">T_s,yy</span> / m_s )(1/n_s0) ∂_y  <span class="cmt">← 従来どおり T_yy</span></code></pre>
+
+<h3>該当するコード行</h3>
+
+<p>3 つの実装それぞれに 2 行ずつ、計 6 行。他に T を参照する箇所はない。</p>
+
+<table>
+  <tr><th>ファイル</th><th>行</th><th>式</th><th>入れる温度</th></tr>
+  <tr><td rowspan="2"><code>src/fmi/snr_linear.py</code><br><span class="summary-tag">タイル法</span></td>
+      <td>278</td><td><code>add(svx, sn, (kx * gamma_ad * T / m) * inv_n0)</code></td><td><strong>T<sub>xx</sub></strong></td></tr>
+  <tr><td>285</td><td><code>add(svy, sn, -1j * (gamma_ad * T / m) * (inv_n0 @ D))</code></td><td>T<sub>yy</sub></td></tr>
+  <tr><td rowspan="2"><code>src/fmi/snr_linear_bloch.py</code><br><span class="summary-tag">Fourier-Bloch</span></td>
+      <td>137</td><td><code>add(svx, sn, (kx * gamma_ad * T / m) * inv_n0)</code></td><td><strong>T<sub>xx</sub></strong></td></tr>
+  <tr><td>146</td><td><code>add(svy, sn, -1j * (gamma_ad * T / m) * (inv_n0 @ DK))</code></td><td>T<sub>yy</sub></td></tr>
+  <tr><td rowspan="2"><code>src/fmi/snr_linear_relative.py</code><br><span class="summary-tag">相対密度変数</span></td>
+      <td>153</td><td><code>add(svx, sn, (kx * gamma_ad * T / m) * eye)</code></td><td><strong>T<sub>xx</sub></strong></td></tr>
+  <tr><td>160</td><td><code>add(svy, sn, -1j * (gamma_ad * T / m) * (DK + dlogn0))</code></td><td>T<sub>yy</sub></td></tr>
+</table>
+
+<details>
+  <summary>相対密度版で <code>dlogn0</code> が付いている理由<span class="summary-tag">補足</span></summary>
+  <div class="details-body">
+    <p>
+      相対密度変数 \(w_s=\delta n_s/n_{s0}\) では \(\delta n_s=n_{s0}w_s\) なので、
+      y 圧力項の \(\partial_y(\delta n_s)/n_{s0}\) が
+      \((\partial_y+\partial_y\ln n_{s0})w_s\) になる。
+      <code>dlogn0</code> は圧力項自身から出てくる項であり、背景場力項ではない。
+      よってここに掛かる温度も T<sub>yy</sub> のままでよい。
+    </p>
+  </div>
+</details>
+
+<!-- ============================================================ -->
+<h2 id="equilibrium">平衡は変わらない</h2>
+
+<div class="callout green">
+  <p><strong>T<sub>xx</sub> は 0 次の方程式に一切現れない。</strong>
+  平衡解も a<sub>0</sub> の校正もやり直す必要がない。</p>
+</div>
+
+<p>
+平衡は y のみに依存する（\(\partial_x=\partial_z=0\)）。したがって x 方向の力の釣り合いは
+</p>
+
+<div class="eq-block">
+  \[ 0 \;=\; q_s n_{s0}\big(E_{0x}+\dots\big) - \partial_x p_{s,xx,0}
+     \;=\; -\,\underbrace{\partial_x p_{s,xx,0}}_{\equiv\,0} \]
+</div>
+
+<p>
+となり、<strong>T<sub>xx</sub> を含む項が恒等的に消える</strong>。x 方向には平衡の勾配が存在しないので、
+T<sub>xx</sub> がいくつであろうと平衡は同じである。
+</p>
+
+<p>一方 y 方向の釣り合いは残り、これが Boltzmann 閉包を決めている。</p>
+
+<div class="eq-block">
+  \[ q_s n_{s0}\big(E_{0y}-\beta_s B_{0z}\big) \;=\; \partial_y p_{s,yy,0}
+     \;=\; T_{s,yy}\,\partial_y n_{s0}
+     \quad\Longleftrightarrow\quad
+     n_{s0}\propto\exp\!\Big[\!-\frac{q_s(\Phi-\beta_s A)}{T_{s,yy}}\Big] \]
+</div>
+
+<div class="callout">
+  <p>
+    <strong>これが「T<sub>yy</sub> を選ぶ」根拠である。</strong>
+    平衡の密度コントラスト（したがって n<sub>ref,min</sub>、正則化の要否、a<sub>0</sub> の校正値）を
+    決めるのは y 方向の力の釣り合いだけであり、そこに入る温度は y 成分である。
+    等方平均 \(T_{\rm iso}\) を使う根拠は存在しない。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="bgforce">背景場力項は T<sub>yy</sub> のまま</h2>
+
+<p>
+運動 y には、密度揺らぎ \(\delta n_s\) が背景場から受ける 1 次の力
+\(q_s\delta n_s(E_{0y}-\beta_sB_{0z})\) が入っている
+（2026-07 に追加。並進ゼロモード検査で較正済み）。
+</p>
+
+<p>この項は上の平衡の力釣り合いを使うと</p>
+
+<div class="eq-block">
+  \[ q_s\,\delta n_s\big(E_{0y}-\beta_sB_{0z}\big)
+     \;=\; T_{s,yy}\,\delta n_s\,\partial_y\ln n_{s0} \]
+</div>
+
+<p>
+と書ける。<strong>y 成分の温度しか現れない</strong>ので、異方性を入れても変更は不要である。
+コード上でも実際の場の値 <code>(E0y - v0 * bg.B0z)</code> を使っており、T を明示的に参照していない。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="estimate">効果の見積り</h2>
+
+<h3>方向別の音速</h3>
+
+<p>
+圧力項の強さは音速 \(c_{s,ii}=\sqrt{\gamma_{\rm ad}T_{s,ii}/m_s}\) で測るのが分かりやすい。
+\(\gamma_{\rm ad}=5/3\)、m<sub>e</sub>=1、m<sub>i</sub>=400。単位は c。
+</p>
+
+<table>
+  <tr><th>粒子種</th><th>c<sub>s</sub>(T<sub>yy</sub>) 現在</th><th>c<sub>s</sub>(T<sub>xx</sub>) 異方性版</th><th>比</th><th>ドリフト β</th></tr>
+  <tr><td>電子</td><td>0.1555</td><td>0.1474</td><td>0.948 <span class="badge badge-green">&minus;5%</span></td><td>&asymp;0</td></tr>
+  <tr><td>入射イオン</td><td>0.0023</td><td>0.0017</td><td>0.731 <span class="badge badge-orange">&minus;27%</span></td><td>&minus;0.0505</td></tr>
+  <tr><td>反射イオン</td><td>0.0058</td><td>0.0020</td><td>0.344 <span class="badge badge-orange">&minus;66%</span></td><td>0.1981</td></tr>
+</table>
+
+<h3>予想される向き</h3>
+
+<p>
+圧力は圧縮に抗するので、x 方向の圧力項は k<sub>x</sub>&ne;0 のモードを<strong>安定化</strong>する。
+T<sub>xx</sub> &lt; T<sub>yy</sub> なのでこの安定化は現在より<strong>弱くなる</strong>。
+したがって
+</p>
+
+<div class="callout orange">
+  <p>
+    <strong>現在の斜め枝・DKI の成長率は過小評価されている可能性がある。</strong>
+    これはステップ1（波数ベクトルの k<sub>x</sub> 方向への拡張）の結論に直接効く。
+  </p>
+</div>
+
+<h3>ただし大きさは自明でない</h3>
+
+<p>
+x 方向の圧力応答を支配するのは音速が最大の<strong>電子</strong>であり
+（0.1555 対 イオン 0.0058、27 倍）、その電子の異方性は 1.11 にすぎず補正は 5% である。
+反射イオンでは 66% 減と大きいが、絶対値が小さい。
+</p>
+
+<p>
+どちらが効くかはモードの性質（電子的か、イオン的か）に依存するため、
+<strong>正味の効果は議論ではなく測定で決めるべきである。</strong>
+</p>
+
+<!-- ============================================================ -->
+<h2 id="gamma">未解決: 断熱指数をどう取るか</h2>
+
+<p>
+現在は \(\gamma_{\rm ad}=5/3\) を両方向に使っている。これは 3 自由度が等分配され、
+圧縮でエネルギーが 3 方向に自由に配分される場合の値である。
+</p>
+
+<p>
+実測は方向間のエネルギー交換が弱いことを示している
+（Weibel 加熱が y に集中し、z が初期値のまま）。交換が完全にないなら、
+各軸は独立に 1 次元断熱圧縮に従い
+</p>
+
+<div class="eq-block">
+  \[ p_{ii}\propto n^{3}\quad\Longrightarrow\quad \delta p_{ii}=3\,T_{ii}\,\delta n
+     \qquad(\gamma=3) \]
+</div>
+
+<p>
+となる。5/3 と 3 では 1.8 倍の差があり、これは電子の異方性補正（5%）より大きい。
+</p>
+
+<div class="callout orange">
+  <p>
+    <strong>異方性温度と断熱指数は別々の決定である。</strong>
+    T<sub>xx</sub>/T<sub>yy</sub> の区別を入れると、\(\gamma_{\rm ad}\) の妥当性を
+    同時に問い直すことになる。両方を一度に変えると、どちらの効果を見ているか分からなくなる。
+    <strong>先に温度だけを変え、\(\gamma_{\rm ad}=5/3\) は固定したまま測るべきである。</strong>
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="implementation">実装</h2>
+
+<h3>データ構造</h3>
+
+<p>後方互換を保つため、スカラーとタプルの両方を受け付ける。</p>
+
+<pre><code><span class="cmt"># src/fmi/snr_linear.py の BackgroundProfiles</span>
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+
+<span class="cmt"># 変更前</span>
+T: dict[<span class="kw">str</span>, <span class="kw">float</span>]                       <span class="cmt"># 成分名 -> スカラー温度</span>
+
+<span class="cmt"># 変更後</span>
+T: dict[<span class="kw">str</span>, <span class="kw">float</span> | <span class="kw">tuple</span>[<span class="kw">float</span>, <span class="kw">float</span>]]   <span class="cmt"># スカラー（等方）または (T_xx, T_yy)</span>
+
+
+<span class="kw">def</span> <span class="fn">_split_temperature</span>(T: <span class="kw">float</span> | <span class="kw">tuple</span>[<span class="kw">float</span>, <span class="kw">float</span>]) -> <span class="kw">tuple</span>[<span class="kw">float</span>, <span class="kw">float</span>]:
+    <span class="str">"""温度入力を (T_xx, T_yy) に正規化する。
+
+    スカラーは等方 T_xx = T_yy = T と解釈する（従来の挙動と厳密に一致）。
+    """</span>
+    <span class="kw">if</span> <span class="fn">isinstance</span>(T, (<span class="kw">int</span>, <span class="kw">float</span>)):
+        <span class="kw">return</span> <span class="fn">float</span>(T), <span class="fn">float</span>(T)
+    Txx, Tyy = T
+    <span class="kw">return</span> <span class="fn">float</span>(Txx), <span class="fn">float</span>(Tyy)</code></pre>
+
+<h3>演算子側（3 ファイル共通の形）</h3>
+
+<pre><code><span class="cmt"># 変更前</span>
+T = bg.T[s]
+...
+add(svx, sn, (kx * gamma_ad * T / m) * inv_n0)
+add(svy, sn, -<span class="num">1j</span> * (gamma_ad * T / m) * (inv_n0 @ D))
+
+<span class="cmt"># 変更後</span>
+Txx, Tyy = <span class="fn">_split_temperature</span>(bg.T[s])
+...
+add(svx, sn, (kx * gamma_ad * <span class="str">Txx</span> / m) * inv_n0)      <span class="cmt"># x 圧力 = ∂_x p_xx</span>
+add(svy, sn, -<span class="num">1j</span> * (gamma_ad * <span class="str">Tyy</span> / m) * (inv_n0 @ D))  <span class="cmt"># y 圧力 = ∂_y p_yy</span></code></pre>
+
+<h3>温度定数</h3>
+
+<pre><code><span class="cmt"># src/fmi/wi_saturated_temperature.py に追加</span>
+<span class="cmt"># PIC 準定常（data_sigma0_m400, omega_pi t=70）の T_xx。</span>
+<span class="cmt"># WI_SATURATED_TY と組にして (T_xx, T_yy) を作る。</span>
+WI_SATURATED_TX = {<span class="str">"Te"</span>: <span class="num">1.3033e-02</span>, <span class="str">"Tinc"</span>: <span class="num">6.9849e-04</span>, <span class="str">"Tref"</span>: <span class="num">9.4597e-04</span>}</code></pre>
+
+<div class="callout">
+  <p>
+    <strong>平衡ソルバーは触らない。</strong>
+    <code>solve_snr_equilibrium_electron_frame(**WI_SATURATED_TY, ...)</code> は
+    そのままでよい。異方性は線形演算子にだけ入る。
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="verification">検証</h2>
+
+<p>実装が正しいことを確かめる検査を、強い順に並べる。</p>
+
+<h3>1. k<sub>x</sub>=0 での厳密不変性 <span class="badge badge-green">最強</span></h3>
+
+<p>
+x 圧力項は k<sub>x</sub> に比例するので、<strong>k<sub>x</sub>=0 では T<sub>xx</sub> をどう変えても
+固有値が 1 ビットも変わってはならない</strong>。
+</p>
+
+<pre><code><span class="cmt"># T_xx を 100 倍しても k_x=0 の結果は不変であること</span>
+L1 = build_operator_bloch(bg_iso,  kx=<span class="num">0.0</span>, K=K)
+L2 = build_operator_bloch(bg_aniso, kx=<span class="num">0.0</span>, K=K)   <span class="cmt"># T_xx だけ 100 倍</span>
+<span class="kw">assert</span> np.<span class="fn">abs</span>(L1 - L2).<span class="fn">max</span>() == <span class="num">0.0</span></code></pre>
+
+<p>これが破れたら、T<sub>xx</sub> を入れる場所を間違えている。</p>
+
+<h3>2. 等方入力での後方互換</h3>
+
+<p>
+スカラー T を渡したときの演算子が、変更前と<strong>ビット単位で一致</strong>すること。
+既存の全結果（warm natural を含む）が無効化されないことの保証になる。
+</p>
+
+<h3>3. 並進ゼロモード検査</h3>
+
+<p>
+平衡の y 微小並進は k<sub>x</sub>=0, ω=0 の厳密解であり、演算子はこれを消す
+（<code>tests/test_snr_linear.py::test_translation_zero_mode_annihilated</code>）。
+この検査は k<sub>x</sub>=0 なので、検査 1 より <strong>T<sub>xx</sub> に依存せず通り続けるはず</strong>である。
+</p>
+
+<h3>4. 一様背景の cold filamentation 較正</h3>
+
+<p>
+既存の解析分散との一致検査は k<sub>y</sub> 方向のみ（k<sub>x</sub>=0）なので、
+これも T<sub>xx</sub> の影響を受けない。
+</p>
+
+<h3>5. 本番の測定</h3>
+
+<p>
+検査 1&ndash;4 を通したうえで、k<sub>x</sub> 分散関係を等方版と異方性版で引き比べる。
+差が出るのは k<sub>x</sub>&ne;0 のみで、k<sub>x</sub>=0 で 2 曲線が交わるはずである。
+交わらなければ実装が誤っている。
+</p>
+
+<!-- ============================================================ -->
+<h2 id="limits">限界</h2>
+
+<table>
+  <tr><th>限界</th><th>内容</th></tr>
+  <tr><td>非対角成分が未検証</td>
+      <td>PIC が出力するのは対角成分 \(P_{xx},P_{yy},P_{zz}\) のみ
+          （<code>um[...,s,5..7]</code>）。異方性プラズマでは \(P_{xy}\) が有限になり得るが、
+          現在のデータでは確かめられない。対角と仮定して進めることになる。</td></tr>
+  <tr><td>断熱指数が未決</td>
+      <td>\(\gamma_{\rm ad}=5/3\) を流用する。方向間のエネルギー交換が弱い実態からは
+          \(\gamma=3\) が示唆されるが、これは別の決定として分離する（<a href="#gamma">§断熱指数</a>）。</td></tr>
+  <tr><td>異方性の時間発展</td>
+      <td>T<sub>xx</sub>, T<sub>yy</sub> は ω<sub>pi</sub>t=70 の 1 点の値を定数として使う。
+          準定常窓（ω<sub>pi</sub>t 65.5&ndash;80.0）の中で異方性比が変化するかは未確認。</td></tr>
+  <tr><td>空間依存を無視</td>
+      <td>温度は空間平均値であり y 依存を持たせていない。フィラメント内外で異方性が
+          異なる可能性があるが、Boltzmann 閉包は T が y 一定であることを要求する。</td></tr>
+  <tr><td>参照データが旧ラン</td>
+      <td>温度は <code>data_sigma0_m400</code>（N<sub>x</sub>=8, N<sub>y</sub>=512、実質 1D）の実測値。
+          x 方向の構造を分解できていない。新しい 4096&times;4096 の σ=0 ランで測り直す価値がある。</td></tr>
+</table>
+
+<hr>
+
+<h2>参照</h2>
+<ul>
+  <li><code>docs/snr_linear_modes.md</code> &mdash; 線形化方程式と演算子ブロックの定義（§3, §4）</li>
+  <li><code>src/fmi/wi_saturated_temperature.py</code> &mdash; PIC 実測温度と準定常窓の定義</li>
+  <li><code>~/pic-nix-weibel/pic/example/foot/weibel/temperature_verification.py</code> &mdash; 温度テンソルの測定コード</li>
+  <li><code>docs/density_regularization.md</code> &mdash; 密度空乏と正則化（平衡側の温度依存）</li>
+</ul>
+
+</main>
+</div>
+</body>
+</html>

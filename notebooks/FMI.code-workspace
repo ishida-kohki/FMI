@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../cf"
+		},
+		{
+			"path": "../../tokuken2"
+		}
+	],
+	"settings": {}
+}

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>電子静止系での平衡の直接導出</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #252836;
+      --border: #2e3247;
+      --accent: #5c9cf5;
+      --accent2: #7ec8a0;
+      --accent3: #f5a623;
+      --text: #e2e4ed;
+      --text-muted: #8890aa;
+      --code-bg: #131622;
+      --kw: #c792ea;
+      --fn: #82aaff;
+      --str: #c3e88d;
+      --num: #f78c6c;
+      --cmt: #546e7a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.7; }
+    a { color: var(--accent); }
+    .page-wrap { display: flex; min-height: 100vh; }
+    nav { width: 260px; flex-shrink: 0; background: var(--surface);
+      border-right: 1px solid var(--border); padding: 2rem 1.2rem;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    nav h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .12em;
+      color: var(--text-muted); margin-bottom: .6rem; }
+    nav ul { list-style: none; }
+    nav li { margin: .2rem 0; }
+    nav a { color: var(--text-muted); text-decoration: none; font-size: .88rem;
+      display: block; padding: .25rem .5rem; border-radius: 4px; transition: .15s; }
+    nav a:hover { color: var(--accent); background: rgba(92,156,245,.08); }
+    main { flex: 1; max-width: 860px; padding: 3rem 3.5rem; }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: .4rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--text-muted); margin-bottom: 2.5rem; font-size: .95rem; }
+    h2 { font-size: 1.35rem; color: var(--accent); margin: 2.5rem 0 .8rem;
+      padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1.05rem; color: var(--accent2); margin: 1.6rem 0 .5rem; }
+    h4 { font-size: .95rem; color: var(--accent3); margin: 1.2rem 0 .4rem; }
+    p  { margin-bottom: .9rem; }
+    .callout { border-left: 3px solid var(--accent); background: rgba(92,156,245,.07);
+      padding: .8rem 1.2rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+    .callout.green { border-color: var(--accent2); background: rgba(126,200,160,.07); }
+    .callout.orange { border-color: var(--accent3); background: rgba(245,166,35,.07); }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th { background: var(--surface2); color: var(--accent); padding: .55rem .9rem;
+      text-align: left; font-weight: 600; border: 1px solid var(--border); }
+    td { padding: .5rem .9rem; border: 1px solid var(--border); }
+    tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+    pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1.2rem 1.4rem; overflow-x: auto; font-size: .84rem; line-height: 1.6; margin: .8rem 0 1.2rem; }
+    code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+    p code, li code, td code { background: var(--surface2); padding: .15em .4em;
+      border-radius: 3px; font-size: .85em; }
+    .kw { color: var(--kw); } .fn { color: var(--fn); } .str { color: var(--str); }
+    .num { color: var(--num); } .cmt { color: var(--cmt); font-style: italic; } .op { color: #89ddff; }
+    .eq-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem 1.6rem; text-align: center; overflow-x: auto; margin: 1rem 0; }
+    .badge { display: inline-block; font-size: .72rem; padding: .15em .55em; border-radius: 999px;
+      font-weight: 600; margin-left: .4rem; vertical-align: middle; }
+    .badge-blue { background: rgba(92,156,245,.2); color: var(--accent); }
+    .badge-green { background: rgba(126,200,160,.2); color: var(--accent2); }
+    .steps { counter-reset: step; list-style: none; margin: .5rem 0 1rem; }
+    .steps li { counter-increment: step; display: flex; gap: .9rem; margin-bottom: 1rem; }
+    .steps li::before { content: counter(step); flex-shrink: 0; width: 1.6rem; height: 1.6rem;
+      border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: .8rem;
+      display: flex; align-items: center; justify-content: center; margin-top: .15rem; }
+    .diagram { font-family: monospace; font-size: .82rem; color: var(--text-muted);
+      background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem 1.4rem; white-space: pre; overflow-x: auto; margin: 1rem 0; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+<nav>
+  <h2>目次</h2>
+  <ul>
+    <li><a href="#overview">概要</a></li>
+    <li class="section-head"><h2 style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.8rem 0 .3rem">動機</h2></li>
+    <li><a href="#why">なぜ電子静止系か</a></li>
+    <li><a href="#boost">フレーム変換の物理</a></li>
+    <li class="section-head"><h2 style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.8rem 0 .3rem">手法</h2></li>
+    <li><a href="#degeneracy">seed 縮退という唯一の障害</a></li>
+    <li><a href="#direct">直接導出アルゴリズム</a></li>
+    <li><a href="#invariants">不変量と恒等式</a></li>
+    <li class="section-head"><h2 style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.8rem 0 .3rem">検証</h2></li>
+    <li><a href="#verify">数値検証</a></li>
+    <li><a href="#api">API / コード参照</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<h1>電子静止系での平衡の直接導出</h1>
+<p class="subtitle">
+  3成分SNR平衡を最初から電子静止系（\(\beta_e=0\)）で解く手順とその検証<br>
+  ——自然系で解いてから boost する2段階（frame-homotopy）を廃した直接1段階解
+</p>
+
+<!-- ── OVERVIEW ── -->
+<h2 id="overview">概要</h2>
+<p>
+  <code>solve_snr_equilibrium_electron_frame</code> は、3成分SNR平衡を<strong>最初から電子静止系
+  （\(\beta_e=0\)）で直接解く</strong>。以前は「自然系（電流中性系）で解いてから boost で電子静止系へ運ぶ」
+  2段階（frame-homotopy）だったが、これを廃し、\(\beta_e=0\) の支配方程式を \(a_0\) ランプ1本で解く
+  <strong>直接1段階解</strong>に置き換えた。得られる \(\Phi,E_{0y}\) は電子静止系の物理場そのもので、
+  boost による後補正・読み替えは不要。
+</p>
+<div class="callout green">
+  <strong>結論先取り:</strong> 電子静止系では入力の自然系ドリフトから \(\beta_{e,\mathrm{nat}}\) を差し引いた
+  電子系ドリフトを使い、\(\beta_e=0\) で残差を解く。ただし \(\beta_e=0\) では線形 seed が縮退する
+  （§seed 縮退）ため、<strong>seed だけ自然系ドリフトで初期化</strong>して正しい basin を選ぶ。検証では
+  \(\beta_e=6.9\times10^{-18}\)（機械精度で 0）、native 残差 \(\sim10^{-7}\)、自然系解との
+  \(B_{0z}\)・密度一致（\(\lesssim10^{-4}\)）を確認した。
+</div>
+<div class="callout">
+  <strong>なぜ直接導出にしたか:</strong> Jikei+ 2024 は系を<strong>電子静止系で定義</strong>する
+  （電荷中性＋純電流ゼロで \(v_{\rm ref}=(1-N)V_{sh},\ v_{\rm inc}=-N V_{sh}\)）。平衡を電子静止系で直接解けば、
+  boost の読み替えなしに<strong>論文と同じフレーム・同じドリフト規約</strong>で比較できる。式の対称性は自然系の方が
+  素直だが（\(\beta_e\) が中性条件で一意）、その利点は seed にのみ残し（下記）、平衡本体は電子系で解く。
+</div>
+
+<!-- ── WHY ── -->
+<h2 id="why">なぜ電子静止系か</h2>
+<p>
+  線形解析では摂動を \(\delta g \propto \exp(i k_x x - i\omega t)\) と置く。背景ドリフト
+  \(\beta_s\) を持つ成分の応答には Doppler 因子
+</p>
+<div class="eq-block">
+  \[
+  \Omega_s \equiv \omega - k_x\,\beta_s\,c
+  \]
+</div>
+<p>
+  が現れる。電子を静止系に取る（\(\beta_e=0\)）と電子の Doppler 因子が
+  \(\Omega_e=\omega\) となり、電子感受率がドリフトなしの素の形に簡約される。
+  分散関係から電子由来の \((\omega-k_x\beta_e c)\) 依存性が消え、固有値問題が単純化する。
+  これが平衡を電子静止系で用意したい理由。
+</p>
+<div class="callout">
+  \(\beta_e\) は独立パラメータではなく、<strong>電流中性条件</strong>
+  \(\beta_e=(1-\eta)\beta_{inc}+\eta\beta_{ref}\) でドリフトから決まる
+  （<code>snr_equilibrium.py</code>）。鏡面反射の規約では \(\beta_e\) は小さいが厳密には 0 でない。
+</div>
+
+<!-- ── BOOST ── -->
+<h2 id="boost">フレーム変換の物理（ガリレイ・ブースト）</h2>
+<p>
+  電子静止系へ移すのは速度 \(\beta_e\) のガリレイ・ブースト。非相対論（\(O(\beta)\)）では
+  場とドリフトが次のように変換する。
+</p>
+<div class="eq-block">
+  \[
+  \Phi' = \Phi - \beta_e A,\qquad
+  A' = A,\qquad
+  \beta_s' = \beta_s - \beta_e
+  \]
+</div>
+<p>これらから各物理量の変換を導ける:</p>
+<table>
+  <thead><tr><th>量</th><th>変換</th><th>理由</th></tr></thead>
+  <tbody>
+    <tr><td>密度 \(n_s\)</td><td><strong>不変</strong></td>
+        <td>\(\Phi'-\beta_s'A' = (\Phi-\beta_e A)-(\beta_s-\beta_e)A = \Phi-\beta_s A\)。Boltzmann 因子の指数が不変</td></tr>
+    <tr><td>磁場 \(B_{0z}=-dA/dy\)</td><td><strong>不変</strong></td>
+        <td>\(A\) を変えないため</td></tr>
+    <tr><td>電場 \(E_{0y}=-d\Phi/dy\)</td><td>\(E_{0y}' = E_{0y} - \beta_e B_{0z}\)</td>
+        <td>\(-d(\Phi-\beta_e A)/dy = E_{0y} + \beta_e\,dA/dy = E_{0y} - \beta_e B_{0z}\)（motional EMF）</td></tr>
+    <tr><td>電流 \(J_x=\sum_s q_s\beta_s n_s\)</td><td>\(J_x' = J_x - \beta_e\rho\)</td>
+        <td>ドリフトが \(\beta_s-\beta_e\) になる対流項。\(\rho=\sum_s q_s n_s\)</td></tr>
+  </tbody>
+</table>
+<p>
+  密度が不変なので \(\rho\) も不変、\(A\) も（1次では）不変で \(B_{0z}\) も不変。\(E_{0y}\) だけが
+  motional EMF \(-\beta_e B_{0z}\) でシフトする。これが両系の解を結ぶ中心的恒等式であり、
+  直接解では \(E_{0y}\) がこのシフト後の電子系の値として<strong>そのまま出る</strong>（boost 後補正は不要）。
+</p>
+<div class="callout orange">
+  <strong>厳密性の注:</strong> 局所電流は \(J_x'=J_x-\beta_e\rho\) と変わるため、Ampère \(d^2A/dy^2=-J_x\) から
+  \(B_{0z}\) は厳密には <strong>\(O(\beta_e^2)\)</strong> だけ両系でずれる（相対論では \(B_z'=B_z-\beta_e E_y\)）。
+  直接解はこの \(J_x'\) をそのまま解くので、電子系の \(B_{0z}\) を近似なしに得る。\(\beta_e\sim7.5\times10^{-4}\)
+  では \(O(\beta_e^2)\sim10^{-6}\) と無視できる（数値検証で \(B_{0z}\) 差 \(\lesssim10^{-4}\) は主に再解の格子・収束差）。
+</div>
+
+<!-- ── DEGENERACY ── -->
+<h2 id="degeneracy">素朴な解き直しが失敗する理由 <span class="badge badge-blue">seed 縮退</span></h2>
+<p>
+  「電子静止系のドリフトを直接 <code>solve_snr_equilibrium</code> に渡して解き直す」のは
+  <strong>失敗する</strong>。初期推定（線形分散 seed）が結合係数
+</p>
+<div class="eq-block">
+  \[
+  C_{AP} = \frac{\beta_e}{T_e} + \frac{(1-\eta)\beta_{inc}}{T_{inc}} + \frac{\eta\beta_{ref}}{T_{ref}}
+  \]
+</div>
+<p>
+  に依存するため。\(T_{inc}=T_{ref}=T_i\) のとき、定義 \((1-\eta)\beta_{inc}+\eta\beta_{ref}=\beta_e\) を使うと
+</p>
+<div class="eq-block">
+  \[
+  C_{AP} = \frac{\beta_e}{T_e} + \frac{\beta_e}{T_i} = \beta_e\left(\frac{1}{T_e}+\frac{1}{T_i}\right)
+  \quad\xrightarrow{\;\beta_e=0\;}\quad C_{AP}=0 .
+  \]
+</div>
+<p>
+  \(C_{AP}=0\) だと seed の2次方程式
+  \(C_{AP}r^2+(C_{AA}-C_{PP})r+C_{AP}=0\) が縮退し、\(\Phi/A\) 比が
+  \(r=0\)（純静電）へ落ちる。結果、電磁モードの種が失われ、誤った短波長
+  静電分枝（\(\lambda_0\to0\) の basin）へ収束してしまう。
+</p>
+<div class="callout">
+  実測: 電子系ドリフトを素で渡すと \(\lambda_0\) が崩壊（例 \(7.9\to0.03\)、native 残差 \(\sim10^{-1}\)）。
+  <code>scipy.optimize.root(lm)</code> はこの崩壊解でも <code>success=True</code> を返すので、native 残差の独立チェックが要る。
+  <strong>回避策は「seed だけ自然系ドリフトで計算する」こと</strong>——残差・抽出は \(\beta_e=0\) のまま、初期推定の
+  \(C_{AP},C_{AA}\) を \(\beta_{e,\mathrm{nat}}\neq0\) の自然系値で作れば非ゼロの \(\Phi/A\) 比が入り、正しい basin に収束する。
+  これが次節の直接導出アルゴリズムの核心。
+</div>
+
+<!-- ── DIRECT ── -->
+<h2 id="direct">直接導出アルゴリズム <span class="badge badge-green">実装</span></h2>
+<p>
+  <code>solve_snr_equilibrium_electron_frame</code> は、\(\beta_e=0\) の平衡を \(a_0\) ランプ1本で
+  <strong>直接</strong>解く。frame-homotopy（\(t:0\to1\) の連続化）も boost 後補正も行わない。
+  唯一の工夫は「seed だけ自然系ドリフトで作る」ことで seed 縮退を回避する点。
+</p>
+<ol class="steps">
+  <li><strong>電子系ドリフトへ移す。</strong> 入力の自然系ドリフトから
+      \(\beta_{e,\mathrm{nat}}=(1-\eta)\beta_{inc}+\eta\beta_{ref}\) を計算し、
+      \(\beta_{inc}'=\beta_{inc}-\beta_{e,\mathrm{nat}},\ \beta_{ref}'=\beta_{ref}-\beta_{e,\mathrm{nat}}\)。
+      これらは \((1-\eta)\beta_{inc}'+\eta\beta_{ref}'=0\) を満たし、solver が再導出する \(\beta_e\) も 0 になる。</li>
+  <li><strong>seed だけ自然系で作る。</strong> 線形分散 seed の \(C_{PP},C_{AP},C_{AA}\) を
+      <em>自然系</em>ドリフト \((\beta_{inc},\beta_{ref},\beta_{e,\mathrm{nat}})\) で計算（引数 <code>_seed_drifts</code>）。
+      \(\beta_{e,\mathrm{nat}}\neq0\) なので \(C_{AP}\neq0\)、非ゼロの \(\Phi/A\) 比が入り正しい basin を指す。</li>
+  <li><strong>\(\beta_e=0\) で残差を解く。</strong> 残差・境界条件・抽出は電子系ドリフト・\(\beta_e=0\) で構成し、
+      \(a_0\) を \(a_{0,\rm start}\to a_{0,\rm target}\) と増やす Newton 継続で1本のランプを解く。
+      得られる \(\Phi,E_{0y}\) は電子系の物理場そのもの。</li>
+</ol>
+<div class="diagram">  入力: 自然系ドリフト β_inc, β_ref
+        │   β_e,nat=(1-η)β_inc+η β_ref
+        ▼
+  seed:   自然系ドリフトで C_AP,C_AA  →  非ゼロ Φ/A 比（縮退回避）
+  残差:   β_e=0, β_s'=β_s−β_e,nat
+        │   a0 ランプ1本 (Newton 継続, root/lm)
+        ▼
+  電子静止系平衡:  β_e=0 (厳密),  E0y は電子系の値として直接出る</div>
+<div class="callout">
+  以前の frame-homotopy（自然系フル解→\(t:0\to1\) の boost 継続、引数 <code>n_frame_steps</code>）は<strong>廃止</strong>。
+  直接解は自然系・旧 homotopy と有効パラメータで機械精度一致（\(\eta=0.1\)–\(0.4\) で \(\lambda_0\) 差 \(<10^{-3}\)）し、
+  非相対論では単純差 \(\beta_s-\beta_e\) で平均電流中性が<strong>厳密に 0</strong> になる（相対論補正 \(O(\beta^2)\) は丸め以下）。
+</div>
+
+<!-- ── INVARIANTS ── -->
+<h2 id="invariants">不変量とフレームシフト恒等式</h2>
+<p>直接解が正しければ、自然系解 <code>solve_snr_equilibrium</code> との間で次が成り立つ（検証に使う）:</p>
+<div class="eq-block">
+  \[
+  \boxed{\;B_{0z}^{\,\mathrm{elec}} = B_{0z}^{\,\mathrm{nat}},\qquad
+  n_s^{\,\mathrm{elec}} = n_s^{\,\mathrm{nat}},\qquad
+  E_{0y}^{\,\mathrm{elec}} = E_{0y}^{\,\mathrm{nat}} - \beta_e\,B_{0z}\;}
+  \]
+</div>
+<p>
+  したがって、自然系で見える物理（フィラメント構造・自己磁場・冷イオン電荷層など）は
+  電子静止系でも<strong>同一</strong>であり、唯一の違いは \(E_{0y}\) の motional シフト
+  \(-\beta_e B_{0z}\)（\(\beta_e\sim7.5\times10^{-4}\) なので振幅 \(\sim10^{-4}\) と微小）。
+</p>
+
+<!-- ── VERIFY ── -->
+<h2 id="verify">数値検証</h2>
+<p>
+  マッハ既定（\(M_S=154.92,\ \eta=0.2,\ V_{sh}/c=0.25,\ v_{te}/c=0.1,\ \sigma=0\)）の自然系入力
+</p>
+<div class="eq-block">
+  \[
+  \beta_{inc}=-0.050473,\quad \beta_{ref}=+0.198142,\quad
+  \tilde T_e=10^{-2},\quad \tilde T_{inc}=\tilde T_{ref}=6.25\times10^{-4}
+  \]
+</div>
+<p>
+  を <code>solve_snr_equilibrium_electron_frame</code>（直接解）に与え、\(N=128\) で解いて
+  自然系 <code>solve_snr_equilibrium</code> と比較（native = ソルバ自身の Chebyshev 微分による厳密残差）:
+</p>
+<table>
+  <thead><tr><th>チェック</th><th>結果</th><th>判定</th></tr></thead>
+  <tbody>
+    <tr><td>\(\beta_e\)（電子系直接解）</td><td>\(6.9\times10^{-18}\)</td><td>厳密に 0 ✓</td></tr>
+    <tr><td>native 収束残差 resA / resP</td><td>\(1.6\times10^{-7}\) / \(1.1\times10^{-7}\)</td><td>収束 ✓</td></tr>
+    <tr><td>\(\max|B_{0z}^{\mathrm{nat}}-B_{0z}^{\mathrm{elec}}|\)</td><td>\(4.0\times10^{-5}\)</td><td>不変 ✓</td></tr>
+    <tr><td>\(\max|n_e^{\mathrm{nat}}-n_e^{\mathrm{elec}}|\)</td><td>\(1.5\times10^{-4}\)</td><td>不変 ✓</td></tr>
+    <tr><td>恒等式残差 \(\max\big|E^{\mathrm{elec}}-(E^{\mathrm{nat}}-\beta_e B_{0z})\big|\)</td><td>\(2.7\times10^{-5}\)</td><td>成立 ✓</td></tr>
+    <tr><td>直接解 vs 自然系/旧 homotopy の \(\lambda_0\)（\(\eta=0.1\)–\(0.4\)）</td><td>差 \(<10^{-3}\)</td><td>一致 ✓</td></tr>
+  </tbody>
+</table>
+<div class="callout green">
+  \(\beta_e\) が厳密に 0、native 残差が \(\sim10^{-7}\) で<strong>直接解が方程式を満たして収束</strong>し、
+  \(B_{0z}\)・密度が自然系と一致、フレームシフト恒等式 \(E^{\mathrm{elec}}=E^{\mathrm{nat}}-\beta_e B_{0z}\) が
+  \(2.7\times10^{-5}\) で成立する。よって<strong>電子静止系での直接導出は正しく動作している</strong>。
+  冷イオン由来の鋭い \(E_{0y}\) 層は自然系でも同一に現れる（\(B_{0z}\)・密度がフレーム不変）ため、
+  フレーム選択の産物ではなく<strong>背景パラメータ（冷たいイオン）由来</strong>である。
+</div>
+
+<!-- ── API ── -->
+<h2 id="api">API / コード参照</h2>
+<pre><code><span class="kw">from</span> fmi.mach_parameters <span class="kw">import</span> MachConfig, build_solver_params
+<span class="kw">from</span> fmi.snr_equilibrium <span class="kw">import</span> (
+    solve_snr_equilibrium,                 <span class="cmt"># 自然系（β_e≠0）</span>
+    solve_snr_equilibrium_electron_frame,  <span class="cmt"># 電子静止系（β_e=0, 直接解）</span>
+)
+
+sp = <span class="fn">build_solver_params</span>(MachConfig(M_S=<span class="num">154.92</span>, beta_sh=<span class="num">0.25</span>,
+                                  beta_te=<span class="num">0.1</span>, sigma=<span class="num">0.0</span>, eta=<span class="num">0.2</span>))
+<span class="cmt"># sp = {eta, beta_inc, beta_ref, Te, Tinc, Tref}（自然系ドリフト）</span>
+
+eq_nat  = <span class="fn">solve_snr_equilibrium</span>(**sp, a0_target=<span class="num">0.25</span>, N_points=<span class="num">128</span>)
+eq_elec = <span class="fn">solve_snr_equilibrium_electron_frame</span>(**sp, a0_target=<span class="num">0.25</span>, N_points=<span class="num">128</span>)
+<span class="cmt"># eq_elec["beta_e"] ≈ 0,  B0z・密度は eq_nat と一致,  E0y は −β_e·B0z だけシフト</span></code></pre>
+<table>
+  <thead><tr><th>関数 / 場所</th><th>役割</th></tr></thead>
+  <tbody>
+    <tr><td><code>solve_snr_equilibrium_electron_frame</code><br>（<code>snr_equilibrium.py</code>）</td>
+        <td>本ページの直接解本体。自然系ドリフトを受け取り \(\beta_e=0\) で1段階解く。seed のみ自然系で作る。</td></tr>
+    <tr><td><code>solve_snr_equilibrium</code> の引数 <code>_seed_drifts</code></td>
+        <td>seed 専用ドリフト \((\beta_{inc},\beta_{ref},\beta_e)\)。残差は引数ドリフト・\(\beta_e=0\) のまま、
+            seed だけ自然系値で計算して縮退を回避する内部フック。</td></tr>
+    <tr><td><code>to_electron_rest_frame</code><br>（<code>mach_parameters.py</code>）</td>
+        <td>ソルバー入力ドリフトだけを電子静止系へブースト（線形解析の前処理用）。平衡は解き直さない軽量版。</td></tr>
+    <tr><td><code>snr_equilibrium.py</code> 内 seed（\(C_{PP},C_{AP},C_{AA}\)）</td>
+        <td>\(\beta_e=0\) での \(C_{AP}=0\) 縮退の発生源。直接解は <code>_seed_drifts</code>（自然系値）で回避する。</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  関連ドキュメント:
+  <a href="snr_equilibrium_solver.html">3成分平衡ソルバー</a> ／
+  <a href="mach_parameter_scheme.html">マッハ数基準パラメータ設計</a> ／
+  <a href="pic_equilibrium_verification.html">PIC 平衡検証</a>
+</div>
+
+<hr>
+<p style="color:var(--text-muted);font-size:.82rem;text-align:center;margin-top:2rem;">
+  電子静止系での平衡の直接導出 —
+  <code>solve_snr_equilibrium_electron_frame</code>（直接1段階解）の手順と数値検証
+</p>
+</main>
+</div>
+</body>
+</html>
